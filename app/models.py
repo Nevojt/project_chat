@@ -6,7 +6,7 @@ from .database import Base
 
 
 class Post(Base):
-    __tablename__ = 'room_two'
+    __tablename__ = 'room_one'
     
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))

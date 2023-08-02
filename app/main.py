@@ -5,11 +5,10 @@ load_dotenv()
 import os
 
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from sqlalchemy.orm import Session
-from . import models
+from . import models, schemas
 from .database import engine, get_db
 
 
@@ -20,10 +19,7 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-class Post(BaseModel):
-    name: str
-    message: str
-    published: bool = True
+
     
 while True:   
     try:
@@ -57,58 +53,62 @@ async def root():
     cursor.execute("""SELECT * FROM room_one""")
     
     room_one = cursor.fetchall()
-    return {"message": room_one}
+    return room_one
 
-@app.get("alchemy")
-def test_get(db: Session = Depends(get_db)):
-    
-    posts = db.query(models.Post).all()
-    return {"data": posts}
 
 
 @app.get("/posts")
-async def get_posts():
-    return {"data": my_post}
+async def get_posts(db: Session = Depends(get_db)):
+    posts = db.query(models.Post).all()
+    return posts
 
 
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def get_posts(post: Post):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
+async def get_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
+    post = models.Post(**post.dict())
+    db.add(post)
+    db.commit()
+    db.refresh(post)    
+    return post
+
+
+
+@app.get("/posts/{id}", response_model=schemas.Post)
+async def get_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id).first()
     
-    return {"data": post}
-
-
-
-@app.get("/posts/{id}")
-async def get_post(id: int):
-    post = find_post(id)
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} not found")
-    return {"post_details": post}
+    return post
 
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
-    index = find_index_post(id)
+def delete_post(id: int, db: Session = Depends(get_db)):
+    post = db.query(models.Post).filter(models.Post.id == id)
     
-    if index == None:
+    if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} not found")
     
-    my_post.pop(index)
+    post.delete(synchronize_session=False)
+    db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.put("/posts/{id}")
-def update_post(id: int, post: Post):
-    index = find_index_post(id)
+
+@app.put("/posts/{id}", response_model=schemas.Post)
+def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db)):
     
-    if index == None:
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+    
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with id: {id} not found")
-        
-    post_dict = post.dict()
-    post_dict['id'] = id
-    my_post[index] = post_dict
-    return {'data': post_dict}
+    
+    post_query.update(update_post.dict(), synchronize_session=False)
+    
+    db.commit()
+    return post_query.first()
     
