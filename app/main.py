@@ -4,14 +4,14 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 
-from fastapi import FastAPI, Response, status, HTTPException, Depends
+from fastapi import FastAPI
 import psycopg2
 from psycopg2.extras import RealDictCursor
 
-from sqlalchemy.orm import Session
-from . import models, schemas, utils
-from .database import engine, get_db
-from .routers import user, post, auth
+
+from . import models
+from .database import engine
+from .routers import post
 
 
 url = os.environ.get("SUPABASE_URL")
@@ -53,5 +53,3 @@ def find_index_post(id):
             return i
 
 app.include_router(post.router)
-app.include_router(user.router)
-app.include_router(auth.router)
