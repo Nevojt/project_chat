@@ -4,14 +4,14 @@ from ..database import get_db
 from .. import models, schemas
 
 router = APIRouter(
-    prefix="/room_one",
-    tags=['Post'],
+    prefix="/room_2",
+    tags=['RoomTwo'],
 )
 
 
 @router.get("/")
 async def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
+    posts = db.query(models.RoomTwo).all()
     return posts
 
 
@@ -20,7 +20,7 @@ async def get_posts(db: Session = Depends(get_db)):
 async def get_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
     
     
-    post = models.Post(**post.dict())
+    post = models.RoomTwo(**post.dict())
     db.add(post)
     db.commit()
     db.refresh(post)    
@@ -30,7 +30,7 @@ async def get_posts(post: schemas.PostCreate, db: Session = Depends(get_db)):
 
 @router.get("/{id}", response_model=schemas.Post)
 async def get_post(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.Post).filter(models.Post.id == id).first()
+    post = db.query(models.RoomTwo).filter(models.RoomTwo.id == id).first()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -40,7 +40,7 @@ async def get_post(id: int, db: Session = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.Post).filter(models.Post.id == id)
+    post = db.query(models.RoomTwo).filter(models.RoomTwo.id == id)
     
     if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -54,7 +54,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 @router.put("/{id}", response_model=schemas.Post)
 def update_post(id: int, update_post: schemas.PostCreate, db: Session = Depends(get_db)):
     
-    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post_query = db.query(models.RoomTwo).filter(models.RoomTwo.id == id)
     post = post_query.first()
     
     if post == None:
