@@ -7,6 +7,10 @@ class PostBase(BaseModel):
     name: str
     message: str
     published: bool = True
+    member_id: int
+    avatar: str
+    is_privat: bool = False
+    receiver: int
     
     
 class PostCreate(PostBase):
@@ -19,26 +23,15 @@ class Post(PostBase):
         from_attributes = True
         
 class UserCreate(BaseModel):
-    user_name: EmailStr  # Email address
-    password: str
+    user_name: str
+    token: int
     
     #  response no password
 class UserOut(BaseModel):
     id: int
-    user_name: EmailStr # Email address
+    user_name: str
     created_at: datetime
+    token: int
     class Config:
         from_attributes = True
-    
-    
-class UserLogin(BaseModel):
-    user_name: EmailStr # Email address
-    password: str
-    
-    
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-    
-class TokenData(BaseModel):
-    id: Optional[str] = None
+

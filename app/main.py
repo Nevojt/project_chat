@@ -11,7 +11,7 @@ from psycopg2.extras import RealDictCursor
 
 from . import models
 from .database import engine
-from .routers import post
+from .routers import post, user
 
 
 url = os.environ.get("SUPABASE_URL")
@@ -53,3 +53,4 @@ def find_index_post(id):
             return i
 
 app.include_router(post.router)
+app.include_router(user.router)
