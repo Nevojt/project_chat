@@ -7,10 +7,10 @@ class PostBase(BaseModel):
     name: str
     message: str
     published: bool = True
-    member_id: int
+    member_id: Optional[int]
     avatar: str
     is_privat: bool = False
-    receiver: int
+    receiver: Optional[int]
     
     
 class PostCreate(PostBase):
