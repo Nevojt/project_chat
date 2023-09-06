@@ -4,7 +4,7 @@ from ..database import get_db
 from .. import models, schemas
 
 router = APIRouter(
-    prefix="/room_4",
+    prefix="/room_5",
     tags=['RoomFive'],
 )
 
