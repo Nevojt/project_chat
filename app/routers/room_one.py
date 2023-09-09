@@ -11,7 +11,7 @@ router = APIRouter(
 
 @router.get("/")
 async def get_posts(db: Session = Depends(get_db)):
-    posts = db.query(models.RoomOne).all()
+    posts = db.query(models.RoomOne).order_by(models.RoomOne.id.asc()).all()
     return posts
 
 
