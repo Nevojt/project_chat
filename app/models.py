@@ -45,7 +45,7 @@ class Rooms(Base):
     __tablename__ = 'rooms'
     
     id = Column(Integer, primary_key=True, nullable=False)
-    name_room = Column(String, nullable=False)
+    name_room = Column(String, nullable=False, unique=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
     
