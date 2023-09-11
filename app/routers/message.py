@@ -28,13 +28,13 @@ async def get_posts(post: schemas.MessageCreate, db: Session = Depends(get_db)):
 
 
 
-@router.get("/{id}", response_model=schemas.MessagePost)
-async def get_post(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.Message).filter(models.Message.id == id).first()
+@router.get("/{rooms}", response_model=schemas.MessagePost)
+async def get_post(rooms: str, db: Session = Depends(get_db)):
+    post = db.query(models.Message).filter(models.Message.rooms == rooms).first()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id: {id} not found")
+                            detail=f"post with rooms: {rooms} not found")
     return post
 
 
@@ -51,15 +51,15 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{id}", response_model=schemas.MessagePost)
-def update_post(id: int, update_post: schemas.MessageCreate, db: Session = Depends(get_db)):
+@router.put("/{rooms}", response_model=schemas.MessagePost)
+def update_post(rooms: str, update_post: schemas.MessageCreate, db: Session = Depends(get_db)):
     
-    post_query = db.query(models.Message).filter(models.Message.id == id)
+    post_query = db.query(models.Message).filter(models.Message.rooms == rooms)
     post = post_query.first()
     
     if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id: {id} not found")
+                            detail=f"post with rooms: {rooms} not found")
     
     post_query.update(update_post.dict(), synchronize_session=False)
     
