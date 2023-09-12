@@ -32,6 +32,6 @@ class Message(Base):
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, nullable=False)
-    user_name = Column(String, nullable=False)   
+    user_name = Column(String, nullable=False)
+    password = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    token = Column(String, nullable=False)
