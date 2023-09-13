@@ -1,8 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
 from datetime import datetime
-
-
         
         
 class MessageBase(BaseModel):
@@ -58,3 +56,10 @@ class UserLogin(BaseModel):
     user_name: str
     password: str
 
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
+class TokenData(BaseModel):
+    user_name: Optional[str] = None
