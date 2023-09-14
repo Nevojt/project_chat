@@ -10,16 +10,16 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_posts(db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+async def get_posts(db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     posts = db.query(models.Message).all()
     return posts
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.MessagePost)
-async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     
-    print(get_current_user)
+    print(user_id)
     post = models.Message(**post.dict())
     db.add(post)
     db.commit()
@@ -29,7 +29,7 @@ async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db
 
 
 @router.get("/{rooms}", response_model=schemas.MessagePost)
-async def get_post(rooms: str, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+async def get_post(rooms: str, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     
     post = db.query(models.Message).filter(models.Message.rooms == rooms).first()
     
@@ -40,7 +40,7 @@ async def get_post(rooms: str, db: Session = Depends(get_db), get_current_user: 
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+def delete_post(id: int, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     post = db.query(models.Message).filter(models.Message.id == id)
     
     if post.first() == None:
@@ -53,7 +53,7 @@ def delete_post(id: int, db: Session = Depends(get_db), get_current_user: str = 
 
 
 @router.put("/{rooms}", response_model=schemas.MessagePost)
-def update_post(rooms: str, update_post: schemas.MessageCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+def update_post(rooms: str, update_post: schemas.MessageCreate, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     
     post_query = db.query(models.Message).filter(models.Message.rooms == rooms)
     post = post_query.first()
