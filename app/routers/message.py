@@ -10,7 +10,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_posts(db: Session = Depends(get_db), cuser_id: int = Depends(oauth2.get_current_user)):
+async def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     posts = db.query(models.Message).all()
     return posts
 
