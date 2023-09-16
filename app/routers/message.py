@@ -10,7 +10,7 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def get_posts(db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     posts = db.query(models.Message).all()
     return posts
 
@@ -29,7 +29,7 @@ async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db
 
 
 @router.get("/{rooms}", response_model=schemas.MessagePost)
-async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def get_post(rooms: str, db: Session = Depends(get_db)):  # , current_user: int = Depends(oauth2.get_current_user)
     
     post = db.query(models.Message).filter(models.Message.rooms == rooms).first()
     
