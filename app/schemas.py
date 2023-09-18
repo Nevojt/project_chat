@@ -6,12 +6,11 @@ from datetime import datetime
 class MessageBase(BaseModel):
     name: str
     message: str
-    published: bool = True
-    member_id: Optional[int]
     avatar: str
     is_privat: bool = False
     receiver: Optional[int]
     rooms: str
+
         
         
 class MessageCreate(MessageBase):
@@ -20,12 +19,14 @@ class MessageCreate(MessageBase):
 class MessagePost(MessageBase):
     id: int
     created_at: datetime
+    owner_id: int
     class Config:
         from_attributes = True
         
         
 class RoomBase(BaseModel):
     name_room: str
+    image_room: str
     
     
 class RoomCreate(RoomBase):
