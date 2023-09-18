@@ -15,7 +15,7 @@ class Rooms(Base):
     
     
 class Message(Base):
-    __tablename__ ='messagesDev'
+    __tablename__ ='messages' # 'messagesDev'
     
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
@@ -27,7 +27,7 @@ class Message(Base):
     is_privat = Column(Boolean, server_default='False', nullable=False)
     receiver = Column(Integer, nullable=False)
     rooms = Column(String, nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    # owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     
     
 class User(Base):

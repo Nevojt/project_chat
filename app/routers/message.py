@@ -4,8 +4,8 @@ from ..database import get_db
 from .. import models, schemas, oauth2
 
 router = APIRouter(
-    prefix="/messagesDev",
-    tags=['MessageDev'],
+    prefix="/messages",
+    tags=['Message'],
 )
 
 
@@ -26,9 +26,9 @@ async def get_post(rooms: str, db: Session = Depends(get_db)):  # , current_user
     return post
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.MessagePost)
-async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+async def create_posts(post: schemas.MessageCreate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     
-    print(current_user.user_name)
+    # print(current_user.user_name)
     post = models.Message(**post.dict())
     db.add(post)
     db.commit()
