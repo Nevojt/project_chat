@@ -32,7 +32,21 @@ class Message(Base):
     
 class User(Base):
     __tablename__ = 'users'
-    id = Column(Integer, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
     user_name = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
+class User_Status(Base):
+    __tablename__ = 'user_status' 
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    room_name = Column(String, nullable=False, unique=True)
+    user_id = Column(Integer, nullable=False, unique=True)
+    user_name = Column(String, nullable=False)
+    status = Column(Boolean, server_default='True', nullable=False)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
+    
+    
+    

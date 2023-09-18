@@ -38,6 +38,24 @@ class RoomPost(RoomBase):
         from_attributes = True
         
         
+class UserStatus(BaseModel):
+    id: int
+    room_name: str
+    user_name: str
+    user_id: int
+    status: bool = True
+    
+class UserStatusCreate(UserStatus):
+    pass
+
+class UserStatusPost(UserStatus):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+    
+        
+        
         
 class UserCreate(BaseModel):
     user_name: str
