@@ -15,8 +15,7 @@ class Rooms(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     image_room = Column(String, nullable=False, server_default='https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/Content%20Home%20page/Desktop/weight-lifting-1284616_640.jpg')
     
-    # owner = relationship('User')
-    
+        
 class Message(Base):
     __tablename__ ='messagesDev' # 'messagesDev'
     
@@ -27,8 +26,8 @@ class Message(Base):
     avatar = Column(String, nullable=False)
     is_privat = Column(Boolean, server_default='False', nullable=False)
     receiver = Column(Integer, nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room'), nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
+    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     
     owner = relationship('User')
     
@@ -51,5 +50,9 @@ class User_Status(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
     
+class Vote(Base):
+    __tablename__ = 'votes'
     
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
+    message_id = Column(Integer, ForeignKey('messagesDev.id', ondelete='CASCADE'), primary_key=True)
     

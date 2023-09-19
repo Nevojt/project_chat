@@ -2,8 +2,8 @@
 from fastapi import FastAPI
 from . import models
 from .database import engine
-from .routers import message, user, rooms, auth, user_status
-# from .config import settings
+from .routers import message, user, rooms, auth, user_status, vote
+
 
 
 
@@ -17,5 +17,6 @@ app.include_router(message.router)
 app.include_router(rooms.router)
 app.include_router(auth.router)
 app.include_router(user_status.router)
+app.include_router(vote.router)
 
 app.include_router(user.router)
