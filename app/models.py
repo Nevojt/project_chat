@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.orm import relationship
 from .database import Base
 
 
@@ -14,6 +15,7 @@ class Rooms(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     image_room = Column(String, nullable=False, server_default='https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/Content%20Home%20page/Desktop/weight-lifting-1284616_640.jpg')
     
+    # owner = relationship('User')
     
 class Message(Base):
     __tablename__ ='messagesDev' # 'messagesDev'
@@ -27,6 +29,8 @@ class Message(Base):
     receiver = Column(Integer, nullable=False)
     rooms = Column(String, ForeignKey('rooms.name_room'), nullable=False)
     owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    owner = relationship('User')
     
     
 class User(Base):

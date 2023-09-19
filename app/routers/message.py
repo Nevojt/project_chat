@@ -2,6 +2,7 @@ from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models, schemas, oauth2
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/messagesDev",
@@ -9,13 +10,13 @@ router = APIRouter(
 )
 
 
-@router.get("/")
+@router.get("/", response_model=List[schemas.MessagePost])
 async def get_posts(db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     posts = db.query(models.Message).all()
     return posts
 
 
-@router.get("/{rooms}")
+@router.get("/{rooms}", response_model=List[schemas.MessagePost])
 async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):  # , current_user: int = Depends(oauth2.get_current_user)
     
     post = db.query(models.Message).filter(models.Message.rooms == rooms).all()
