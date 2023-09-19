@@ -10,26 +10,30 @@ router = APIRouter(
 
 
 @router.get("/")
-async def get_posts(db: Session = Depends(get_db)):
+async def get_rooms(db: Session = Depends(get_db)):
     posts = db.query(models.Rooms).all()
     return posts
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.RoomPost)
-async def create_posts(post: schemas.RoomCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+async def create_room(room: schemas.RoomCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
     
+    existing_room = db.query(models.Rooms).filter(models.Rooms.name_room == room.name_room).first()
+    if existing_room:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"Room {existing_room.name_room} already exists")
     
-    post = models.Rooms(**post.dict())
-    db.add(post)
+    room = models.Rooms(**room.dict())
+    db.add(room)
     db.commit()
-    db.refresh(post)    
-    return post
+    db.refresh(room)    
+    return room
 
 
 
 @router.get("/{name_room}", response_model=schemas.RoomPost)
-async def get_post(name_room: str, db: Session = Depends(get_db)):
+async def get_room(name_room: str, db: Session = Depends(get_db)):
     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room).first()
     
     if not post:
@@ -39,7 +43,7 @@ async def get_post(name_room: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(name_room: str, db: Session = Depends(get_db)):
+def delete_room(name_room: str, db: Session = Depends(get_db)):
     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     
     if post.first() == None:
