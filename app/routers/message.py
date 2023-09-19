@@ -11,8 +11,9 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.MessagePost])
-async def get_posts(db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
-    posts = db.query(models.Message).all()
+async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""): # , current_user: int = Depends(oauth2.get_current_user)
+    
+    posts = db.query(models.Message).filter(models.Message.message.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 
