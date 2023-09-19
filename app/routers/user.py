@@ -12,14 +12,24 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
+    existing_user = db.query(models.User).filter(models.User.user_name == user.user_name).first()
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"User {existing_user.user_name} already exists")
+    
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
-
+    
+    
     new_user = models.User(**user.dict())
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)    
+    db.refresh(new_user) 
+    
     return new_user
+     
+        
+    
 
 
 @router.get('/{id}', response_model=schemas.UserOut)

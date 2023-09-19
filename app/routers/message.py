@@ -29,8 +29,7 @@ async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.MessagePost)
 async def create_post(post: schemas.MessageCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)): # , current_user: int = Depends(oauth2.get_current_user)
     
-    # print(current_user.id)
-    # print(current_user.user_name)
+
     post = models.Message(owner_id=current_user.id, **post.dict())
     db.add(post)
     db.commit()
