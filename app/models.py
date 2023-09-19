@@ -43,8 +43,8 @@ class User_Status(Base):
     __tablename__ = 'user_status' 
     
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    room_name = Column(String, nullable=False, unique=True)
-    user_id = Column(Integer, nullable=False, unique=True)
+    room_name = Column(String, nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     user_name = Column(String, nullable=False)
     status = Column(Boolean, server_default='True', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
