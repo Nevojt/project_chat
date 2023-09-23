@@ -12,16 +12,17 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.MessagePost])
-async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""): # , current_user: int = Depends(oauth2.get_current_user)
+async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
     posts = db.query(models.Message).filter(models.Message.message.contains(search)).limit(limit).offset(skip).all()
     return posts
 
 
 @router.get("/{rooms}", response_model=List[schemas.MessagePost])
-async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):  # , current_user: int = Depends(oauth2.get_current_user)
+async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
+                   limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
-    post = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(asc(models.Message.created_at)).all()
+    post = db.query(models.Message).filter(models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(asc(models.Message.created_at)).limit(limit).offset(skip).all()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,

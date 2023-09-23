@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from pydantic.types import conint
         
@@ -19,7 +19,9 @@ class MessageCreate(MessageBase):
 
 class UserOut(BaseModel):
     id: int
+    email: EmailStr
     user_name: str
+    avatar: str
     created_at: datetime
     
     class Config:
@@ -59,7 +61,6 @@ class RoomPost(RoomBase):
 
         
 class UserStatus(BaseModel):
-    id: int
     room_name: str
     user_name: str
     user_id: int
@@ -78,12 +79,14 @@ class UserStatusPost(UserStatus):
         
         
 class UserCreate(BaseModel):
+    email: EmailStr
     user_name: str
     password: str
+    avatar: str
     
         
 class UserLogin(BaseModel):
-    user_name: str
+    email: EmailStr
     password: str
 
 
