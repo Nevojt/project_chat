@@ -43,7 +43,7 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(name_room: str, db: Session = Depends(get_db)):
+def delete_room(name_room: str, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     
     if post.first() == None:
@@ -56,7 +56,7 @@ def delete_room(name_room: str, db: Session = Depends(get_db)):
 
 
 @router.put("/{name_room}", response_model=schemas.RoomPost)
-def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = Depends(get_db)):
+def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
     
     post_query = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     post = post_query.first()
