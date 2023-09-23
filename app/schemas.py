@@ -5,9 +5,7 @@ from pydantic.types import conint
         
         
 class MessageBase(BaseModel):
-    name: str
     message: str
-    avatar: str
     is_privat: bool = False
     receiver: Optional[int]
     rooms: str
@@ -19,7 +17,6 @@ class MessageCreate(MessageBase):
 
 class UserOut(BaseModel):
     id: int
-    email: EmailStr
     user_name: str
     avatar: str
     created_at: datetime
