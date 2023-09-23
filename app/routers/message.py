@@ -1,5 +1,6 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
+from sqlalchemy import asc
 from ..database import get_db
 from .. import models, schemas, oauth2
 from typing import List, Optional
@@ -20,7 +21,7 @@ async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 
 @router.get("/{rooms}", response_model=List[schemas.MessagePost])
 async def get_post(rooms: str, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):  # , current_user: int = Depends(oauth2.get_current_user)
     
-    post = db.query(models.Message).filter(models.Message.rooms == rooms).all()
+    post = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(asc(models.Message.created_at)).all()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
