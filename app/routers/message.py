@@ -1,6 +1,6 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-from sqlalchemy import asc
+from sqlalchemy import asc, func
 from ..database import get_db
 from .. import models, schemas, oauth2
 from typing import List, Optional
@@ -18,16 +18,20 @@ async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 
     return posts
 
 
-@router.get("/{rooms}", response_model=List[schemas.MessagePost])
+@router.get("/{rooms}", response_model=List[schemas.MessageOut])
 async def get_post(rooms: str, db: Session = Depends(get_db),
                    limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
     post = db.query(models.Message).filter(models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(asc(models.Message.created_at)).limit(limit).offset(skip).all()
     
-    if not post:
+    result = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
+        models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
+            models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(
+                asc(models.Message.created_at)).limit(limit).offset(skip).all()
+    if not post:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with rooms: {rooms} not found")
-    return post
+    return result
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.MessagePost)

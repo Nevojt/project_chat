@@ -34,6 +34,13 @@ class MessagePost(MessageBase):
     class Config:
         from_attributes = True
         
+class MessageOut(BaseModel):
+    Message: MessagePost
+    votes: int
+    
+    class Config:
+        from_attributes = True
+        
         
         
         
