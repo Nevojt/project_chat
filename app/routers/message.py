@@ -11,10 +11,13 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.MessagePost])
+@router.get("/", response_model=List[schemas.MessageOut])
 async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
-    posts = db.query(models.Message).filter(models.Message.message.contains(search)).limit(limit).offset(skip).all()
+    posts = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
+        models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
+            models.Message.message.contains(search)).order_by(
+                asc(models.Message.created_at)).limit(limit).offset(skip).all()
     return posts
 
 
@@ -22,16 +25,15 @@ async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 
 async def get_post(rooms: str, db: Session = Depends(get_db),
                    limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
-    post = db.query(models.Message).filter(models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(asc(models.Message.created_at)).limit(limit).offset(skip).all()
     
-    result = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
+    post = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
             models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(
                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
     if not post:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with rooms: {rooms} not found")
-    return result
+    return post
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.MessagePost)
