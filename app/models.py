@@ -13,7 +13,7 @@ class Rooms(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     name_room = Column(String, nullable=False, unique=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    image_room = Column(String, nullable=False, server_default='https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/Content%20Home%20page/Desktop/weight-lifting-1284616_640.jpg')
+    image_room = Column(String, nullable=False)
     
         
 class Message(Base):

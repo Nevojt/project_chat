@@ -53,8 +53,10 @@ class RoomBase(BaseModel):
 class RoomCreate(RoomBase):
     pass
 
-class RoomPost(RoomBase):
+class RoomPost(BaseModel):
     id: int
+    name_room: str
+    image_room: str
     created_at: datetime
 
     class Config:

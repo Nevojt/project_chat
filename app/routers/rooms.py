@@ -55,8 +55,8 @@ def delete_room(name_room: str, db: Session = Depends(get_db), get_current_user:
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{name_room}", response_model=schemas.RoomPost)
-def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+@router.put("/{name_room}")
+def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
     
     post_query = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     post = post_query.first()
@@ -68,4 +68,4 @@ def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = D
     post_query.update(update_post.dict(), synchronize_session=False)
     
     db.commit()
-    return post_query.first()
+    return {"Message": f"Room {name_room} update"}     #post_query.first()
