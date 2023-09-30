@@ -56,3 +56,11 @@ class Vote(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     message_id = Column(Integer, ForeignKey("messagesDev.id", ondelete="CASCADE"), primary_key=True)
     
+    
+class ImagesAll(Base):
+    __tablename__ = 'imagesAll'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    images = Column(String, nullable=False)
+    image_room = Column(String, nullable=False)
+    

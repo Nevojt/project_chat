@@ -63,7 +63,19 @@ class RoomPost(RoomBase):
     class Config:
         from_attributes = True
         
+        
+class Images(BaseModel):
+    images: str
+    image_room: str
+    
+class ImagesCreate(Images):
+    pass
+       
+class ImagesResponse(Images):
+    id: int
 
+    class Config:
+        from_attributes = True
 
 
         
