@@ -7,7 +7,6 @@ from pydantic.types import conint
 class MessageBase(BaseModel):
     message: str
     is_privat: bool = False
-    # receiver_id: Optional[int]
     rooms: str
     
     
@@ -23,6 +22,7 @@ class UserOut(BaseModel):
     
     class Config:
         from_attributes = True
+    
         
 
 class MessagePost(MessageBase):
@@ -111,6 +111,17 @@ class UserCreate(BaseModel):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    
+    
+class UserInfo(BaseModel):
+    id: int
+    email: str
+    user_name: str
+    avatar: str
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):

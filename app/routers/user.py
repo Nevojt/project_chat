@@ -2,6 +2,7 @@ from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .. import models, schemas, utils, oauth2
+from typing import List
 
 router = APIRouter(
     prefix="/users",
@@ -41,3 +42,9 @@ def get_users(id: int, db: Session = Depends(get_db)):
                             detail=f"User with id {id} not found")
         
     return user
+
+
+@router.get("/", response_model=List[schemas.UserInfo])
+async def get_email(db: Session = Depends(get_db)):
+    posts = db.query(models.User).all()
+    return posts
