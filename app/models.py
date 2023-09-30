@@ -36,12 +36,12 @@ class Message(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     message = Column(String, nullable=False)
     is_privat = Column(Boolean, server_default='False', nullable=False)
-    receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    receiver = Column(Integer, nullable=False)
+    rooms = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
-    owner = relationship('User', foreign_keys=[owner_id])
-    receiver = relationship('User', foreign_keys=[receiver_id])
+    owner = relationship('User')
+    
     
 class User(Base):
     __tablename__ = 'users'
