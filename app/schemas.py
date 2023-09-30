@@ -7,7 +7,7 @@ from pydantic.types import conint
 class MessageBase(BaseModel):
     message: str
     is_privat: bool = False
-    receiver: Optional[int]
+    # receiver_id: Optional[int]
     rooms: str
     
     
@@ -29,7 +29,10 @@ class MessagePost(MessageBase):
     id: int
     created_at: datetime
     owner_id: int
+    receiver_id: int
+    
     owner: UserOut
+    receiver: UserOut
     
     class Config:
         from_attributes = True
