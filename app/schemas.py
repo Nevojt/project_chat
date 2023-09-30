@@ -53,10 +53,8 @@ class RoomBase(BaseModel):
 class RoomCreate(RoomBase):
     pass
 
-class RoomPost(BaseModel):
+class RoomPost(RoomBase):
     id: int
-    name_room: str
-    image_room: str
     created_at: datetime
 
     class Config:
@@ -74,6 +72,10 @@ class UserStatus(BaseModel):
     
 class UserStatusCreate(UserStatus):
     pass
+
+class UserStatusUpdate(BaseModel):
+    room_name: str
+    status: bool = True
 
 class UserStatusPost(UserStatus):
     id: int

@@ -17,7 +17,7 @@ async def get_rooms(db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.RoomPost)
-async def create_room(room: schemas.RoomCreate, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+async def create_room(room: schemas.RoomCreate, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
     
     existing_room = db.query(models.Rooms).filter(models.Rooms.name_room == room.name_room).first()
     if existing_room:
@@ -43,16 +43,19 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(name_room: str, db: Session = Depends(get_db), get_current_user: str = Depends(oauth2.get_current_user)):
+def delete_room(name_room: str, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     
     if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with name_room: {name_room} not found")
+                            detail=f"Room with: {name_room} not found")
     
     post.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+
 
 
 @router.put("/{name_room}")
@@ -68,4 +71,4 @@ def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = D
     post_query.update(update_post.dict(), synchronize_session=False)
     
     db.commit()
-    return {"Message": f"Room {name_room} update"}     #post_query.first()
+    return {"Message": f"Room {name_room} update"}

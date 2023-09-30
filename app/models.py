@@ -17,15 +17,15 @@ class Rooms(Base):
     
         
 class Message(Base):
-    __tablename__ ='messagesDev' # 'messagesDev'
+    __tablename__ ='messagesDev'
     
     id = Column(Integer, primary_key=True, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     message = Column(String, nullable=False)
     is_privat = Column(Boolean, server_default='False', nullable=False)
     receiver = Column(Integer, nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    rooms = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE"), nullable=False)
+    owner_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     owner = relationship('User')
     
@@ -43,8 +43,8 @@ class User_Status(Base):
     __tablename__ = 'user_status' 
     
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    room_name = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'),nullable=False)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    room_name = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE"),nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),unique=True, nullable=False)
     user_name = Column(String, nullable=False)
     status = Column(Boolean, server_default='True', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
@@ -53,6 +53,6 @@ class User_Status(Base):
 class Vote(Base):
     __tablename__ = 'votes'
     
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), primary_key=True)
-    message_id = Column(Integer, ForeignKey('messagesDev.id', ondelete='CASCADE'), primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    message_id = Column(Integer, ForeignKey("messagesDev.id", ondelete="CASCADE"), primary_key=True)
     

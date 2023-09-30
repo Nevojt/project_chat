@@ -67,6 +67,7 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+
 @router.put("/{id}", response_model=schemas.MessagePost)
 def update_post(id: int, update_post: schemas.MessageCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     

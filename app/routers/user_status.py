@@ -27,6 +27,7 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserStatusPost)
 async def create_posts(post: schemas.UserStatusCreate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+
     
     # print(current_user.user_name)
     post = models.User_Status(**post.dict())
@@ -38,7 +39,7 @@ async def create_posts(post: schemas.UserStatusCreate, db: Session = Depends(get
 
 
 @router.put("/{user_id}", response_model=schemas.UserStatusPost)
-def update_post(user_id: int, update_post: schemas.UserStatusCreate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+def update_post(user_id: int, update_post: schemas.UserStatusUpdate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     
     post_query = db.query(models.User_Status).filter(models.User_Status.user_id == user_id)
     post = post_query.first()
