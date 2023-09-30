@@ -7,6 +7,7 @@ from pydantic.types import conint
 class MessageBase(BaseModel):
     message: str
     is_privat: bool = False
+    receiver_id: int = 1
     rooms: str
     
     
