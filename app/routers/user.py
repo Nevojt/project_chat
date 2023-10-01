@@ -27,6 +27,11 @@ def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user) 
     
+    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, room_name="Holl")
+    db.add(post)
+    db.commit()
+    db.refresh(post) 
+    
     return new_user
      
         

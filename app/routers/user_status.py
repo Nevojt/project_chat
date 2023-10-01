@@ -25,16 +25,16 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
                             detail=f"post with user_name: {user_name} not found")
     return post
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserStatusPost)
-async def create_posts(post: schemas.UserStatusCreate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+# @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserStatusPost)
+# async def create_posts(post: schemas.UserStatusCreate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
 
     
-    # print(current_user.user_name)
-    post = models.User_Status(**post.dict())
-    db.add(post)
-    db.commit()
-    db.refresh(post)    
-    return post
+#     # print(current_user.user_name)
+#     post = models.User_Status(**post.dict())
+#     db.add(post)
+#     db.commit()
+#     db.refresh(post)    
+#     return post
 
 
 
