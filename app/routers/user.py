@@ -33,13 +33,13 @@ def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
 
 
-@router.get('/{id}', response_model=schemas.UserOut)
-def get_users(id: int, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == id).first()
+@router.get('/{email}', response_model=schemas.UserInfo)
+def get_user_mail(email: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == email).first()
     
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with id {id} not found")
+                            detail=f"User with email {email} not found")
         
     return user
 
