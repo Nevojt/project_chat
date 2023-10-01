@@ -6,8 +6,6 @@ from .database import engine
 from .routers import message, user, rooms, auth, user_status, vote, images
 
 
-
-
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -23,7 +21,6 @@ app.add_middleware(
 )
 
 
-
 app.include_router(message.router)
 app.include_router(rooms.router)
 app.include_router(auth.router)
@@ -37,5 +34,5 @@ app.include_router(images.router)
 app.include_router(user.router)
 
 @app.get('/')
-def start():
+async def start():
     return {"status": "Hello World"}
