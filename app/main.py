@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import models
 from .database import engine
 from .routers import message, user, rooms, auth, user_status, vote, images
-
+import soket
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -28,6 +28,7 @@ app.include_router(user_status.router)
 app.include_router(vote.router)
 app.include_router(images.router)
 
+app.include_router(soket.router)
 
 
 
