@@ -2,7 +2,8 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response, WebSocket
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app import models, schemas
+from app import models, schemas, oauth2
+from typing import List
 
 router = APIRouter(
     prefix="/ws",
@@ -22,8 +23,8 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
 
 
 
-def save_message(db: Session, message_data: schemas.MessagePost):
-    message = models.Message(**message_data.dict())
+def save_message(db: Session, message_data: schemas.MessageCreate, current_user: int = Depends(oauth2.get_current_user)):
+    message = models.Message(owner_id=current_user.id, **message_data.dict())
     db.add(message)
     db.commit()
     db.refresh(message)
