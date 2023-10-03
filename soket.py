@@ -13,7 +13,7 @@ router = APIRouter(
 
 
 @router.websocket("/")
-async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
+async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
