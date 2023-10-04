@@ -5,15 +5,13 @@ from app.database import get_db
 from app import models, schemas, oauth2
 from typing import List
 
-router = APIRouter(
-    prefix="/ws",
-    tags="Socket"
-)
+router = APIRouter()
 
 
 
-@router.websocket("/")
-async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
     await websocket.accept()
     while True:
         data = await websocket.receive_text()
