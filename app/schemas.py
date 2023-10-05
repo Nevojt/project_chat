@@ -73,7 +73,7 @@ class ImagesCreate(Images):
     pass
        
 class ImagesResponse(Images):
-    id: int
+    id: Optional[int]
 
     class Config:
         from_attributes = True
