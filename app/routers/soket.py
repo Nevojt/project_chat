@@ -12,11 +12,11 @@ import json
 router = APIRouter()
 
 
-@router.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)):
+@router.websocket("/ws/{rooms}")
+async def websocket_endpoint(websocket: WebSocket, rooms: str, db: Session = Depends(get_db)):
     await websocket.accept()
     
-    messages = await get_messages(db)
+    messages = await get_messages(db, rooms)
     serialized_messages = [row_to_dict(message) for message in messages]
     await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
 
@@ -39,10 +39,15 @@ async def websocket_endpoint(websocket: WebSocket, db: Session = Depends(get_db)
         await websocket.send_json(f"Message saved with ID: {message.id}")
 
 
-async def get_messages(db: Session = Depends(get_db)):
-
-    posts = db.query(models.Message).all()
+async def get_messages(db: Session = Depends(get_db), rooms: str = None):
+    query = db.query(models.Message)
+    
+    if rooms is not None:
+        query = query.filter(models.Message.rooms == rooms)
+    
+    posts = query.all()  # Remove the .all() here
     return posts
+
 
 def row_to_dict(row) -> dict:
     data =  {column.name: getattr(row, column.name) for column in row.__table__.columns}
