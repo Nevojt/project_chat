@@ -13,40 +13,52 @@ router = APIRouter()
 
 
 @router.websocket("/ws/{rooms}")
-
 async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
-    if token is None:
-        await websocket.close(code=1008)  # Close the WebSocket connection if token is missing
+    try:
+        if token is None:
+            await websocket.close(code=1008)  # Close the WebSocket connection if token is missing
+            return
 
-    user = oauth2.get_current_user(token, db)
+        user = oauth2.get_current_user(token, db)
 
-    if user is None:
-        await websocket.close(code=1008)  # Close the WebSocket connection if the token is invalid
+        if user is None:
+            await websocket.close(code=1008)  # Close the WebSocket connection if the token is invalid
+            return
 
-    await websocket.accept()
-    await websocket.send_text(f"Welcome, {user.user_name}!")
-    
-    messages = await get_messages(db, rooms)
-    serialized_messages = [row_to_dict(message) for message in messages]
-    await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
+        await websocket.accept()
+        await websocket.send_text(f"Welcome, {user.user_name}!")
 
+        messages = await get_messages(db, rooms)
+        serialized_messages = []
 
-    while True:
-        data = await websocket.receive_text()
-        await websocket.send_text(f"Received: {data}")
-        
-        try:
-            message_data = schemas.MessageCreate.parse_raw(data)
-            
-        except WebSocketDisconnect:
-            await websocket.close()
-            
-        except Exception as e:
-            await websocket.send_text(f"Error parsing data: {str(e)}")
-            continue 
+        for message in messages:
+            message_dict = row_to_dict(message)
+            message_dict["votes"] = 0  # Додайте ключ "votes" і встановіть його значення на ваш розсуд
+            serialized_messages.append(message_dict)
 
-        message = await create_message(message_data,  user, db)
-        await websocket.send_text(f"Message saved with ID: {message.id}")
+        await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
+
+        while True:
+            data = await websocket.receive_text()
+
+            try:
+                message_data = schemas.MessageCreate.parse_raw(data)
+                message = await create_message(message_data, user, db)
+                
+                # Optional: Send a confirmation message to the client if needed.
+                # await websocket.send_text(f"Message saved with ID: {message.id}")
+            except WebSocketDisconnect:
+                await websocket.close()
+                break
+            except Exception as e:
+                await websocket.send_text(f"Error parsing data: {str(e)}")
+                continue
+
+    except Exception as e:
+        await websocket.send_text(f"An error occurred: {str(e)}")
+    finally:
+        await websocket.close()
+
         
         
         
@@ -106,7 +118,7 @@ def row_to_dict(row) -> dict:
                 "receiver": receiver_data
             }
 
-            result_data["Message"] = message_data  # Додайте дані повідомлення до нового словника
+            result_data["message"] = message_data  # Додайте дані повідомлення до нового словника
         else:
             result_data[key] = value  # Збережіть інші дані без змін
 
@@ -118,9 +130,11 @@ def row_to_dict(row) -> dict:
 
 
 async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
-    
-    post = models.Message(owner_id=current_user.id, **post.dict())
-    db.add(post)
+    message = models.Message(owner_id=current_user.id, **post.dict())
+    db.add(message)
     db.commit()
-    db.refresh(post)    
-    return post
+    db.refresh(message)
+    
+    serialized_message = row_to_dict(message)  # Серіалізуємо повідомлення
+    
+    return serialized_message  # Повертаємо серіалізоване повідомлення
