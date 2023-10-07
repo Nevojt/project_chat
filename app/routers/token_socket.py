@@ -33,7 +33,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
         for message in messages:
             message_dict = row_to_dict(message)
-            message_dict["votes"] = 0  # Додайте ключ "votes" і встановіть його значення на ваш розсуд
+            # message_dict["votes"] = 0  # Додайте ключ "votes" і встановіть його значення на ваш розсуд
             serialized_messages.append(message_dict)
 
         await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
