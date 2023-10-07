@@ -30,6 +30,8 @@ class Message(Base):
     owner = relationship('User', foreign_keys=[owner_id])
     receiver = relationship('User', foreign_keys=[receiver_id])
     
+
+    
 class User(Base):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
