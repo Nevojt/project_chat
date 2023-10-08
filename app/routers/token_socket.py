@@ -134,7 +134,7 @@ async def create_message(post: schemas.MessageCreate, current_user: models.User,
     db.add(message)
     db.commit()
     db.refresh(message)
-    
+ 
     serialized_message = row_to_dict(message)  # Серіалізуємо повідомлення
     
     return serialized_message  # Повертаємо серіалізоване повідомлення
