@@ -31,3 +31,6 @@ app.include_router(token_socket.router)
 
 app.include_router(user.router)
 
+@app.get("/")
+def home():
+    return {"message": "Welcome to the club!"}
