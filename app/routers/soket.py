@@ -62,7 +62,7 @@ def row_to_dict(row) -> dict:
 
 
 async def create_message(post: schemas.MessageCreate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    print(current_user)
+    # print(current_user)
     
     post = models.Message(owner_id=current_user.id, **post.dict())
     db.add(post)
