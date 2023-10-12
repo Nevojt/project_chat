@@ -6,7 +6,6 @@ from app import models, schemas, oauth2
 from datetime import datetime
 import json
 from typing import List, Optional
-  # Import your token verification function
 
 router = APIRouter()
 
@@ -26,14 +25,13 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             return
 
         await websocket.accept()
-        await websocket.send_text(f"Welcome, {user.user_name}!")
+        # await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
         serialized_messages = []
 
         for message in messages:
             message_dict = row_to_dict(message)
-            # message_dict["votes"] = 0  # Додайте ключ "votes" і встановіть його значення на ваш розсуд
             serialized_messages.append(message_dict)
 
         await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
@@ -45,8 +43,6 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
                 message_data = schemas.MessageCreate.parse_raw(data)
                 message = await create_message(message_data, user, db)
                 
-                # Optional: Send a confirmation message to the client if needed.
-                # await websocket.send_text(f"Message saved with ID: {message.id}")
             except WebSocketDisconnect:
                 await websocket.close()
                 break
