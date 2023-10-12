@@ -33,4 +33,4 @@ app.include_router(user.router)
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to the club!"}
+    return {"message": "Welcome to the club! Hello Rooms"}
