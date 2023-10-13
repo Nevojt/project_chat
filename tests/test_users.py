@@ -7,4 +7,4 @@ client = TestClient(app)
 
 def test_root():
     res = client.get("/")
-    print(res)
+    print(res.status_code)
