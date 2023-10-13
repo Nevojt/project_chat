@@ -1,7 +1,6 @@
 
 from sqlalchemy import create_engine, pool
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
