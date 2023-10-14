@@ -24,7 +24,7 @@ async def create_room(room: schemas.RoomCreate, db: Session = Depends(get_db), c
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"Room {existing_room.name_room} already exists")
     
-    room = models.Rooms(**room.dict())
+    room = models.Rooms(**room.model_dump())
     db.add(room)
     db.commit()
     db.refresh(room)    
@@ -68,7 +68,7 @@ def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = D
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with name_room: {name_room} not found")
     
-    post_query.update(update_post.dict(), synchronize_session=False)
+    post_query.update(update_post.model_dump(), synchronize_session=False)
     
     db.commit()
     return {"Message": f"Room {name_room} update"}

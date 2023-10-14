@@ -48,7 +48,7 @@ def update_post(user_id: int, update_post: schemas.UserStatusUpdate, db: Session
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"post with user_id: {user_id} not found")
     
-    post_query.update(update_post.dict(), synchronize_session=False)
+    post_query.update(update_post.model_dump(), synchronize_session=False)
     
     db.commit()
     return post_query.first()

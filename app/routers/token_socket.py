@@ -126,7 +126,7 @@ def row_to_dict(row) -> dict:
 
 
 async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
-    message = models.Message(owner_id=current_user.id, **post.dict())
+    message = models.Message(owner_id=current_user.id, **post.model_dump())
     db.add(message)
     db.commit()
     db.refresh(message)
