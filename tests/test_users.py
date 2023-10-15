@@ -21,4 +21,4 @@ def test_created_user():
     
     new_user = schemas.UserOut(**res.json())
     assert new_user.user_name == "TestUser"
-    assert res.status_code == 201
+    assert res.status_code == 201 # status code for successful
