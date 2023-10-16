@@ -25,7 +25,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             return
 
         await websocket.accept()
-        # await websocket.send_text(f"Welcome, {user.user_name}!")
+        await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
         serialized_messages = []
