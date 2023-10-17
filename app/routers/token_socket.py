@@ -1,4 +1,5 @@
-from fastapi import WebSocket, Depends, APIRouter, status, HTTPException, WebSocketDisconnect
+from fastapi import WebSocket, Depends, APIRouter, status, HTTPException
+from fastapi.websockets import WebSocketState, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc
 from app.database import get_db
@@ -14,7 +15,7 @@ active_websockets = {}
 @router.websocket("/ws/{rooms}")
 async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
     
-
+    user = None
     try:
         if token is None:
             await websocket.close(code=1008)  # Close the WebSocket connection if token is missing
@@ -49,7 +50,8 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
                 
             except WebSocketDisconnect:
-                del active_websockets[user.user_name]
+                if user and user.user_name in active_websockets:
+                    del active_websockets[user.user_name]
                 await websocket.close()
                 break
             except Exception as e:
@@ -58,8 +60,12 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
     except Exception as e:
         await websocket.send_text(f"An error occurred: {str(e)}")
-    finally:
+        if user and user.user_name in active_websockets:
+            del active_websockets[user.user_name]
         await websocket.close()
+    finally:
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            await websocket.close()
 
         
         
