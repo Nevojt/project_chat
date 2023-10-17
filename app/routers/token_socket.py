@@ -42,27 +42,19 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
         while True:
             data = await websocket.receive_text()
-            try:
-                message_data = schemas.MessageCreate.model_validate_json(data)
-                serialized_message = await create_message(message_data, user, db)
-                for ws in active_websockets.values():
+            message_data = schemas.MessageCreate.model_validate_json(data)
+            serialized_message = await create_message(message_data, user, db)
+            for ws in active_websockets.values():
+                if ws != websocket:  # Опціонально: відправити повідомлення всім, крім відправника
                     await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
 
-                
-            except WebSocketDisconnect:
-                if user and user.user_name in active_websockets:
-                    del active_websockets[user.user_name]
-                await websocket.close()
-                break
-            except Exception as e:
-                await websocket.send_text(f"Error parsing data: {str(e)}")
-                continue
-
+    except WebSocketDisconnect:
+        if user and user.user_name in active_websockets:
+            del active_websockets[user.user_name]
     except Exception as e:
         await websocket.send_text(f"An error occurred: {str(e)}")
         if user and user.user_name in active_websockets:
             del active_websockets[user.user_name]
-        await websocket.close()
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
