@@ -44,12 +44,17 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
             serialized_message = await create_message(message_data, user, db)
-            for ws in active_websockets.values():
-                await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
+            for username, ws in list(active_websockets.items()):
+                if ws.client_state == WebSocketState.CONNECTED:
+                    await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
+                else:
+                    active_websockets.pop(username)  # видаляємо вебсокет, якщо він не підключений
+
 
     except WebSocketDisconnect:
-        if user and user.user_name in active_websockets:
-            del active_websockets[user.user_name]
+        if user:
+            active_websockets.pop(user.user_name, None) # це видаляє вебсокет зі словника, якщо він там є
+
     except Exception as e:
         await websocket.send_text(f"An error occurred: {str(e)}")
         if user and user.user_name in active_websockets:
