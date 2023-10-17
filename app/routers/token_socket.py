@@ -9,10 +9,12 @@ from typing import List, Optional
 
 router = APIRouter()
 
-
+active_websockets = {}
 
 @router.websocket("/ws/{rooms}")
 async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
+    
+
     try:
         if token is None:
             await websocket.close(code=1008)  # Close the WebSocket connection if token is missing
@@ -25,6 +27,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             return
 
         await websocket.accept()
+        active_websockets[user.user_name] = websocket
         await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
@@ -33,17 +36,20 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         for message in messages:
             message_dict = row_to_dict(message)
             serialized_messages.append(message_dict)
-
+        
         await websocket.send_text(json.dumps(serialized_messages, ensure_ascii=False))
 
         while True:
             data = await websocket.receive_text()
-
             try:
-                message_data = schemas.MessageCreate.parse_raw(data)
-                message = await create_message(message_data, user, db)
+                message_data = schemas.MessageCreate.model_validate_json(data)
+                serialized_message = await create_message(message_data, user, db)
+                for ws in active_websockets.values():
+                    await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
+
                 
             except WebSocketDisconnect:
+                del active_websockets[user.user_name]
                 await websocket.close()
                 break
             except Exception as e:
