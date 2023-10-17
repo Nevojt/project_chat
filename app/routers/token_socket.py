@@ -45,8 +45,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             message_data = schemas.MessageCreate.model_validate_json(data)
             serialized_message = await create_message(message_data, user, db)
             for ws in active_websockets.values():
-                if ws != websocket:  # Опціонально: відправити повідомлення всім, крім відправника
-                    await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
+                await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
 
     except WebSocketDisconnect:
         if user and user.user_name in active_websockets:
@@ -60,8 +59,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             await websocket.close()
 
         
-        
-        
+         
         
 async def get_messages(db: Session = Depends(get_db), rooms: str = None):
     query = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).filter(
