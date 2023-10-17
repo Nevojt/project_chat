@@ -15,9 +15,7 @@ active_websockets = {}
 @router.websocket("/ws/{rooms}")
 async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
     
-    if rooms not in active_websockets:
-        active_websockets[rooms] = {}
-    active_websockets[rooms][user.user_name] = websocket
+
 
     
     user = None
@@ -33,7 +31,9 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             return
 
         await websocket.accept()
-        active_websockets[user.user_name] = websocket
+        if rooms not in active_websockets:
+            active_websockets[rooms] = {}
+        active_websockets[rooms][user.user_name] = websocket
         await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
