@@ -45,14 +45,12 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
-            print(message_data)
             await create_message(message_data, user, db)
             one_message = await get_latest_message(db, rooms)
             
             if rooms in active_websockets:
                 for username, ws in list(active_websockets[rooms].items()):
                     if ws.client_state == WebSocketState.CONNECTED:
-
                         await ws.send_text(json.dumps(one_message, ensure_ascii=False))
                     else:
                         active_websockets[rooms].pop(username)  # видаляємо вебсокет, якщо він не підключений
