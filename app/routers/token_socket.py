@@ -1,7 +1,7 @@
 from fastapi import WebSocket, Depends, APIRouter, status, HTTPException
 from fastapi.websockets import WebSocketState, WebSocketDisconnect
 from sqlalchemy.orm import Session
-from sqlalchemy import func, asc
+from sqlalchemy import func, desc
 from app.database import get_db
 from app import models, schemas, oauth2
 from datetime import datetime
@@ -14,9 +14,6 @@ active_websockets = {}
 
 @router.websocket("/ws/{rooms}")
 async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
-    
-
-
     
     user = None
     try:
@@ -48,16 +45,18 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
+            print(message_data)
             serialized_message = await create_message(message_data, user, db)
+            one_message =await get_latest_message(db, rooms)
+            # print(serialized_message)
             
             if rooms in active_websockets:
                 for username, ws in list(active_websockets[rooms].items()):
                     if ws.client_state == WebSocketState.CONNECTED:
-                        await ws.send_text(json.dumps(serialized_message, ensure_ascii=False))
+
+                        await ws.send_text(json.dumps(one_message, ensure_ascii=False))
                     else:
                         active_websockets[rooms].pop(username)  # видаляємо вебсокет, якщо він не підключений
-
-
 
 
     except WebSocketDisconnect:
@@ -89,6 +88,46 @@ async def get_messages(db: Session = Depends(get_db), rooms: str = None):
     posts = [{"message": row[0], "votes": row[1]} for row in result]
     return posts
 
+async def get_latest_message(db: Session = Depends(get_db), rooms: str = None):
+    latest_message = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(desc(models.Message.created_at)).first()
+    if latest_message:
+        return {
+            "message": {
+                "id": latest_message.id,
+                "owner_id": latest_message.owner_id,
+                "message": latest_message.message,
+                "created_at": latest_message.created_at.isoformat(),
+                "rooms": latest_message.rooms,
+                "is_privat": latest_message.is_privat,
+                "receiver_id": latest_message.receiver_id,
+                "owner": {
+                    "id": latest_message.owner.id,
+                    "user_name": latest_message.owner.user_name,
+                    "avatar": latest_message.owner.avatar,
+                    "created_at": latest_message.owner.created_at.isoformat()
+                },
+                "receiver": {
+                    "id": latest_message.receiver.id,
+                    "user_name": latest_message.receiver.user_name,
+                    "avatar": latest_message.receiver.avatar,
+                    "created_at": latest_message.receiver.created_at.isoformat()
+                }
+            },
+            "votes": 0  # Ваш код для отримання голосів тут
+        }
+    else:
+        return None  # Якщо немає останнього повідомлення
+
+
+async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
+    message = models.Message(owner_id=current_user.id, **post.model_dump())
+    print(message)
+    db.add(message)
+    db.commit()
+    db.refresh(message)
+ 
+    serialized_message = row_to_dict(message)  # Серіалізуємо повідомлення
+    return serialized_message  # Повертаємо серіалізоване повідомлення
 
 def row_to_dict(row) -> dict:
     if isinstance(row, dict):
@@ -101,6 +140,7 @@ def row_to_dict(row) -> dict:
     for key, value in data.items():
         if isinstance(value, datetime):
             result_data[key] = value.isoformat()
+            
         elif isinstance(value, models.Message):
             # Створіть словник з даними користувача
             owner_data = {
@@ -141,12 +181,4 @@ def row_to_dict(row) -> dict:
 
 
 
-async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
-    message = models.Message(owner_id=current_user.id, **post.model_dump())
-    db.add(message)
-    db.commit()
-    db.refresh(message)
- 
-    serialized_message = row_to_dict(message)  # Серіалізуємо повідомлення
-    
-    return serialized_message  # Повертаємо серіалізоване повідомлення
+

@@ -39,12 +39,13 @@ class MessagePost(MessageBase):
         from_attributes = True
         
 class MessageOut(BaseModel):
-    Message: MessagePost
+    MessagePost: MessagePost
     votes: int
     
     class Config:
         from_attributes = True
         
+
         
         
         
