@@ -31,7 +31,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         
         if rooms not in active_websockets:
             active_websockets[rooms] = {}
-        active_websockets[rooms][user.user_name, user.avatar] = websocket
+        active_websockets[rooms][user.id, user.user_name, user.avatar] = websocket
         
         await websocket.send_text(f"Welcome, {user.user_name}!")
 
@@ -58,17 +58,21 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
 
     except WebSocketDisconnect:
-        if user:
-            active_websockets[rooms].pop(user.user_name, None) # це видаляє вебсокет зі словника, якщо він там є
+        if user and rooms in active_websockets:
+            key_to_remove = (user.id, user.user_name, user.avatar)
+            if key_to_remove in active_websockets[rooms]:
+                active_websockets[rooms].pop(key_to_remove)
 
+                
     except Exception as e:
         await websocket.send_text(f"An error occurred: {str(e)}")
-        if user and user.user_name in active_websockets:
-            del active_websockets[user.user_name]
+        if user and user.id in active_websockets:
+            del active_websockets[user.id]
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
-
+            
+            
 @router.get("/ws/users/{rooms}")
 async def get_users_in_room(rooms: str):
     if rooms in active_websockets:
@@ -77,7 +81,6 @@ async def get_users_in_room(rooms: str):
     else:
         return {"users": []}
       
-         
         
 async def get_messages(db: Session = Depends(get_db), rooms: str = None):
     query = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).filter(
@@ -183,7 +186,10 @@ def row_to_dict(row) -> dict:
 
 
 
-
+def remove_user_from_active(rooms, username):
+    if rooms in active_websockets and username in active_websockets[rooms]:
+        del active_websockets[rooms][username]
+     
 
 
 
