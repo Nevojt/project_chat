@@ -28,9 +28,11 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             return
 
         await websocket.accept()
+        
         if rooms not in active_websockets:
             active_websockets[rooms] = {}
         active_websockets[rooms][user.user_name] = websocket
+        
         await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
@@ -47,7 +49,6 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             message_data = schemas.MessageCreate.model_validate_json(data)
             await create_message(message_data, user, db)
             one_message = await get_latest_message(db, rooms)
-            
             
             for username, ws in list(active_websockets[rooms].items()):
                 if ws.client_state == WebSocketState.CONNECTED:
@@ -68,7 +69,14 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
 
-        
+@router.get("/ws/users/{rooms}")
+async def get_users_in_room(rooms: str):
+    if rooms in active_websockets:
+        users = list(active_websockets[rooms].keys())
+        return {"users": users}
+    else:
+        return {"users": []}
+      
          
         
 async def get_messages(db: Session = Depends(get_db), rooms: str = None):
