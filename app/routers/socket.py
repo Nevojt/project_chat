@@ -45,8 +45,8 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
-            await create_message(message_data, user, db)
-            one_message = await get_latest_message(db, rooms)
+            one_message = await create_message(message_data, user, db)
+            # one_message = await get_latest_message(db, rooms)
             
             
             for username, ws in list(active_websockets[rooms].items()):
