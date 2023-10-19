@@ -72,10 +72,10 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 @router.get("/ws/users/{rooms}")
 async def get_users_in_room(rooms: str):
     if rooms in active_websockets:
-        users = dict(active_websockets[rooms].keys())
+        users = list(active_websockets[rooms].keys())
         return {"users": users}
     else:
-        return {"users": {}}
+        return {"users": []}
       
          
         
