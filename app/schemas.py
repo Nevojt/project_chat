@@ -46,10 +46,7 @@ class MessageOut(BaseModel):
         from_attributes = True
         
 
-        
-        
-        
-        
+
 class RoomBase(BaseModel):
     name_room: str
     image_room: str
@@ -97,6 +94,7 @@ class UserStatusUpdate(BaseModel):
 class UserStatusPost(UserStatus):
     id: int
     created_at: datetime
+    
     class Config:
         from_attributes = True
     
