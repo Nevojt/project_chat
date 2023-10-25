@@ -47,9 +47,10 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
-            await create_message(message_data, user, db)
+            test = await create_message(message_data, user, db)
+
             one_message = await get_latest_message(db, rooms)
-            
+
             for username, ws in list(active_websockets[rooms].items()):
                 if ws.client_state == WebSocketState.CONNECTED:
                     await ws.send_text(json.dumps(one_message, ensure_ascii=False))
@@ -129,7 +130,6 @@ async def get_latest_message(db: Session = Depends(get_db), rooms: str = None):
 
 async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
     message = models.Message(owner_id=current_user.id, **post.model_dump())
-    print(message)
     db.add(message)
     db.commit()
     db.refresh(message)
