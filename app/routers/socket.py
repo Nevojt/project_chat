@@ -32,8 +32,6 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         if rooms not in active_websockets:
             active_websockets[rooms] = {}
         active_websockets[rooms][user.id, user.user_name, user.avatar] = websocket
-        
-        # await websocket.send_text(f"Welcome, {user.user_name}!")
 
         messages = await get_messages(db, rooms)
         serialized_messages = []
@@ -47,15 +45,21 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
-            test = await create_message(message_data, user, db)
+            await create_message(message_data, user, db)
 
             one_message = await get_latest_message(db, rooms)
+
+            users_to_remove = []
 
             for username, ws in list(active_websockets[rooms].items()):
                 if ws.client_state == WebSocketState.CONNECTED:
                     await ws.send_text(json.dumps(one_message, ensure_ascii=False))
                 else:
-                    active_websockets[rooms].pop(username)  # видаляємо вебсокет, якщо він не підключений
+                    users_to_remove.append(username)
+
+            # Видалення користувачів після завершення ітерації
+            for username in users_to_remove:
+                active_websockets[rooms].pop(username)
 
 
     except WebSocketDisconnect:
@@ -65,10 +69,10 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
                 active_websockets[rooms].pop(key_to_remove)
 
                 
-    except Exception as e:
-        await websocket.send_text(f"An error occurred: {str(e)}")
-        if user and user.id in active_websockets:
-            del active_websockets[user.id]
+    # except Exception as e:
+    #     await websocket.send_text(f"An error occurred: {str(e)}")
+    #     if user and user.id in active_websockets:
+    #         del active_websockets[user.id]
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
