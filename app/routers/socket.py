@@ -1,4 +1,4 @@
-from fastapi import WebSocket, Depends, APIRouter, status, HTTPException
+from fastapi import WebSocket, Depends, APIRouter
 from fastapi.websockets import WebSocketState, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
@@ -46,7 +46,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
             await create_message(message_data, user, db)
-
+            
             one_message = await get_latest_message(db, rooms)
 
             users_to_remove = []
@@ -102,7 +102,7 @@ async def get_messages(db: Session = Depends(get_db), rooms: str = None):
     return posts
 
 async def get_latest_message(db: Session = Depends(get_db), rooms: str = None):
-    latest_message = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(desc(models.Message.created_at)).first()
+    latest_message = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(desc(models.Message.id)).first()
     if latest_message:
         return {
             "message": {
