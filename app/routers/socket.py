@@ -31,6 +31,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         
         if rooms not in active_websockets:
             active_websockets[rooms] = {}
+            
         active_websockets[rooms][user.id, user.user_name, user.avatar] = websocket
 
         messages = await get_messages(db, rooms)
@@ -193,7 +194,3 @@ def row_to_dict(row) -> dict:
 def remove_user_from_active(rooms, username):
     if rooms in active_websockets and username in active_websockets[rooms]:
         del active_websockets[rooms][username]
-     
-
-
-
