@@ -70,10 +70,10 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
                 active_websockets[rooms].pop(key_to_remove)
 
                 
-    # except Exception as e:
-    #     await websocket.send_text(f"An error occurred: {str(e)}")
-    #     if user and user.id in active_websockets:
-    #         del active_websockets[user.id]
+    except Exception as e:
+        await websocket.send_text(f"An error occurred: {str(e)}")
+        if user and user.id in active_websockets:
+            del active_websockets[user.id]
     finally:
         if websocket.client_state != WebSocketState.DISCONNECTED:
             await websocket.close()
