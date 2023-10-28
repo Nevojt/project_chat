@@ -72,7 +72,6 @@ class Socket(Base):
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     message = Column(String, nullable=False)
-    is_privat = Column(Boolean, server_default='False', nullable=False)
     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    

@@ -49,7 +49,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, session: Asyn
     
     # Отримуємо останні повідомлення
     messages = await fetch_last_messages(session)
-    print(messages)
+
     # Відправляємо кожне повідомлення користувачеві
     for message in messages:
         await websocket.send_text(f"Previous message: {message.message}")  # або яке поле ви хочете використовувати
