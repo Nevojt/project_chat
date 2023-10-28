@@ -1,10 +1,10 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
-from app.database import get_async_session
+from app.database import get_async_session, async_session_maker
 from app import models, schemas
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import desc
+from sqlalchemy import desc, insert
 from typing import List
 
 router = APIRouter(
@@ -26,11 +26,20 @@ class ConnectionManager:
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_text(message)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: str, add_to_db: bool):
+        if add_to_db:
+            await self.add_messages_to_database(message)
         for connection in self.active_connections:
             await connection.send_text(message)
 
-
+    @staticmethod
+    async def add_messages_to_database(message: str):
+        async with async_session_maker() as session:
+            stmt = insert(models.Socket).values(message=message, rooms="Holl", receiver_id=3)
+            await session.execute(stmt)
+            await session.commit()
+            
+            
 manager = ConnectionManager()
 
 
@@ -57,7 +66,7 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, session: Asyn
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(f"Client #{client_id} says: {data}")
+            await manager.broadcast(f"Client #{client_id} says: {data}", add_to_db=True)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat")
+        await manager.broadcast(f"Client #{client_id} left the chat", add_to_db=False)

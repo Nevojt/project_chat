@@ -143,6 +143,7 @@ class SocketModel(BaseModel):
     created_at: datetime
     message: str
     rooms: str
+    receiver_id: int
     
     class Config:
         from_attributes = True

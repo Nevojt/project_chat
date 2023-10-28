@@ -11,29 +11,29 @@ router = APIRouter(
 )
 
 
-# # @router.get("/", response_model=schemas.MessageBase)
-# # async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""):
+# @router.get("/", response_model=schemas.MessageBase)
+# async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
-# #     posts = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
-# #         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
-# #             models.Message.message.contains(search)).order_by(
-# #                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
-# #     return posts
+#     posts = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
+#         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
+#             models.Message.message.contains(search)).order_by(
+#                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
+#     return posts
 
 
-# # @router.get("/{rooms}", response_model=List[schemas.MessageOut])
-# # async def get_post(rooms: str, db: Session = Depends(get_db),
-# #                    limit: int = 50, skip: int = 0, search: Optional[str] = ""):
+# @router.get("/{rooms}", response_model=List[schemas.MessageOut])
+# async def get_post(rooms: str, db: Session = Depends(get_db),
+#                    limit: int = 50, skip: int = 0, search: Optional[str] = ""):
     
     
-# #     post = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
-# #         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
-# #             models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(
-# #                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
-# #     if not post:  
-# #         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-# #                             detail=f"post with rooms: {rooms} not found")
-# #     return post
+#     post = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
+#         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
+#             models.Message.rooms == rooms, models.Message.message.contains(search)).order_by(
+#                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
+#     if not post:  
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"post with rooms: {rooms} not found")
+#     return post
 
 
 
