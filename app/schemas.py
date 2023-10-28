@@ -135,3 +135,14 @@ class TokenData(BaseModel):
 class Vote(BaseModel):
     message_id: int
     dir: conint(le=1)
+    
+    
+    
+class SocketModel(BaseModel):
+    id: int
+    created_at: datetime
+    message: str
+    rooms: str
+    
+    class Config:
+        from_attributes = True

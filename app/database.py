@@ -1,6 +1,8 @@
 
 from sqlalchemy import create_engine, pool
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from typing import AsyncGenerator
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
@@ -19,7 +21,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-def get_db() -> Session:
+async def get_db() -> Session:
     db = SessionLocal()
     try:
         yield db
@@ -27,7 +29,25 @@ def get_db() -> Session:
         db.close()
         
         
-        
+ASINC_SQLALCHEMY_DATABASE_URL = f'postgresql+asyncpg://{settings.database_name}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_username}'
+
+engine_asinc = create_async_engine(ASINC_SQLALCHEMY_DATABASE_URL)
+async_session_maker = sessionmaker(engine_asinc, class_=AsyncSession, expire_on_commit=False)
+
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    async with async_session_maker() as session:
+        yield session
+
+
+
+
+
+
+
+
+
+       
 while True:   
     try:
         conn = psycopg2.connect(host=settings.database_hostname, database=settings.database_name, user=settings.database_username,
