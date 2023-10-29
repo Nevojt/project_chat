@@ -1,7 +1,7 @@
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.database import get_async_session, async_session_maker
-from app import models, schemas
+from app import models, schemas, oauth2
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,8 +39,6 @@ class ConnectionManager:
             await self.add_messages_to_database(message, rooms, receiver_id)
             
         for connection in self.active_connections:
-
-            print(message_json)
             await connection.send_json(message_json)
 
     @staticmethod
@@ -63,7 +61,18 @@ async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel
 
 
 @router.websocket("/ws/{rooms}/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int, rooms: str, session: AsyncSession = Depends(get_async_session)):
+async def websocket_endpoint(
+    websocket: WebSocket,
+    client_id: int,
+    rooms: str,
+    token: str,
+    session: AsyncSession = Depends(get_async_session)
+    ):
+    
+    user = await oauth2.get_current_user(token, session)
+    print(user.user_name)
+
+    
     await manager.connect(websocket)
     
     # Отримуємо останні повідомлення
