@@ -1,3 +1,4 @@
+import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.database import get_async_session, async_session_maker
 from app import models, schemas
@@ -27,11 +28,20 @@ class ConnectionManager:
         await websocket.send_json(message)
 
     async def broadcast(self, message: str, rooms: str, receiver_id: int, add_to_db: bool):
+        message_data = {
+            "receiver_id": receiver_id,
+            "message": message
+            
+        }
+        message_json = json.dumps(message_data, ensure_ascii=False)
+        
         if add_to_db:
             await self.add_messages_to_database(message, rooms, receiver_id)
             
         for connection in self.active_connections:
-            await connection.send_json(message)
+
+            print(message_json)
+            await connection.send_json(message_json)
 
     @staticmethod
     async def add_messages_to_database(message: str, rooms: str, client_id: int):
