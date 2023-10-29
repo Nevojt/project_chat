@@ -24,26 +24,23 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
         
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+        await websocket.send_json(message)
 
-    async def broadcast(self, message: str, add_to_db: bool):
+    async def broadcast(self, message: str, rooms: str, receiver_id: int, add_to_db: bool):
         if add_to_db:
-            await self.add_messages_to_database(message)
+            await self.add_messages_to_database(message, rooms, receiver_id)
+            
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_json(message)
 
     @staticmethod
-    async def add_messages_to_database(message: str):
+    async def add_messages_to_database(message: str, rooms: str, client_id: int):
         async with async_session_maker() as session:
-            stmt = insert(models.Socket).values(message=message, rooms="Holl", receiver_id=3)
+            stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=client_id)
             await session.execute(stmt)
             await session.commit()
             
-            
 manager = ConnectionManager()
-
-
-
 
 
 async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel]:
@@ -52,8 +49,11 @@ async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel
     messages = result.scalars().all()
     return messages
 
-@router.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int, session: AsyncSession = Depends(get_async_session)):
+
+
+
+@router.websocket("/ws/{rooms}/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: int, rooms: str, session: AsyncSession = Depends(get_async_session)):
     await manager.connect(websocket)
     
     # Отримуємо останні повідомлення
@@ -61,12 +61,16 @@ async def websocket_endpoint(websocket: WebSocket, client_id: int, session: Asyn
 
     # Відправляємо кожне повідомлення користувачеві
     for message in messages:
-        await websocket.send_text(f"Previous message: {message.message}")  # або яке поле ви хочете використовувати
+        await websocket.send_json({message.receiver_id: message.message}) 
     
     try:
         while True:
-            data = await websocket.receive_text()
-            await manager.broadcast(f"Client #{client_id} says: {data}", add_to_db=True)
+            data = await websocket.receive_json()
+            await manager.broadcast(f"{data['message']}", rooms=rooms, receiver_id=client_id, add_to_db=True)
+
+            
+            
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat", add_to_db=False)
+        await manager.broadcast(f"Client #{client_id} left the chat", rooms=rooms, receiver_id=client_id, add_to_db=False)
+
