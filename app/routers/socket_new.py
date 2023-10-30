@@ -93,3 +93,4 @@ async def websocket_endpoint(
         manager.disconnect(websocket)
         await manager.broadcast(f"Client #{client_id} left the chat", rooms=rooms, receiver_id=client_id, add_to_db=False)
 
+# new socket connection
