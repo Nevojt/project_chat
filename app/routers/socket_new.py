@@ -9,7 +9,6 @@ from sqlalchemy import desc, insert
 from typing import List
 
 router = APIRouter(
-    prefix="/chat",
     tags=["Chat"]
 )
 
@@ -42,9 +41,9 @@ class ConnectionManager:
             await connection.send_json(message_json)
 
     @staticmethod
-    async def add_messages_to_database(message: str, rooms: str, client_id: int):
+    async def add_messages_to_database(message: str, rooms: str, user: int):
         async with async_session_maker() as session:
-            stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=client_id)
+            stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=user.id)
             await session.execute(stmt)
             await session.commit()
             
@@ -60,10 +59,9 @@ async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel
 
 
 
-@router.websocket("/ws/{rooms}/{client_id}")
+@router.websocket("/ws/{rooms}")
 async def websocket_endpoint(
     websocket: WebSocket,
-    client_id: int,
     rooms: str,
     token: str,
     session: AsyncSession = Depends(get_async_session)
@@ -85,12 +83,12 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_json()
-            await manager.broadcast(f"{data['message']}", rooms=rooms, receiver_id=client_id, add_to_db=True)
+            await manager.broadcast(f"{data['message']}", rooms=rooms, receiver_id=user.id, add_to_db=True)
 
             
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{client_id} left the chat", rooms=rooms, receiver_id=client_id, add_to_db=False)
+        await manager.broadcast(f"Client #{user.user_name} left the chat", rooms=rooms, receiver_id=user.id, add_to_db=False)
 
 # new socket connection

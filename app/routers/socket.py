@@ -2,7 +2,8 @@ from fastapi import WebSocket, Depends, APIRouter
 from fastapi.websockets import WebSocketState, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
-from app.database import get_db
+from app.database import get_async_session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app import models, schemas, oauth2
 from datetime import datetime
 import json
@@ -13,7 +14,10 @@ router = APIRouter()
 active_websockets = {}
 
 @router.websocket("/ws/{rooms}")
-async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, db: Session = Depends(get_db)):
+async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None, session: AsyncSession = Depends(get_async_session)
+    ):
+    
+    
     
     user = None
     try:
@@ -21,7 +25,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             await websocket.close(code=1008)  # Close the WebSocket connection if token is missing
             return
 
-        user = oauth2.get_current_user(token, db)
+        user = await oauth2.get_current_user(token, session)
 
         if user is None:
             await websocket.close(code=1008)  # Close the WebSocket connection if the token is invalid
@@ -34,7 +38,7 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
             
         active_websockets[rooms][user.id, user.user_name, user.avatar] = websocket
 
-        messages = await get_messages(db, rooms)
+        messages = await get_messages(session, rooms)
         serialized_messages = []
 
         for message in messages:
@@ -46,9 +50,9 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
         while True:
             data = await websocket.receive_text()
             message_data = schemas.MessageCreate.model_validate_json(data)
-            await create_message(message_data, user, db)
+            await create_message(message_data, user, session)
             
-            one_message = await get_latest_message(db, rooms)
+            one_message = await get_latest_message(session, rooms)
 
             users_to_remove = []
 
@@ -64,6 +68,8 @@ async def websocket_endpoint(websocket: WebSocket, rooms: str, token: str = None
 
 
     except WebSocketDisconnect:
+        if websocket.client_state != WebSocketState.DISCONNECTED:
+            await websocket.close()
         if user and rooms in active_websockets:
             key_to_remove = (user.id, user.user_name, user.avatar)
             if key_to_remove in active_websockets[rooms]:
@@ -88,8 +94,8 @@ async def get_users_in_room(rooms: str):
         return {"users": []}
       
         
-async def get_messages(db: Session = Depends(get_db), rooms: str = None):
-    query = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).filter(
+async def get_messages(session: AsyncSession = Depends(get_async_session), rooms: str = None):
+    query = session.query(models.Message, func.count(models.Vote.message_id).label("votes")).filter(
             models.Message.rooms == rooms)
 
     if rooms is not None:
@@ -102,8 +108,8 @@ async def get_messages(db: Session = Depends(get_db), rooms: str = None):
     posts = [{"message": row[0], "votes": row[1]} for row in result]
     return posts
 
-async def get_latest_message(db: Session = Depends(get_db), rooms: str = None):
-    latest_message = db.query(models.Message).filter(models.Message.rooms == rooms).order_by(desc(models.Message.id)).first()
+async def get_latest_message(session: AsyncSession = Depends(get_async_session), rooms: str = None):
+    latest_message = session.query(models.Message).filter(models.Message.rooms == rooms).order_by(desc(models.Message.id)).first()
     if latest_message:
         return {
             "message": {
@@ -133,11 +139,11 @@ async def get_latest_message(db: Session = Depends(get_db), rooms: str = None):
         return None  # Якщо немає останнього повідомлення
 
 
-async def create_message(post: schemas.MessageCreate, current_user: models.User, db: Session = Depends(get_db)):
+async def create_message(post: schemas.MessageCreate, current_user: models.User, session: AsyncSession = Depends(get_async_session)):
     message = models.Message(owner_id=current_user.id, **post.model_dump())
-    db.add(message)
-    db.commit()
-    db.refresh(message)
+    session.add(message)
+    session.commit()
+    session.refresh(message)
  
     serialized_message = row_to_dict(message)  # Серіалізуємо повідомлення
     return serialized_message  # Повертаємо серіалізоване повідомлення
