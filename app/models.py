@@ -63,8 +63,8 @@ class ImagesAll(Base):
     __tablename__ = 'imagesAll'
     
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    images = Column(String, nullable=False)
     image_room = Column(String, nullable=False)
+    images = Column(String, nullable=False)
     
 class Socket(Base):
     __tablename__ = 'socket'

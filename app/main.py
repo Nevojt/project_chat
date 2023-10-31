@@ -28,7 +28,7 @@ app.include_router(auth.router)
 app.include_router(user_status.router)
 app.include_router(vote.router)
 app.include_router(images.router)
-# app.include_router(socket.router)
+app.include_router(socket.router)
 app.include_router(socket_new.router)
 
 app.include_router(user.router)
