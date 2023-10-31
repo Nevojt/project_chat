@@ -139,12 +139,9 @@ class Vote(BaseModel):
     
     
 class SocketModel(BaseModel):
-    id: int
     created_at: datetime
-    message: str
-    rooms: str
     receiver_id: int
-    
+    message: str
     user_name: str
     avatar: str
     

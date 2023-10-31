@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.database import get_async_session, async_session_maker
@@ -26,8 +27,10 @@ class ConnectionManager:
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_json(message)
 
-    async def broadcast(self, message: str, rooms: str, receiver_id: int, user_name: str, avatar: str, add_to_db: bool):
+    async def broadcast(self, message: str, rooms: str, receiver_id: int, user_name: str, avatar: str, created_at: str, add_to_db: bool):
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message_data = {
+            "created_at": current_time,
             "receiver_id": receiver_id,
             "message": message,
             "user_name": user_name,
@@ -63,11 +66,9 @@ async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel
     # Convert raw messages to SocketModel
     messages = [
         schemas.SocketModel(
-            id=socket.id,
             created_at=socket.created_at,
-            message=socket.message,
-            rooms=socket.rooms,
             receiver_id=socket.receiver_id,
+            message=socket.message,
             user_name=user.user_name,
             avatar=user.avatar
         )
@@ -101,8 +102,11 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_json()
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
             await manager.broadcast(f"{data['message']}",
                                     rooms=rooms,
+                                    created_at=current_time,
                                     receiver_id=user.id,
                                     user_name=user.user_name,
                                     avatar=user.avatar,
@@ -112,8 +116,10 @@ async def websocket_endpoint(
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         await manager.broadcast(f"Client #{user.user_name} left the chat",
                                 rooms=rooms,
+                                created_at=current_time,
                                 receiver_id=user.id,
                                 user_name=user.user_name,
                                 avatar=user.avatar,
