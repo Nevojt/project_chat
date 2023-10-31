@@ -41,9 +41,9 @@ class ConnectionManager:
             await connection.send_json(message_json)
 
     @staticmethod
-    async def add_messages_to_database(message: str, rooms: str, user: int):
+    async def add_messages_to_database(message: str, rooms: str, receiver_id: int):
         async with async_session_maker() as session:
-            stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=user.id)
+            stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=receiver_id)
             await session.execute(stmt)
             await session.commit()
             
@@ -69,7 +69,7 @@ async def websocket_endpoint(
     
     user = await oauth2.get_current_user(token, session)
     print(user.user_name)
-
+    user_id = user.id
     
     await manager.connect(websocket)
     
@@ -83,12 +83,12 @@ async def websocket_endpoint(
     try:
         while True:
             data = await websocket.receive_json()
-            await manager.broadcast(f"{data['message']}", rooms=rooms, receiver_id=user.id, add_to_db=True)
+            await manager.broadcast(f"{data['message']}", rooms=rooms, receiver_id=user_id, add_to_db=True)
 
             
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        await manager.broadcast(f"Client #{user.user_name} left the chat", rooms=rooms, receiver_id=user.id, add_to_db=False)
+        await manager.broadcast(f"Client #{user.user_name} left the chat", rooms=rooms, receiver_id=user_id, add_to_db=False)
 
 # new socket connection
