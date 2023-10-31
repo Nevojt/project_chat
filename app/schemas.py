@@ -145,5 +145,8 @@ class SocketModel(BaseModel):
     rooms: str
     receiver_id: int
     
+    user_name: str
+    avatar: str
+    
     class Config:
         from_attributes = True

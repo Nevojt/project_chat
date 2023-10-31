@@ -74,4 +74,3 @@ class Socket(Base):
     message = Column(String, nullable=False)
     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
-    
