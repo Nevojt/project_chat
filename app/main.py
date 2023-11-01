@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from .database import engine
-from .routers import message, socket, user, rooms, auth, user_status, vote, images
+from .routers import message, socket, user, rooms, auth, user_status, vote, images, private_messages
 from app import models
 
 models.Base.metadata.create_all(bind=engine)
@@ -29,6 +29,7 @@ app.include_router(user_status.router)
 app.include_router(vote.router)
 app.include_router(images.router)
 app.include_router(socket.router)
+app.include_router(private_messages.router)
 app.include_router(user.router)
 
 

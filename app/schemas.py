@@ -27,6 +27,14 @@ class SocketModel(BaseModel):
     class Config:
         from_attributes = True
 
+class PrivateMessage(BaseModel):
+    created_at: datetime
+    sender_id: int
+    recipient_id: int
+    messages: str
+    
+    class Config:
+        from_attributes = True
 
 
 class RoomBase(BaseModel):
