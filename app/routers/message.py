@@ -1,24 +1,76 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Response
-from sqlalchemy.orm import Session
-from sqlalchemy import asc, func
-from ..database import get_db
-from .. import models, schemas, oauth2
-from typing import List, Optional
+from fastapi import status, HTTPException, Depends, APIRouter
+from sqlalchemy import desc
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_async_session
+from .. import models, schemas
+from sqlalchemy.future import select
+from typing import List
 
 router = APIRouter(
-    prefix="/messagesDev",
-    tags=['MessageDev'],
+    prefix="/messages",
+    tags=['Message'],
 )
 
 
-# @router.get("/", response_model=schemas.MessageBase)
-# async def get_posts(db: Session = Depends(get_db), limit: int = 50, skip: int = 0, search: Optional[str] = ""):
-    
-#     posts = db.query(models.Message, func.count(models.Vote.message_id).label("votes")).join(
-#         models.Vote, models.Vote.message_id == models.Message.id, isouter=True).group_by(models.Message.id).filter(
-#             models.Message.message.contains(search)).order_by(
-#                 asc(models.Message.created_at)).limit(limit).offset(skip).all()
-#     return posts
+@router.get("/", response_model=List[schemas.SocketModel])
+async def get_posts(session: AsyncSession = Depends(get_async_session), limit: int = 50, skip: int = 0):
+    query = select(models.Socket, models.User).join(
+        models.User, models.Socket.receiver_id == models.User.id
+    ).order_by(desc(models.Socket.id)).limit(limit).offset(skip)
+
+    result = await session.execute(query)
+    raw_messages = result.all()
+
+    # Convert raw messages to SocketModel
+    messages = [
+        schemas.SocketModel(
+            created_at=socket.created_at,
+            receiver_id=socket.receiver_id,
+            message=socket.message,
+            user_name=user.user_name,
+            avatar=user.avatar
+        )
+        for socket, user in raw_messages
+    ]
+
+    return messages
+
+
+
+@router.get("/{rooms}", response_model=List[schemas.SocketModel])
+async def get_posts(rooms: str, session: AsyncSession = Depends(get_async_session), limit: int = 50, skip: int = 0):
+   
+    query = select(models.Socket, models.User).join(
+        models.User, models.Socket.receiver_id == models.User.id
+    ).filter(models.Socket.rooms == rooms).order_by(desc(models.Socket.id)).limit(limit).offset(skip)
+
+    result = await session.execute(query)
+    raw_messages = result.all()
+
+    # Convert raw messages to SocketModel
+    messages = [
+        schemas.SocketModel(
+            created_at=socket.created_at,
+            receiver_id=socket.receiver_id,
+            message=socket.message,
+            user_name=user.user_name,
+            avatar=user.avatar
+        )
+        for socket, user in raw_messages
+    ]
+    if not messages:  
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Post with rooms: {rooms} not found")
+
+    return messages
+
+
+
+
+
+
+
+
 
 
 # @router.get("/{rooms}", response_model=List[schemas.MessageOut])

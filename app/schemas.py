@@ -4,15 +4,7 @@ from datetime import datetime
 from pydantic.types import conint
         
         
-class MessageBase(BaseModel):
-    message: str
-    is_privat: bool = False
-    receiver_id: int = 1
-    rooms: str
-    
-    
-class MessageCreate(MessageBase):
-    pass
+
 
 
 class UserOut(BaseModel):
@@ -25,26 +17,16 @@ class UserOut(BaseModel):
         from_attributes = True
     
         
-
-class MessagePost(MessageBase):
-    id: int
+class SocketModel(BaseModel):
     created_at: datetime
-    owner_id: int
     receiver_id: int
-    
-    owner: UserOut
-    receiver: UserOut
-    
-    class Config:
-        from_attributes = True
-        
-class MessageOut(BaseModel):
-    MessagePost: MessagePost
-    votes: int
+    message: str
+    user_name: str
+    avatar: str
     
     class Config:
         from_attributes = True
-        
+
 
 
 class RoomBase(BaseModel):
@@ -138,12 +120,32 @@ class Vote(BaseModel):
     
     
     
-class SocketModel(BaseModel):
-    created_at: datetime
-    receiver_id: int
-    message: str
-    user_name: str
-    avatar: str
+# class MessagePost(MessageBase):
+#     id: int
+#     created_at: datetime
+#     owner_id: int
+#     receiver_id: int
     
-    class Config:
-        from_attributes = True
+#     owner: UserOut
+#     receiver: UserOut
+    
+#     class Config:
+#         from_attributes = True
+        
+# class MessageOut(BaseModel):
+#     MessagePost: MessagePost
+#     votes: int
+    
+#     class Config:
+#         from_attributes = True
+        
+        
+# class MessageBase(BaseModel):
+#     message: str
+#     is_privat: bool = False
+#     receiver_id: int = 1
+#     rooms: str
+    
+    
+# class MessageCreate(MessageBase):
+#     pass

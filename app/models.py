@@ -1,11 +1,19 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
-from sqlalchemy.orm import relationship
+# from sqlalchemy.orm import relationship
 from .database import Base
 
 
-
+class Socket(Base):
+    __tablename__ = 'socket'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    message = Column(String, nullable=False)
+    receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
+  
     
 class Rooms(Base):
     __tablename__ = 'rooms'
@@ -15,22 +23,6 @@ class Rooms(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     image_room = Column(String, nullable=False)
     
-        
-class Message(Base):
-    __tablename__ ='messagesDev'
-    
-    id = Column(Integer, primary_key=True, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    message = Column(String, nullable=False)
-    is_privat = Column(Boolean, server_default='False', nullable=False)
-    receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
-    owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    
-    owner = relationship('User', foreign_keys=[owner_id])
-    receiver = relationship('User', foreign_keys=[receiver_id])
-    
-
     
 class User(Base):
     __tablename__ = 'users'
@@ -66,11 +58,19 @@ class ImagesAll(Base):
     image_room = Column(String, nullable=False)
     images = Column(String, nullable=False)
     
-class Socket(Base):
-    __tablename__ = 'socket'
+
+
+
+# class Message(Base):
+#     __tablename__ ='messagesDev'
     
-    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    message = Column(String, nullable=False)
-    receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
+#     id = Column(Integer, primary_key=True, nullable=False)
+#     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+#     message = Column(String, nullable=False)
+#     is_privat = Column(Boolean, server_default='False', nullable=False)
+#     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+#     rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
+#     owner_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    
+#     owner = relationship('User', foreign_keys=[owner_id])
+#     receiver = relationship('User', foreign_keys=[receiver_id])
