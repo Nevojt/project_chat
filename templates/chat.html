@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <style>
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #activeUsers {
+            background-color: #f8f8f8;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        #chatBox {
+            background-color: #e0f7fa;
+            padding: 10px;
+            height: 300px;
+            overflow-y: scroll;
+            margin-bottom: 10px;
+        }
+        #messageInput {
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    <div id="activeUsers">
+        <h4>Active Users:</h4>
+        <ul id="userBox"></ul>
+    </div>
+    <div id="chatBox">
+        <ul id="chatMessages"></ul>
+    </div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+        // Отримання параметрів запиту з URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const rooms = urlParams.get('rooms');
+
+        // Перевірка, чи отримані значення token та rooms
+        if (!token || !rooms) {
+            console.error("Token or rooms are missing from the URL");
+            // Ви можете додати додаткові дії, наприклад, відобразити повідомлення користувачеві
+        } else {
+        // Встановлення з'єднання з веб-сокетом
+        const socket = new WebSocket(`wss://cool-chat.club/ws/${rooms}?token=${token}`);
+    
+        const chatBox = document.getElementById('chatMessages');
+        const userBox = document.getElementById('userBox');
+        const messageInput = document.getElementById('messageInput');
+
+        socket.onmessage = function(event) {
+        const messageData = JSON.parse(event.data);
+
+        if (messageData.type && messageData.type === "active_users") {
+            userBox.innerHTML = "";
+            messageData.data.forEach(user => {
+                if (user.user_name && user.user_id && user.avatar) {
+                    const userItem = document.createElement("li");
+
+                    // Створення та налаштування елементу img
+                    const avatarImg = document.createElement("img");
+                    avatarImg.src = user.avatar;
+                    avatarImg.alt = `${user.user_name}'s avatar`;
+                    avatarImg.style.width = '30px';  // Встановіть потрібний розмір
+                    avatarImg.style.height = '30px'; // Встановіть потрібний розмір
+                    avatarImg.style.borderRadius = '15px'; // Заокруглені кути, якщо потрібно
+
+                    userItem.textContent = `${user.user_name} `;
+                    userItem.appendChild(avatarImg);  // Додаємо зображення до елементу li
+                    userBox.appendChild(userItem);
+                }
+            });
+        } else if (messageData.created_at && messageData.receiver_id && messageData.message && messageData.user_name && messageData.avatar) {
+                // Перевірка наявності всіх полів у чатовому повідомленні
+                const messageItem = document.createElement("li");
+                messageItem.textContent = `${messageData.user_name}: ${messageData.message} (${messageData.created_at})`;
+                chatBox.appendChild(messageItem);
+            }
+        };
+    
+        function sendMessage() {
+            const message = messageInput.value;
+            socket.send(JSON.stringify({message: message}));
+            messageInput.value = '';
+        }
+    }
+    </script>
+</body>
+</html>

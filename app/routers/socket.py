@@ -3,11 +3,10 @@ import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.database import get_async_session, async_session_maker
 from app import models, schemas, oauth2
-from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import desc, insert
-from typing import List
+from typing import List, Dict, Tuple
 
 router = APIRouter(
     tags=["Chat"]
@@ -16,13 +15,16 @@ router = APIRouter(
 class ConnectionManager:
     def __init__(self):
         self.active_connections: List[WebSocket] = []
+        self.user_connections: Dict[int, Tuple[WebSocket, str, str]] = {}
 
-    async def connect(self, websocket: WebSocket):
+    async def connect(self, websocket: WebSocket, user_id: int, user_name: str, avatar: str):
         await websocket.accept()
         self.active_connections.append(websocket)
+        self.user_connections[user_id] = (websocket, user_name, avatar)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket, user_id: int):
         self.active_connections.remove(websocket)
+        self.user_connections.pop(user_id, None)
         
     async def send_personal_message(self, message: str, websocket: WebSocket):
         await websocket.send_json(message)
@@ -43,7 +45,7 @@ class ConnectionManager:
             await self.add_messages_to_database(message, rooms, receiver_id)
             
         for connection in self.active_connections:
-            await connection.send_json(message_json)
+            await connection.send_text(message_json)
 
     @staticmethod
     async def add_messages_to_database(message: str, rooms: str, receiver_id: int):
@@ -51,6 +53,12 @@ class ConnectionManager:
             stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=receiver_id)
             await session.execute(stmt)
             await session.commit()
+            
+    async def send_active_users(self):
+        active_users = [{"user_id": user_id, "user_name": user_info[1], "avatar": user_info[2]} for user_id, user_info in self.user_connections.items()]
+        message_data = {"type": "active_users", "data": active_users}
+        for websocket, _, _ in self.user_connections.values():
+            await websocket.send_json(message_data)
             
 manager = ConnectionManager()
 
@@ -79,7 +87,6 @@ async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel
 
 
 
-
 @router.websocket("/ws/{rooms}")
 async def websocket_endpoint(
     websocket: WebSocket,
@@ -90,14 +97,15 @@ async def websocket_endpoint(
     
     user = await oauth2.get_current_user(token, session)
 
-    await manager.connect(websocket)
+    await manager.connect(websocket, user.id, user.user_name, user.avatar)
+    await manager.send_active_users()
     
     # Отримуємо останні повідомлення
     messages = await fetch_last_messages(session)
 
     # Відправляємо кожне повідомлення користувачеві
     for message in messages:  
-        await websocket.send_json(message.model_dump_json()) 
+        await websocket.send_text(message.model_dump_json()) 
     
     try:
         while True:
@@ -111,16 +119,22 @@ async def websocket_endpoint(
                                     user_name=user.user_name,
                                     avatar=user.avatar,
                                     add_to_db=True)
-
             
             
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, user.id)
+        await manager.send_active_users()
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        await manager.broadcast(f"Client #{user.user_name} left the chat",
+        await manager.broadcast(f"Цей користувач -> {user.user_name} пішов з чату 🏃",
                                 rooms=rooms,
                                 created_at=current_time,
                                 receiver_id=user.id,
                                 user_name=user.user_name,
                                 avatar=user.avatar,
                                 add_to_db=False)
+
+
+@router.get('/ws/{rooms}/users')
+async def active_users(rooms: str):
+    active_users = [{"user_id": user_id, "user_name": user_info[1], "avatar": user_info[2]} for user_id, user_info in manager.user_connections.items()]
+    return {"rooms": rooms, "active_users": active_users}
