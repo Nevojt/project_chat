@@ -5,7 +5,7 @@ from app.database import get_async_session
 from app import models, schemas, oauth2
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 from typing import List
 
 router = APIRouter(
@@ -17,10 +17,10 @@ router = APIRouter(
 manager = ConnectionManager()
 
 
-async def fetch_last_messages(session: AsyncSession) -> List[schemas.SocketModel]:
-    query = select(models.Socket, models.User).join(
+async def fetch_last_messages(rooms:str, session: AsyncSession) -> List[schemas.SocketModel]:
+    query = select(models.Socket, models.User).filter(models.Socket.rooms == rooms).join(
         models.User, models.Socket.receiver_id == models.User.id
-    ).order_by(desc(models.Socket.id)).limit(5)
+    ).order_by(asc(models.Socket.id)).limit(50)
 
     result = await session.execute(query)
     raw_messages = result.all()
@@ -55,7 +55,7 @@ async def websocket_endpoint(
     await manager.send_active_users()
     
     # Отримуємо останні повідомлення
-    messages = await fetch_last_messages(session)
+    messages = await fetch_last_messages(rooms, session)
 
     # Відправляємо кожне повідомлення користувачеві
     for message in messages:  
