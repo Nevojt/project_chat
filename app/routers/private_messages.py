@@ -1,9 +1,9 @@
-from datetime import datetime
+
 import json
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from app.connection_manager import ConnectionManager
 from app.database import get_async_session
-from app import models, schemas, oauth2
+from app import models, oauth2
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_, desc, or_
@@ -65,7 +65,7 @@ async def private_webprivate_endpoint(
     for message in messages:  
         message_json = json.dumps(message, ensure_ascii=False)
         await websocket.send_text(message_json)
-        print(message_json)
+        # print(message_json)
 
     try:
         while True:
