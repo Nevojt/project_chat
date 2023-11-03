@@ -50,7 +50,7 @@ async def fetch_last_private_messages(session: AsyncSession, sender_id: int, rec
 
 
 @router.websocket("/ws/private/{recipient_id}")
-async def private_webprivate_endpoint(
+async def web_private_endpoint(
     websocket: WebSocket,
     recipient_id: int,
     token: str,
