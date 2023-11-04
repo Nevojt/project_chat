@@ -154,6 +154,6 @@ class Vote(BaseModel):
 #     receiver_id: int = 1
 #     rooms: str
     
-    
+    # commit message
 # class MessageCreate(MessageBase):
 #     pass
