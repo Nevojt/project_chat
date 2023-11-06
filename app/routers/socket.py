@@ -20,7 +20,7 @@ manager = ConnectionManager()
 async def fetch_last_messages(rooms:str, session: AsyncSession) -> List[schemas.SocketModel]:
     query = select(models.Socket, models.User).filter(models.Socket.rooms == rooms).join(
         models.User, models.Socket.receiver_id == models.User.id
-    ).order_by(asc(models.Socket.created_at)).limit(50)
+    ).order_by(asc(models.Socket.created_at))    #.limit(50)
 
     result = await session.execute(query)
     raw_messages = result.all()

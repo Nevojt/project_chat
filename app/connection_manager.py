@@ -61,7 +61,7 @@ class ConnectionManager:
             await websocket.send_json(message_data)
             
        
-            
+       # Connecting Private Messages     
 class ConnectionManagerPrivate:
     def __init__(self):
         self.active_connections: Dict[Tuple[int, int], WebSocket] = {}
@@ -96,6 +96,7 @@ class ConnectionManagerPrivate:
 
         # Зберігаємо повідомлення в базі даних
         await self.add_private_message_to_database(message, sender_id, recipient_id)
+
 
     @staticmethod
     async def add_private_message_to_database(message: str, sender_id: int, recipient_id: int):
