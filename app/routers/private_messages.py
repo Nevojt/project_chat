@@ -18,6 +18,19 @@ manager = ConnectionManagerPrivate()
 
 
 async def fetch_last_private_messages(session: AsyncSession, sender_id: int, recipient_id: int) -> List[dict]:
+    
+    """
+    Fetch the last private messages between two users from the database.
+
+    Args:
+    session (AsyncSession): The database session to execute the query.
+    sender_id (int): The ID of the user who sent the message.
+    recipient_id (int): The ID of the user who received the message.
+
+    Returns:
+    List[dict]: A list of dictionaries containing message details.
+    """
+    
     query = select(models.PrivateMessage, models.User).join(
         models.User, models.PrivateMessage.sender_id == models.User.id
     ).where(
@@ -51,6 +64,7 @@ async def unique_user_name_id(user_id: int, user_name: str):
     return unique_user_name_id
     
 
+
 @router.websocket("/ws/private/{recipient_id}")
 async def web_private_endpoint(
     websocket: WebSocket,
@@ -58,6 +72,25 @@ async def web_private_endpoint(
     token: str,
     session: AsyncSession = Depends(get_async_session)
 ):
+    
+    """
+    WebSocket endpoint for handling private messaging between users.
+
+    Args:
+    websocket (WebSocket): The WebSocket connection instance.
+    recipient_id (int): The ID of the message recipient.
+    token (str): The authentication token of the current user.
+    session (AsyncSession): The database session, injected by dependency.
+
+    Operations:
+    - Authenticates the current user.
+    - Establishes a WebSocket connection.
+    - Fetches and sends the last private messages to the connected client.
+    - Listens for incoming messages and handles sending and receiving of private messages.
+    - Disconnects on WebSocket disconnect event.
+    """
+    
+    
     user = await oauth2.get_current_user(token, session)
    
     await manager.connect(websocket, user.id, recipient_id)
