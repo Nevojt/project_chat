@@ -15,21 +15,36 @@ from typing import List, Dict, Tuple
 
 class ConnectionManager:
     def __init__(self):
+        # List to store active WebSocket connections
         self.active_connections: List[WebSocket] = []
+        
+        # Dictionary to map user IDs to their WebSocket connection, username, and avatar
         self.user_connections: Dict[int, Tuple[WebSocket, str, str]] = {}
 
     async def connect(self, websocket: WebSocket, user_id: int, user_name: str, avatar: str):
+        """
+        Accepts a new WebSocket connection and stores it in the list of active connections
+        and the dictionary of user connections.
+        """
         await websocket.accept()
         self.active_connections.append(websocket)
         self.user_connections[user_id] = (websocket, user_name, avatar)
 
     def disconnect(self, websocket: WebSocket, user_id: int):
+        """
+        Removes a WebSocket connection from the list of active connections and the user
+        connections dictionary when a user disconnects.
+        """
         self.active_connections.remove(websocket)
         self.user_connections.pop(user_id, None)
         
 
 
     async def broadcast(self, message: str, rooms: str, receiver_id: int, user_name: str, avatar: str, created_at: str, add_to_db: bool):
+        """
+        Sends a message to all active WebSocket connections. If `add_to_db` is True, it also
+        adds the message to the database.
+        """
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         message_data = {
             "created_at": current_time,
@@ -49,12 +64,18 @@ class ConnectionManager:
 
     @staticmethod
     async def add_messages_to_database(message: str, rooms: str, receiver_id: int):
+        """
+        Adds a message to the database asynchronously.
+        """
         async with async_session_maker() as session:
             stmt = insert(models.Socket).values(message=message, rooms=rooms, receiver_id=receiver_id)
             await session.execute(stmt)
             await session.commit()
              
     async def send_active_users(self):
+        """
+        Sends the list of active users to all connected WebSocket clients.
+        """
         active_users = [{"user_id": user_id, "user_name": user_info[1], "avatar": user_info[2]} for user_id, user_info in self.user_connections.items()]
         message_data = {"type": "active_users", "data": active_users}
         for websocket, _, _ in self.user_connections.values():
