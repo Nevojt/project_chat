@@ -52,6 +52,14 @@ async def websocket_endpoint(
     user = await oauth2.get_current_user(token, session)
 
     await manager.connect(websocket, user.id, user.user_name, user.avatar)
+    
+    x_real_ip = websocket.headers.get('x-real-ip')
+    x_forwarded_for = websocket.headers.get('x-forwarded-for')
+
+    # Використання отриманих IP-адрес
+    print(f"X-Real-IP: {x_real_ip}")
+    print(f"X-Forwarded-For: {x_forwarded_for}")
+    
     await manager.send_active_users()
     
     # Отримуємо останні повідомлення
