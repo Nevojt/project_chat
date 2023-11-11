@@ -13,20 +13,23 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
+    # Check if a user with the given email already exists
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"User {existing_user.email} already exists")
     
+    # Hash the user's password
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
     
-    
+    # Create a new user and add it to the database
     new_user = models.User(**user.model_dump())
     db.add(new_user)
     db.commit()
     db.refresh(new_user) 
     
+    # Create a User_Status entry for the new user
     post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell")
     db.add(post)
     db.commit()
@@ -40,8 +43,11 @@ def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 
 @router.get('/{email}', response_model=schemas.UserInfo)
 def get_user_mail(email: str, db: Session = Depends(get_db)):
+    
+    # Query the database for a user with the given email
     user = db.query(models.User).filter(models.User.email == email).first()
     
+    # If the user is not found, raise an HTTP 404 error
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with email {email} not found")
@@ -51,5 +57,6 @@ def get_user_mail(email: str, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[schemas.UserInfo])
 async def get_email(db: Session = Depends(get_db)):
+    # Query the database for all users
     posts = db.query(models.User).all()
     return posts
