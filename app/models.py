@@ -14,15 +14,6 @@ class Socket(Base):
     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
   
-class PrivateMessage(Base):
-    __tablename__ = 'private_messages'
-    
-    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    sender_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False, index=True)
-    recipient_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"), nullable=False, index=True)
-    messages = Column(String, nullable=False)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    
     
 class Rooms(Base):
     __tablename__ = 'rooms'
