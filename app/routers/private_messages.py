@@ -23,7 +23,7 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
 async def get_private_messages(recipient_id: int, db: Session = Depends(get_db)):
     
     query = db.query(models.PrivateMessage, models.User).join(
-        models.User, models.PrivateMessage.recipient_id == models.User.id  # Явно вказуємо умову з'єднання
+        models.User, models.PrivateMessage.recipient_id == models.User.id
     ).filter(
         models.PrivateMessage.recipient_id == recipient_id
     ).all()
@@ -34,8 +34,9 @@ async def get_private_messages(recipient_id: int, db: Session = Depends(get_db))
             schemas.PrivateRecipient(
             id=message.id,
             recipient_id=message.recipient_id,
-            user_name=user.user_name,  
-            avatar=user.avatar,  
+            user_name=user.user_name,
+            avatar=user.avatar,
+            messages=message.messages,
             created_at=message.created_at
         )
         for message, user in query
