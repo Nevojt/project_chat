@@ -34,9 +34,8 @@ async def get_private_messages(recipient_id: int, db: Session = Depends(get_db))
             schemas.PrivateRecipient(
             id=message.id,
             recipient_id=message.recipient_id,
-            user_name=user.user_name,  # Припускаючи, що у моделі User є поле name
-            avatar=user.avatar,  # Припускаючи, що у моделі User є поле avatar
-            messages=message.messages,  # Припускаючи, що у моделі PrivateMessage є поле content
+            user_name=user.user_name,  
+            avatar=user.avatar,  
             created_at=message.created_at
         )
         for message, user in query
