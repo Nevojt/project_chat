@@ -28,6 +28,19 @@ class SocketModel(BaseModel):
         from_attributes = True
 
 
+class PrivateRecipient(BaseModel):
+    id: int
+    recipient_id: int
+    user_name: str
+    avatar: str
+    messages: str
+    created_at: datetime
+    
+    # class Config:
+    #     from_attributes = True
+
+
+
 class RoomBase(BaseModel):
     name_room: str
     image_room: str
