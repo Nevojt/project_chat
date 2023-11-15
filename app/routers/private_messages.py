@@ -1,5 +1,6 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy import or_
 from typing import List
 from ..database import get_db
 from .. import models, schemas, oauth2
@@ -19,27 +20,36 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
 
 
 
-@router.get("/{recipient_id}", response_model=List[schemas.PrivateRecipient])
-async def get_private_messages(recipient_id: int, db: Session = Depends(get_db)):
+@router.get("/{user_id}", response_model=List[schemas.PrivateRecipient])
+async def get_private_messages(user_id: int, db: Session = Depends(get_db)):
     
-    query = db.query(models.PrivateMessage, models.User).join(
-        models.User, models.PrivateMessage.recipient_id == models.User.id
+    sender_alias = aliased(models.User)
+    recipient_alias = aliased(models.User)
+
+    query = db.query(models.PrivateMessage, sender_alias, recipient_alias).join(
+        sender_alias, models.PrivateMessage.sender_id == sender_alias.id
+    ).join(
+        recipient_alias, models.PrivateMessage.recipient_id == recipient_alias.id
     ).filter(
-        models.PrivateMessage.recipient_id == recipient_id
+        or_(
+            models.PrivateMessage.sender_id == user_id,
+            models.PrivateMessage.recipient_id == user_id
+        )
     ).all()
-    
-    
     
     results = [
             schemas.PrivateRecipient(
             id=message.id,
+            sender_id=message.sender_id,
+            sender_name=sender.user_name,
+            sender_avatar=sender.avatar,
             recipient_id=message.recipient_id,
-            user_name=user.user_name,
-            avatar=user.avatar,
+            recipient_name=recipient.user_name,
+            recipient_avatar=recipient.avatar,
             messages=message.messages,
             created_at=message.created_at
         )
-        for message, user in query
+        for message, sender, recipient in query
         ]
         
     return results

@@ -30,9 +30,12 @@ class SocketModel(BaseModel):
 
 class PrivateRecipient(BaseModel):
     id: int
+    sender_id: int
+    sender_name: str
+    sender_avatar: str
     recipient_id: int
-    user_name: str
-    avatar: str
+    recipient_name: str
+    recipient_avatar: str
     messages: str
     created_at: datetime
     
