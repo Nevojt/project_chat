@@ -17,11 +17,28 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
     return query
 
 
+@router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
+async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
+    query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.recipient_id).join(
+        models.User, models.PrivateMessage.recipient_id == models.User.id
+    ).filter(
+        models.PrivateMessage.sender_id == sender_id
+    ).all()
+    
+    result = [
+        schemas.PrivateInfoRecipient(
+            recipient_id=message.recipient_id,
+            recipient_name=user.user_name,
+            recipient_avatar=user.avatar)
+        for message, user in query
+    ]
+    
+    return result
 
 
 
-@router.get("/{user_id}", response_model=List[schemas.PrivateRecipient])
-async def get_private_messages(user_id: int, db: Session = Depends(get_db)):
+# @router.get("/{user_id}", response_model=List[schemas.PrivateRecipient])
+# async def get_private_messages(user_id: int, db: Session = Depends(get_db)):
     
     sender_alias = aliased(models.User)
     recipient_alias = aliased(models.User)
@@ -39,17 +56,15 @@ async def get_private_messages(user_id: int, db: Session = Depends(get_db)):
     
     results = [
             schemas.PrivateRecipient(
-            id=message.id,
             sender_id=message.sender_id,
             sender_name=sender.user_name,
             sender_avatar=sender.avatar,
             recipient_id=message.recipient_id,
             recipient_name=recipient.user_name,
-            recipient_avatar=recipient.avatar,
-            messages=message.messages,
-            created_at=message.created_at
+            recipient_avatar=recipient.avatar
         )
         for message, sender, recipient in query
         ]
+    
         
     return results

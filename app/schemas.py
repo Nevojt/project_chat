@@ -29,18 +29,17 @@ class SocketModel(BaseModel):
 
 
 class PrivateRecipient(BaseModel):
-    id: int
     sender_id: int
     sender_name: str
     sender_avatar: str
     recipient_id: int
     recipient_name: str
     recipient_avatar: str
-    messages: str
-    created_at: datetime
-    
-    # class Config:
-    #     from_attributes = True
+
+class PrivateInfoRecipient(BaseModel):
+    recipient_id: int
+    recipient_name: str
+    recipient_avatar: str
 
 
 
