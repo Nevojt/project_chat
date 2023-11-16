@@ -3,8 +3,7 @@ from sqlalchemy.orm import Session, aliased
 from sqlalchemy import or_
 from typing import List
 from ..database import get_db
-from .. import models, schemas, oauth2
-
+from .. import models, schemas
 router = APIRouter(
     prefix="/direct",
     tags=['Direct'],
@@ -32,7 +31,9 @@ async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
             recipient_avatar=user.avatar)
         for message, user in query
     ]
-    
+    if not result:  
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Sorry not messages")
     return result
 
 
