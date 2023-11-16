@@ -33,7 +33,7 @@ async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
     ]
     if not result:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Sorry not messages")
+                            detail=f"Sorry not recipients")
     return result
 
 
