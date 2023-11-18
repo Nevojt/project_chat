@@ -1,6 +1,5 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Response
-from sqlalchemy.orm import Session, aliased
-from sqlalchemy import or_
+from fastapi import status, HTTPException, Depends, APIRouter
+from sqlalchemy.orm import Session
 from typing import List
 from ..database import get_db
 from .. import models, schemas
@@ -28,7 +27,8 @@ async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
         schemas.PrivateInfoRecipient(
             recipient_id=message.recipient_id,
             recipient_name=user.user_name,
-            recipient_avatar=user.avatar)
+            recipient_avatar=user.avatar,
+            is_read=message.is_read)
         for message, user in query
     ]
     if not result:  
@@ -38,34 +38,21 @@ async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
 
 
 
-# @router.get("/{user_id}", response_model=List[schemas.PrivateRecipient])
-# async def get_private_messages(user_id: int, db: Session = Depends(get_db)):
-    
-    sender_alias = aliased(models.User)
-    recipient_alias = aliased(models.User)
 
-    query = db.query(models.PrivateMessage, sender_alias, recipient_alias).join(
-        sender_alias, models.PrivateMessage.sender_id == sender_alias.id
-    ).join(
-        recipient_alias, models.PrivateMessage.recipient_id == recipient_alias.id
-    ).filter(
-        or_(
-            models.PrivateMessage.sender_id == user_id,
-            models.PrivateMessage.recipient_id == user_id
-        )
-    ).all()
-    
-    results = [
-            schemas.PrivateRecipient(
-            sender_id=message.sender_id,
-            sender_name=sender.user_name,
-            sender_avatar=sender.avatar,
-            recipient_id=message.recipient_id,
-            recipient_name=recipient.user_name,
-            recipient_avatar=recipient.avatar
-        )
-        for message, sender, recipient in query
-        ]
-    
-        
-    return results
+# @router.get('/is_read/{user_id}')    
+# async def check_unread_messages(user_id: int, session: AsyncSession = Depends(get_async_session)) -> bool:
+#     """
+#     Перевіряє, чи є у користувача непрочитані повідомлення.
+
+#     Args:
+#         user_id (int): ID користувача.
+
+#     Returns:
+#         bool: True, якщо є непрочитані повідомлення, інакше False.
+#     """
+#     query = select(models.PrivateMessage).where(
+#         models.PrivateMessage.recipient_id == user_id,
+#         models.PrivateMessage.is_read == False
+#     )
+#     result = await session.execute(query)
+#     return result.scalar() is not None
