@@ -57,7 +57,7 @@ class Vote(Base):
     __tablename__ = 'votes'
     
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    message_id = Column(Integer, ForeignKey("messagesDev.id", ondelete="CASCADE"), primary_key=True)
+    message_id = Column(Integer, ForeignKey("socket.id", ondelete="CASCADE"), primary_key=True)
     
     
 class ImagesAll(Base):
