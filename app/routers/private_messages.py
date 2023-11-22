@@ -15,7 +15,7 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
     return query
 
 
-@router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
+@router.get("/{sender_id}", response_model=List[schemas.PrivateInfoRecipient])
 async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
     query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.recipient_id).join(
         models.User, models.PrivateMessage.recipient_id == models.User.id
