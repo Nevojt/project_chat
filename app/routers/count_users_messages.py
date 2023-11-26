@@ -14,7 +14,8 @@ router = APIRouter(
 
 @router.get("/messages", response_model=List[schemas.CountMessages])
 async def get_count_messages(db: Session = Depends(get_db)):
-    query_result = db.query(models.Socket.rooms, func.count(models.Socket.id).label('count')).group_by(models.Socket.rooms).all()
+    query_result = db.query(models.Socket.rooms, func.count(models.Socket.id).label('count')).group_by(
+        models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
     
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -27,7 +28,8 @@ async def get_count_messages(db: Session = Depends(get_db)):
 
 @router.get("/users", response_model=List[schemas.CountUsers])
 async def get_count_users(db: Session = Depends(get_db)):
-    query_result = db.query(models.User_Status.name_room, func.count(models.User_Status.id).label('count')).group_by(models.User_Status.name_room).all()
+    query_result = db.query(models.User_Status.name_room, func.count(models.User_Status.id).label('count')).group_by(
+        models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
     
     if not query_result:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
