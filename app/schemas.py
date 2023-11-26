@@ -94,6 +94,14 @@ class UserStatusPost(UserStatus):
     
     class Config:
         from_attributes = True
+        
+class CountMessages(BaseModel):
+    rooms: str
+    count: int
+    
+class CountUsers(BaseModel):
+    rooms: str
+    count: int
     
         
         
