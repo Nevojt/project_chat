@@ -11,7 +11,7 @@ router = APIRouter(
 
 @router.get("/")
 async def get_rooms(db: Session = Depends(get_db)):
-    posts = db.query(models.Rooms).all()
+    posts = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').all()
     return posts
 
 
