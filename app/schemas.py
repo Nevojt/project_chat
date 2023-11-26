@@ -85,7 +85,7 @@ class UserStatusCreate(UserStatus):
     pass
 
 class UserStatusUpdate(BaseModel):
-    room_name: str
+    name_room: str
     status: bool = True
 
 class UserStatusPost(UserStatus):

@@ -38,7 +38,7 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
 
 
 
-@router.put("/{user_id}", response_model=schemas.UserStatusPost)
+@router.put("/{user_id}")
 def update_post(user_id: int, update_post: schemas.UserStatusUpdate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     
     post_query = db.query(models.User_Status).filter(models.User_Status.user_id == user_id)
