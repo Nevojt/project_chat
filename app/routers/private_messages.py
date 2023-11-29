@@ -15,26 +15,45 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
     return query
 
 
-@router.get("/{sender_id}", response_model=List[schemas.PrivateInfoRecipient])
-async def get_private_recipient(sender_id: int, db: Session = Depends(get_db)):
-    query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.recipient_id).join(
+@router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
+async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
+    # Query for recipients to whom the user sent messages
+    sent_messages_query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.recipient_id).join(
         models.User, models.PrivateMessage.recipient_id == models.User.id
     ).filter(
-        models.PrivateMessage.sender_id == sender_id
-    ).all()
-    
-    result = [
-        schemas.PrivateInfoRecipient(
-            recipient_id=message.recipient_id,
-            recipient_name=user.user_name,
-            recipient_avatar=user.avatar,
-            is_read=message.is_read)
-        for message, user in query
-    ]
+        models.PrivateMessage.sender_id == user_id
+    )
+
+    # Query for senders who sent messages to the user
+    received_messages_query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.sender_id).join(
+        models.User, models.PrivateMessage.sender_id == models.User.id
+    ).filter(
+        models.PrivateMessage.recipient_id == user_id
+    )
+
+    # Execute queries
+    sent_messages = sent_messages_query.all()
+    received_messages = received_messages_query.all()
+
+    # Combine results
+    unique_users = {}
+    for message, user in sent_messages + received_messages:
+        user_id = user.id
+        if user_id not in unique_users:
+            unique_users[user_id] = schemas.PrivateInfoRecipient(
+                recipient_id=user_id,
+                recipient_name=user.user_name,
+                recipient_avatar=user.avatar,
+                is_read=message.is_read
+            )
+
+    result = list(unique_users.values())
+
     if not result:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Sorry not recipients")
+                            detail="Sorry, no recipients or senders found.")
     return result
+
 
 
 
