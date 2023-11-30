@@ -45,10 +45,12 @@ class PrivateInfoRecipient(BaseModel):
 
 
 class RoomBase(BaseModel):
+    id: int
     name_room: str
     image_room: str
     count_users: int
     count_messages: int
+    created_at: datetime
     
     
 class RoomCreate(BaseModel):
