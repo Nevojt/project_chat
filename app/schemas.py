@@ -47,10 +47,13 @@ class PrivateInfoRecipient(BaseModel):
 class RoomBase(BaseModel):
     name_room: str
     image_room: str
+    count_users: int
+    count_messages: int
     
     
-class RoomCreate(RoomBase):
-    pass
+class RoomCreate(BaseModel):
+    name_room: str
+    image_room: str
 
 class RoomPost(RoomBase):
     id: int
