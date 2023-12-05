@@ -117,6 +117,9 @@ class UserCreate(BaseModel):
     password: str
     avatar: str
     
+class PasswordReset(BaseModel):
+    email: EmailStr
+    
         
 class UserLogin(BaseModel):
     email: EmailStr
