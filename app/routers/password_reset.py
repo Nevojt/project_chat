@@ -18,6 +18,21 @@ router = APIRouter(
 
 @router.post("/request/", response_description="Reset password")
 async def reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
+    """
+    Handles the password reset request. Validates the user's email and initiates the password reset process.
+
+    Args:
+        request (PasswordResetRequest): The request payload containing the user's email.
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: Raises a 404 error if no user is found with the provided email.
+        HTTPException: Raises a 404 error if the user's details are not found or the email address is invalid.
+
+    Returns:
+        dict: A message confirming that an email has been sent for password reset instructions.
+    """
+    # Func
     user = db.query(models.User).filter(models.User.email == request.email).first()
     
     if not user:
@@ -45,6 +60,20 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
         
 @router.put("/reset/", response_description="Reset password")
 async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depends(get_async_session)):
+    """
+    Handles the actual password reset using a provided token. Validates the token and updates the user's password.
+
+    Args:
+        token (str): The token for user verification, used to ensure the password reset request is valid.
+        new_password (PasswordReset): The payload containing the new password.
+        db (AsyncSession, optional): Asynchronous database session. Defaults to Depends(get_async_session).
+
+    Raises:
+        HTTPException: Raises a 404 error if no user is found associated with the provided token.
+
+    Returns:
+        dict: A message confirming that the password has been successfully reset.
+    """
     
     user = await oauth2.get_current_user(token, db)
 
