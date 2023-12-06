@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from pydantic.types import conint
         
@@ -117,10 +117,13 @@ class UserCreate(BaseModel):
     password: str
     avatar: str
     
-class PasswordReset(BaseModel):
-    email: EmailStr
+class PasswordResetRequest(BaseModel):
+    email: EmailStr = Field(...)
     
-        
+class PasswordReset(BaseModel):
+    password: str  = Field(...)      
+
+
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

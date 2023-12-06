@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
-
-from app import models, oauth2
+from app import models, oauth2, utils
 from app.send_mail import password_reset
-from ..database import get_db
-from app.schemas import PasswordReset
+from ..database import get_db, get_async_session
+from app.schemas import PasswordReset, PasswordResetRequest
 
 
 
@@ -17,7 +17,7 @@ router = APIRouter(
 
 
 @router.post("/request/", response_description="Reset password")
-async def reset_password(request: PasswordReset, db: Session = Depends(get_db)):
+async def reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == request.email).first()
     
     if not user:
@@ -42,3 +42,22 @@ async def reset_password(request: PasswordReset, db: Session = Depends(get_db)):
             detail="Your details not found, invalid email address"
         )
         
+        
+@router.put("/reset/", response_description="Reset password")
+async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depends(get_async_session)):
+    
+    user = await oauth2.get_current_user(token, db)
+
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # Хешування нового пароля
+    hashed_password = utils.hash(new_password.password)
+
+    # Оновлення пароля в базі даних
+    user.password = hashed_password
+    # update_password = models.User(id=user.id, password=hashed_password)
+    db.add(user)
+    await db.commit()
+
+    return {"msg": "Password has been reset successfully."}

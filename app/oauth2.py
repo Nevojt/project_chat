@@ -6,7 +6,6 @@ from sqlalchemy import select
 from . import schemas, database, models
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from .config import settings
 
