@@ -56,7 +56,6 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
 
     # Оновлення пароля в базі даних
     user.password = hashed_password
-    # update_password = models.User(id=user.id, password=hashed_password)
     db.add(user)
     await db.commit()
 

@@ -46,3 +46,7 @@ async def read_root(request: Request):
 @app.get("/reset")
 async def read_reset(request: Request):
     return templates.TemplateResponse("window_new_password.html", {"request": request})
+
+@app.get("/success-page")
+async def finally_reset(request: Request):
+    return templates.TemplateResponse("success-page.html", {"request": request})
