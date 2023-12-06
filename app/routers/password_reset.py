@@ -25,7 +25,7 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
                             detail=f"User with email: {request.email} not found")
     if user is not None:
         token = oauth2.create_access_token(data={"user_id": user.id})
-        reset_link = f"http://locahost:8000/reset?token={token}"
+        reset_link = f"http://127.0.0.1:8000/reset?token={token}"
         
         await password_reset("Password Reset", user.email,
             {

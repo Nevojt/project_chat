@@ -41,3 +41,8 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/")
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/reset")
+async def read_reset(request: Request):
+    return templates.TemplateResponse("window_new_password.html", {"request": request})
