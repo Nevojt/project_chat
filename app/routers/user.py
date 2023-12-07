@@ -12,6 +12,20 @@ router = APIRouter(
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    """
+    Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
+
+    Args:
+        user (schemas.UserCreate): The user details for creating a new user.
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: Raises a 424 error if a user with the given email already exists.
+
+    Returns:
+        models.User: The newly created user, along with their information, after being added to the database.
+    """
+    
     
     # Check if a user with the given email already exists
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()

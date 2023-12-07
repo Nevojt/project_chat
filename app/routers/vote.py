@@ -9,6 +9,22 @@ router = APIRouter(
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def vote(vote: schemas.Vote, db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
+    """
+    Handles the voting process for a message. Users can cast or retract their vote on a specific message.
+
+    Args:
+        vote (schemas.Vote): The vote details, including message ID and vote direction.
+        db (Session, optional): Database session dependency. Defaults to Depends(database.get_db).
+        current_user (int): The ID of the current user, obtained through authentication.
+
+    Raises:
+        HTTPException: Raises a 404 error if the message to be voted on does not exist.
+        HTTPException: Raises a 409 conflict error if the user has already voted on the specific message and is attempting to vote again.
+        HTTPException: Raises a 404 error if the user tries to retract a vote that does not exist.
+
+    Returns:
+        dict: A confirmation message indicating the successful addition or deletion of a vote.
+    """
     
     message = db.query(models.Message).filter(models.Message.id == vote.message_id).first()
     if not message:
