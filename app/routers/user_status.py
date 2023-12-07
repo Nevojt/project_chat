@@ -40,6 +40,20 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
 
 @router.put("/{user_id}")
 def update_post(user_id: int, update_post: schemas.UserStatusUpdate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+    """
+    Updates the status of a user post based on the provided user ID and updated post details.
+
+    Args:
+        user_id (int): The ID of the user whose post is to be updated.
+        update_post (schemas.UserStatusUpdate): The updated post details.
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: Raises a 404 error if no post is found for the given user ID.
+
+    Returns:
+        models.User_Status: The updated user post after the changes have been committed to the database.
+    """
     
     post_query = db.query(models.User_Status).filter(models.User_Status.user_id == user_id)
     post = post_query.first()
