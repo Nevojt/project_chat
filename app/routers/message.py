@@ -14,6 +14,19 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.SocketModel])
 async def get_posts(session: AsyncSession = Depends(get_async_session), limit: int = 50, skip: int = 0):
+    
+    """
+    Retrieves a list of socket messages with associated user details, paginated by a limit and offset.
+
+    Args:
+        session (AsyncSession, optional): Asynchronous database session. Defaults to Depends(get_async_session).
+        limit (int, optional): Maximum number of messages to retrieve. Defaults to 50.
+        skip (int, optional): Number of messages to skip for pagination. Defaults to 0.
+
+    Returns:
+        List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
+    """
+
     query = select(models.Socket, models.User).join(
         models.User, models.Socket.receiver_id == models.User.id
     ).order_by(desc(models.Socket.id)).limit(limit).offset(skip)

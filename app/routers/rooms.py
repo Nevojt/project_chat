@@ -13,6 +13,17 @@ router = APIRouter(
 
 @router.get("/", response_model=List[schemas.RoomBase])
 async def get_rooms_info(db: Session = Depends(get_db)):
+    
+    """
+    Retrieves information about chat rooms, excluding a specific room ('Hell'), along with associated message and user counts.
+
+    Args:
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Returns:
+        List[schemas.RoomBase]: A list containing information about each room, such as room name, image, count of users, count of messages, and creation date.
+    """
+    
     # Отримання інформації про кімнати
     rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').all()
 

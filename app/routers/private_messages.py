@@ -17,6 +17,21 @@ async def get_all_private_messages(db: Session = Depends(get_db)):
 
 @router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
 async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
+    
+    """
+    Retrieves a list of unique recipients and senders associated with a given user's private messages.
+
+    Args:
+        user_id (int): The ID of the user whose message recipients and senders are to be retrieved.
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: Raises a 404 error if no recipients or senders are found for the given user.
+
+    Returns:
+        List[schemas.PrivateInfoRecipient]: A list of unique private message recipients and senders with their details.
+    """
+    
     # Query for recipients to whom the user sent messages
     sent_messages_query = db.query(models.PrivateMessage, models.User).distinct(models.PrivateMessage.recipient_id).join(
         models.User, models.PrivateMessage.recipient_id == models.User.id
