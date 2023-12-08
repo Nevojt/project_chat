@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.post("/request/", response_description="Reset password")
+@router.post("/request/", status_code=status.HTTP_202_ACCEPTED, response_description="Reset password")
 async def reset_password(request: PasswordResetRequest, db: Session = Depends(get_db)):
     """
     Handles the password reset request. Validates the user's email and initiates the password reset process.

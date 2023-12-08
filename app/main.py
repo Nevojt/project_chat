@@ -24,11 +24,12 @@ app.add_middleware(
 
 app.include_router(message.router)
 app.include_router(rooms.router)
+app.include_router(user.router)
 app.include_router(auth.router)
 app.include_router(user_status.router)
 app.include_router(vote.router)
 app.include_router(images.router)
-app.include_router(user.router)
+
 app.include_router(private_messages.router)
 app.include_router(count_users_messages.router)
 app.include_router(password_reset.router)
