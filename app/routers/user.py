@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from ..database import get_db
-from .. import models, schemas, utils, oauth2
+from .. import models, schemas, utils, oauth2, send_mail
 from typing import List
 
 router = APIRouter(
@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
 
@@ -47,7 +47,17 @@ def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell")
     db.add(post)
     db.commit()
-    db.refresh(post) 
+    db.refresh(post)
+    
+    reset_link = f"http://cool-chat.club/"
+    await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
+                                           {
+                                            "title": "Registration",
+                                            "name": user.user_name,
+                                            "reset_link": reset_link
+                                            })
+    
+    
     
     return new_user
      

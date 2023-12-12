@@ -42,6 +42,7 @@ class User(Base):
     password = Column(String, nullable=False)
     avatar = Column(String, nullable=False, server_default='https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Avatar%20Desktop/avatar_default.jpg')
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    verified = Column(Boolean, nullable=False, server_default='false')
     
     
 class User_Status(Base):
