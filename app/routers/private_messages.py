@@ -75,15 +75,15 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
 
 # @router.get('/is_read/{user_id}')    
 # async def check_unread_messages(user_id: int, session: AsyncSession = Depends(get_async_session)) -> bool:
-    """
-    Перевіряє, чи є у користувача непрочитані повідомлення.
+    # """
+    # Перевіряє, чи є у користувача непрочитані повідомлення.
 
-    Args:
-        user_id (int): ID користувача.
+    # Args:
+    #     user_id (int): ID користувача.
 
-    Returns:
-        bool: True, якщо є непрочитані повідомлення, інакше False.
-    """
+    # Returns:
+    #     bool: True, якщо є непрочитані повідомлення, інакше False.
+    # """
     # query = select(models.PrivateMessage).where(
     #     models.PrivateMessage.recipient_id == user_id,
     #     models.PrivateMessage.is_read == False
