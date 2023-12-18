@@ -38,11 +38,13 @@ async def password_reset(subject: str, email_to: str, body: dict):
 
     return {"message": "Email has been sent."}
 
-templare_mail_regostration = env.get_template('email.html')
+
+
+template_mail_registration = env.get_template('email.html')
 
 async def send_registration_mail(subject: str, email_to: str, body: dict):
     
-    html_content = templare_mail_regostration.render(body)
+    html_content = template_mail_registration.render(body)
     message = MessageSchema(
         subject=subject,
         recipients=[email_to],
@@ -52,3 +54,4 @@ async def send_registration_mail(subject: str, email_to: str, body: dict):
     
     fm = FastMail(conf)
     await fm.send_message(message, template_name='email.html')
+    return {"message": "Email has been sent."}

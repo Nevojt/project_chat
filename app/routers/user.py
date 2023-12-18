@@ -49,12 +49,16 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(post)
     
-    reset_link = f"http://cool-chat.club/"
+    
+    
+    
+    # token = oauth2.create_access_token(data={"user_id": user.id})
+    registration_link = f"http://cool-chat.club/success_registration"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
                                             "name": user.user_name,
-                                            "reset_link": reset_link
+                                            "reset_link": registration_link
                                             })
     
     

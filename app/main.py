@@ -51,3 +51,7 @@ async def read_reset(request: Request):
 @app.get("/success-page")
 async def finally_reset(request: Request):
     return templates.TemplateResponse("success-page.html", {"request": request})
+
+@app.get("/success_registration")
+async def registration(request: Request):
+    return templates.TemplateResponse("success_registration.html", {"request": request})
