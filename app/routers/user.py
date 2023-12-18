@@ -1,5 +1,8 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_async_session
 from ..database import get_db
 from .. import models, schemas, utils, oauth2, send_mail
 from typing import List
@@ -11,7 +14,7 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
     Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
 
@@ -28,10 +31,16 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
     
     # Check if a user with the given email already exists
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    stmt = select(models.User).where(models.User.email == user.email)
+
+    # Execute the statement asynchronously
+    result = await db.execute(stmt)
+    existing_user = result.scalar_one_or_none()
+
     if existing_user:
-        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
-                            detail=f"User {existing_user.email} already exists")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT,
+                            detail=f"User with email {user.email} already exists")
+
     
     # Hash the user's password
     hashed_password = utils.hash(user.password)
@@ -40,20 +49,20 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Create a new user and add it to the database
     new_user = models.User(**user.model_dump())
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user) 
+    await db.commit()
+    await db.refresh(new_user) 
     
     # Create a User_Status entry for the new user
     post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell")
     db.add(post)
-    db.commit()
-    db.refresh(post)
+    await db.commit()
+    await db.refresh(post)
     
     
     
     
-    # token = oauth2.create_access_token(data={"user_id": user.id})
-    registration_link = f"http://cool-chat.club/success_registration"
+    token = oauth2.create_access_token(data={"user_id": new_user.id})
+    registration_link = f"http://127.0.0.1:8000/verify_email?token={token}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
@@ -69,22 +78,22 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     
 
 
-@router.get('/{email}', response_model=schemas.UserInfo)
-def get_user_mail(email: str, db: Session = Depends(get_db)):
+# @router.get('/{email}', response_model=schemas.UserInfo)
+# def get_user_mail(email: str, db: Session = Depends(get_db)):
     
-    # Query the database for a user with the given email
-    user = db.query(models.User).filter(models.User.email == email).first()
+#     # Query the database for a user with the given email
+#     user = db.query(models.User).filter(models.User.email == email).first()
     
-    # If the user is not found, raise an HTTP 404 error
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with email {email} not found")
+#     # If the user is not found, raise an HTTP 404 error
+#     if not user:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"User with email {email} not found")
         
-    return user
+#     return user
 
 
-@router.get("/", response_model=List[schemas.UserInfo])
-async def get_email(db: Session = Depends(get_db)):
-    # Query the database for all users
-    posts = db.query(models.User).all()
-    return posts
+# @router.get("/", response_model=List[schemas.UserInfo])
+# async def get_email(db: Session = Depends(get_db)):
+#     # Query the database for all users
+#     posts = db.query(models.User).all()
+#     return posts
