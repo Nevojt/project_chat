@@ -62,7 +62,7 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     
     
     token = oauth2.create_access_token(data={"user_id": new_user.id})
-    registration_link = f"http://127.0.0.1:8000/verify_email?token={token}"
+    registration_link = f"http://cool-chat.club/verify_email?token={token}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",

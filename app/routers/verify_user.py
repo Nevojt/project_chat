@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.templating import Jinja2Templates
-from app import models, oauth2, utils
-from ..database import get_db, get_async_session
+from app import oauth2
+from ..database import get_async_session
 
 
 router = APIRouter(
