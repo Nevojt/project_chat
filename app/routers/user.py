@@ -52,14 +52,14 @@ async def created_user(user: schemas.UserCreate, db: Depends = Depends(get_db)):
     
     
     
-    token = oauth2.create_access_token(data={"user_id": new_user.id})
-    registration_link = f"http://127.0.0.1:8000/verify_email?token={token}"
-    await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
-                                           {
-                                            "title": "Registration",
-                                            "name": user.user_name,
-                                            "reset_link": registration_link
-                                            })
+    # token = oauth2.create_access_token(data={"user_id": new_user.id})
+    # registration_link = f"http://127.0.0.1:8000/verify_email?token={token}"
+    # await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
+    #                                        {
+    #                                         "title": "Registration",
+    #                                         "name": user.user_name,
+    #                                         "reset_link": registration_link
+    #                                         })
     
     
     
