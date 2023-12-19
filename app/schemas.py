@@ -23,6 +23,8 @@ class SocketModel(BaseModel):
     message: str
     user_name: str
     avatar: str
+    vote: int
+    id_return: Optional[int] = None
     
     class Config:
         from_attributes = True
