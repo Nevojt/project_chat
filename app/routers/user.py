@@ -52,14 +52,16 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     db.add(post)
     await db.commit()
     await db.refresh(post)
+
+
+    token = await oauth2.create_access_token(data={"user_id": new_user.id})
     
-    # token = oauth2.create_access_token(data={"user_id": new_user.id})
-    reset_link = f"http://cool-chat.club/"
+    registration_link = f"http://cool-chat.club/verify_email?token={token}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
                                             "name": user.user_name,
-                                            "reset_link": reset_link
+                                            "registration_link": registration_link
                                             })
     
     return new_user
@@ -69,22 +71,22 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     
 
 
-@router.get('/{email}', response_model=schemas.UserInfo)
-def get_user_mail(email: str, db: Session = Depends(get_db)):
+# @router.get('/{email}', response_model=schemas.UserInfo)
+# def get_user_mail(email: str, db: Session = Depends(get_db)):
     
-    # Query the database for a user with the given email
-    user = db.query(models.User).filter(models.User.email == email).first()
+#     # Query the database for a user with the given email
+#     user = db.query(models.User).filter(models.User.email == email).first()
     
-    # If the user is not found, raise an HTTP 404 error
-    if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with email {email} not found")
+#     # If the user is not found, raise an HTTP 404 error
+#     if not user:
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+#                             detail=f"User with email {email} not found")
         
-    return user
+#     return user
 
 
-@router.get("/", response_model=List[schemas.UserInfo])
-async def get_email(db: Session = Depends(get_db)):
-    # Query the database for all users
-    posts = db.query(models.User).all()
-    return posts
+# @router.get("/", response_model=List[schemas.UserInfo])
+# async def get_email(db: Session = Depends(get_db)):
+#     # Query the database for all users
+#     posts = db.query(models.User).all()
+#     return posts
