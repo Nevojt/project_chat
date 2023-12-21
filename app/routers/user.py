@@ -1,21 +1,10 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_async_session
 from ..database import get_db
 from .. import models, schemas, utils, oauth2, send_mail
-from typing import List
-
-router = APIRouter(
-    prefix="/users",
-    tags=['Users'],
-)
-
-
-from fastapi import status, HTTPException, Depends, APIRouter
-from sqlalchemy.ext.asyncio import AsyncSession
-from ..database import get_async_session
-from .. import models, schemas, utils, send_mail
 from typing import List
 
 router = APIRouter(
@@ -40,8 +29,10 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     """
     
     # Check if a user with the given email already exists
-    existing_user = await db.execute(models.User.query.filter(models.User.email == user.email))
-    existing_user = existing_user.scalar_one_or_none()
+    query = select(models.User).where(models.User.email == user.email)
+    result = await db.execute(query)
+    existing_user = result.scalar_one_or_none()
+
     if existing_user:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"User {existing_user.email} already exists")
