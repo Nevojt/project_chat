@@ -1,5 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_async_session
 from ..database import get_db
 from .. import models, schemas, utils, oauth2, send_mail
 from typing import List
@@ -10,14 +12,25 @@ router = APIRouter(
 )
 
 
+from fastapi import status, HTTPException, Depends, APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_async_session
+from .. import models, schemas, utils, send_mail
+from typing import List
+
+router = APIRouter(
+    prefix="/users",
+    tags=['Users'],
+)
+
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
     Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
 
     Args:
         user (schemas.UserCreate): The user details for creating a new user.
-        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+        db (AsyncSession, optional): Asynchronous Database session dependency. Defaults to Depends(get_async_session).
 
     Raises:
         HTTPException: Raises a 424 error if a user with the given email already exists.
@@ -26,9 +39,9 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
         models.User: The newly created user, along with their information, after being added to the database.
     """
     
-    
     # Check if a user with the given email already exists
-    existing_user = db.query(models.User).filter(models.User.email == user.email).first()
+    existing_user = await db.execute(models.User.query.filter(models.User.email == user.email))
+    existing_user = existing_user.scalar_one_or_none()
     if existing_user:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"User {existing_user.email} already exists")
@@ -40,14 +53,14 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Create a new user and add it to the database
     new_user = models.User(**user.model_dump())
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user) 
+    await db.commit()
+    await db.refresh(new_user)
     
     # Create a User_Status entry for the new user
     post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell")
     db.add(post)
-    db.commit()
-    db.refresh(post)
+    await db.commit()
+    await db.refresh(post)
     
     reset_link = f"http://cool-chat.club/"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
@@ -57,9 +70,8 @@ async def created_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
                                             "reset_link": reset_link
                                             })
     
-    
-    
     return new_user
+
      
         
     
