@@ -12,7 +12,6 @@ class UserOut(BaseModel):
     user_name: str
     avatar: str
     created_at: datetime
-    token_verify: str
     
     class Config:
         from_attributes = True

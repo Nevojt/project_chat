@@ -12,7 +12,7 @@ router = APIRouter(
     tags=['Users'],
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
+@router.post("/", status_code=status.HTTP_201_CREATED) #, response_model=schemas.UserOut
 async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
     Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
