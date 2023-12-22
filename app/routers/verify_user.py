@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi.templating import Jinja2Templates
-from app import oauth2, models
+from app import models
 from ..database import get_async_session
 
 
