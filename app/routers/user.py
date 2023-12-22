@@ -12,7 +12,7 @@ router = APIRouter(
     tags=['Users'],
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED) #, response_model=schemas.UserOut
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
     Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
@@ -57,7 +57,7 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     await db.refresh(post)
 
     
-    registration_link = f"http://cool-chat.club/success_registration?token={new_user.token_verify}"
+    registration_link = f"http://cool-chat.club/success_registration?token={new_user.email}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
