@@ -57,7 +57,7 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     await db.refresh(post)
 
     
-    registration_link = f"http://cool-chat.club/success_registration?token={new_user.email}"
+    registration_link = f"http://cool-chat.club/success_registration?token={new_user.token_verify}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
