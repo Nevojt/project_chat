@@ -41,8 +41,11 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     hashed_password = utils.hash(user.password)
     user.password = hashed_password
     
+    
+    verification_token = utils.generate_unique_token(user.email)
     # Create a new user and add it to the database
-    new_user = models.User(**user.model_dump())
+    new_user = models.User(**user.model_dump(),
+                           token_verify=verification_token)
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
@@ -56,7 +59,7 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
 
     # token = await oauth2.create_access_token(data={"user_id": new_user.id})
     
-    registration_link = f"http://cool-chat.club/"
+    registration_link = f"http://cool-chat.club/verify_email?token={verification_token}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",

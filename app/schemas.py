@@ -117,6 +117,7 @@ class UserCreate(BaseModel):
     password: str
     avatar: str
     verified: bool = Field(False)
+    # token_verify: str
     
 class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(...)
