@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from fastapi.templating import Jinja2Templates
 from app import oauth2, models
 from ..database import get_async_session
@@ -12,13 +13,17 @@ router = APIRouter(
 templates = Jinja2Templates(directory="templates")
 
 
-@router.get("/verify_email")
+@router.get("/success_registration")
 async def verify_email(token: str, request: Request, db: AsyncSession = Depends(get_async_session)):
     """
     Verifies the user's email address using the provided token.
     """
     # Query for a user with the matching token_verify field
-    result = await db.execute(models.User.select().where(models.User.token_verify == token))
+    # Construct the query
+    query = select(models.User).where(models.User.token_verify == token)
+
+    # Execute the query
+    result = await db.execute(query)
     user = result.scalar_one_or_none()
 
     if not user:
