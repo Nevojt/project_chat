@@ -59,14 +59,14 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
 
     # token = await oauth2.create_access_token(data={"user_id": new_user.id})
     
-    registration_link = f"http://cool-chat.club/verify_email?token={verification_token}"
+    registration_link = f"http://cool-chat.club/verify_email?token={new.token_verify}"
     await send_mail.send_registration_mail("Вітаємо з реєстрацією!", new_user.email,
                                            {
                                             "title": "Registration",
                                             "name": user.user_name,
                                             "registration_link": registration_link
                                             })
-    
+    print(new_user.token_verify)
     return new_user
 
      
