@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Depends, status, HTTPException, Response
+
+    
+
+from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from .. import database, schemas, models, utils, oauth2
 
 router = APIRouter(tags=['Authentication'])
 
-
 @router.post('/login', response_model=schemas.Token)
-def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(database.get_db)):
-    
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(database.get_async_session)):
+        
     """
     OAuth2-compatible token login, get an access token for future requests.
 
@@ -30,19 +33,21 @@ def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session =
     - Generates an access token using the user's ID.
     - Returns the access token and the token type as a JSON object.
     """
-    
+    try:
+        query = select(models.User).where(models.User.email == user_credentials.username)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
+        if not user or not utils.verify(user_credentials.password, user.password):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
 
-    user = db.query(models.User).filter(
-        models.User.email == user_credentials.username).first()
+        access_token = await oauth2.create_access_token(data={"user_id": user.id})
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
-
-    if not utils.verify(user_credentials.password, user.password):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail=f"Invalid Credentials")
-
-    access_token = oauth2.create_access_token(data={"user_id": user.id})
-
-    return {"access_token": access_token, "token_type": "bearer"}
+        # Return the token
+        return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException:
+        # Re-raise HTTPExceptions without modification
+        raise
+    except Exception as e:
+        # Log the exception or handle it as you see fit
+        print(f"An error occurred: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while processing the request.")
