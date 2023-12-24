@@ -44,7 +44,8 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     verification_token = utils.generate_unique_token(user.email)
     
     # Create a new user and add it to the database
-    new_user = models.User(**user.model_dump())
+    new_user = models.User(**user.model_dump(),
+                           token_verify=verification_token)
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
