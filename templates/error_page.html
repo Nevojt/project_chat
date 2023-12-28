@@ -4,10 +4,12 @@
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat error page</title>
+<title>Chat Simulation with 404 Animation</title>
 <style>
   body {
-    background-color: #e0f7fa;
+    background-image: url('https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/content%20common%20chat/Desktop/Foto%20empty%20chat.png');
+    background-size: 55%;
+    background-position: center;
     margin: 0;
     font-family: 'Comic Sans MS', cursive, sans-serif;
     display: flex;
@@ -15,11 +17,17 @@
     align-items: center;
     justify-content: center;
     height: 100vh;
+    color: #333;
+    background-repeat: no-repeat;
   }
   .chat-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
   }
   .chat-bubble {
     background-color: #ffffff;
@@ -55,15 +63,9 @@
       transform: translateY(-15px);
     }
   }
-  .logo {
-    max-width: 100%;
-    height: auto;
-    margin-bottom: 20px;
-  }
 </style>
 </head>
 <body>
-<img class="logo" src="https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/Content%20Home%20page/Desktop/Logo_light%20tema_DES.png" alt="Logo">
 <div class="chat-container">
   <div class="chat-bubble bot">Oops, something went wrong.</div>
   <div class="error">404</div>
