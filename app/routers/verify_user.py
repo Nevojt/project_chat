@@ -36,7 +36,8 @@ async def verify_email(token: str, request: Request, db: AsyncSession = Depends(
     user = result.scalar_one_or_none()
 
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid or expired token")
+        return templates.TemplateResponse("error_page.html", {"request": request})
+        
 
     # Update the user's verified status
     user.verified = True
