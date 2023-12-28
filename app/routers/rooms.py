@@ -2,7 +2,10 @@ from typing import List
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.future import select
 from ..database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..database import get_async_session
 from .. import models, schemas, oauth2
 
 router = APIRouter(
@@ -56,19 +59,22 @@ async def get_rooms_info(db: Session = Depends(get_db)):
 
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.RoomPost)
-async def create_room(room: schemas.RoomCreate, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_async_session), current_user: str = Depends(oauth2.get_current_user)):
     
-    existing_room = db.query(models.Rooms).filter(models.Rooms.name_room == room.name_room).first()
+    room_get = select(models.Rooms).where(models.Rooms.name_room == room.name_room)
+    result = await db.execute(room_get)
+    existing_room = result.scalar_one_or_none()
+    
     if existing_room:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
-                            detail=f"Room {existing_room.name_room} already exists")
+                            detail=f"Room {room.name_room} already exists")
     
-    room = models.Rooms(**room.model_dump())
-    db.add(room)
-    db.commit()
-    db.refresh(room)    
-    return room
+    new_room = models.Rooms(**room.model_dump())
+    db.add(new_room)
+    await db.commit()
+    await db.refresh(new_room)
+    return new_room
 
 
 
