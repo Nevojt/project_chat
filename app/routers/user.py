@@ -1,4 +1,4 @@
-from fastapi import status, HTTPException, Depends, APIRouter
+from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -65,6 +65,24 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
                                             })
     
     return new_user
+
+@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(id: int, db: AsyncSession = Depends(get_async_session), current_user: int = Depends(oauth2.get_current_user)):
+    
+    # Select the user with the given ID
+    query = select(models.User).where(models.User.id == id)
+    result = await db.execute(query)
+    existing_user = result.scalar_one_or_none()
+
+    # If the user does not exist, raise an HTTP 404 error
+    if not existing_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID {id} does not exist.")
+    
+    # Delete the user
+    await db.delete(existing_user)
+    await db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
      
         
