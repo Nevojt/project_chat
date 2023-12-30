@@ -1,4 +1,4 @@
-from fastapi import Response, status, HTTPException, Depends, APIRouter
+from fastapi import Response, status, HTTPException, Depends, APIRouter, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -66,23 +66,52 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     
     return new_user
 
+
+
+
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(id: int, db: AsyncSession = Depends(get_async_session), current_user: int = Depends(oauth2.get_current_user)):
+async def delete_user(
+    id: int, 
+    password: str = Body(...),  # Вимагайте пароль у тілі запиту
+    db: AsyncSession = Depends(get_async_session), 
+    current_user: int = Depends(oauth2.get_current_user)
+):
     
-    # Select the user with the given ID
+    # Переконайтесь, що користувач видаляє лише свій профіль
+    if current_user.id != id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not permitted to delete other users' profiles."
+        )
+    
+    # Знайдіть користувача
     query = select(models.User).where(models.User.id == id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
-    # If the user does not exist, raise an HTTP 404 error
+    # Якщо користувач не існує, підніміть помилку 404
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with ID {id} does not exist.")
+        # Перевірте, чи користувач верифікований
+    if not existing_user.verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only verified users can delete their profiles."
+        )
     
-    # Delete the user
+    # Перевірте пароль
+    if not utils.verify(password, existing_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password."
+        )
+    
+    # Видаліть користувача
     await db.delete(existing_user)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
 
      
         
