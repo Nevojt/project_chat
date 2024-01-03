@@ -76,6 +76,24 @@ async def delete_user(
     db: AsyncSession = Depends(get_async_session), 
     current_user: int = Depends(oauth2.get_current_user)
 ):
+    """
+    Asynchronously deletes a user from the database.
+
+    This endpoint allows a user to delete their own profile by providing their user ID and password. It performs several checks to ensure that the user is allowed to delete the profile, such as verifying the user's identity, checking the existence of the user, and ensuring the user is verified and authorized to perform the deletion.
+
+    Parameters:
+    - id (int): The unique identifier of the user to be deleted.
+    - password (str): The password of the user to authenticate the deletion request.
+    - db (AsyncSession): The database session used to perform database operations.
+    - current_user (int): The user ID obtained from the current user session, used to ensure a user can only delete their own profile.
+
+    Raises:
+    - HTTPException: If the current user is not the user being deleted, if the user does not exist, if the user is not verified, or if the provided password is incorrect.
+
+    Returns:
+    - Response: An empty response with a 204 No Content status, indicating successful deletion.
+    """
+    
     
     # Переконайтесь, що користувач видаляє лише свій профіль
     if current_user.id != id:
@@ -93,7 +111,7 @@ async def delete_user(
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with ID {id} does not exist.")
-        # Перевірте, чи користувач верифікований
+    # Перевірте, чи користувач верифікований
     if not existing_user.verified:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
