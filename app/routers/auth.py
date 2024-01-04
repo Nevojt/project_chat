@@ -1,12 +1,16 @@
 
     
 
+import logging
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from .. import database, schemas, models, utils, oauth2
+
+logging.basicConfig(filename='log/authentication.log', format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=['Authentication'])
 
@@ -44,10 +48,12 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
 
         # Return the token
         return {"access_token": access_token, "token_type": "bearer"}
-    except HTTPException:
+    except HTTPException as ex_error:
+        logger.error(f"Error processing Authentication {ex_error}", exc_info=True)
         # Re-raise HTTPExceptions without modification
         raise
     except Exception as e:
         # Log the exception or handle it as you see fit
+        logger.error(f"An error occurred: Authentication {e}", exc_info=True)
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while processing the request.")
