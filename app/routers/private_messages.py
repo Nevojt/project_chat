@@ -52,20 +52,29 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     # Combine and filter results
     unique_users = {}
     for message, user in messages:
-        user_id = user.id
-        if user_id not in unique_users or (user_id in unique_users and message.is_read):
-            unique_users[user_id] = schemas.PrivateInfoRecipient(
-                recipient_id=user_id,
-                recipient_name=user.user_name,
-                recipient_avatar=user.avatar,
-                verified=user.verified,
+        # Визначаємо, хто є одержувачем у повідомленні
+        if message.sender_id == user_id:
+            # Якщо користувач є відправником, то одержувачем є інша сторона
+            other_user_id = message.recipient_id
+        else:
+            # Якщо користувач є одержувачем, то відправником є інша сторона
+            other_user_id = message.sender_id
+
+        # Отримуємо деталі іншого користувача
+        other_user = db.query(models.User).filter(models.User.id == other_user_id).first()
+
+        if other_user_id not in unique_users or (other_user_id in unique_users and message.is_read):
+            unique_users[other_user_id] = schemas.PrivateInfoRecipient(
+                recipient_id=other_user_id,
+                recipient_name=other_user.user_name,
+                recipient_avatar=other_user.avatar,
+                verified=other_user.verified,
                 is_read=message.is_read
             )
 
     result = list(unique_users.values())
 
-    if not result:
-        logger.error("Couldn't find" + message)
+    if not result:  
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Sorry, no recipients or senders found.")
     return result
@@ -75,8 +84,11 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
 
 
 
+
+
+
 # @router.get('/is_read/{user_id}')    
-# async def check_unread_messages(user_id: int, session: AsyncSession = Depends(get_async_session)) -> bool:
+# async def check_is_read_messages(user_id: int, session: AsyncSession = Depends(get_async_session)) -> bool:
     # """
     # Перевіряє, чи є у користувача непрочитані повідомлення.
 
