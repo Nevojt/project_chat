@@ -40,6 +40,7 @@ class PrivateInfoRecipient(BaseModel):
     recipient_id: int
     recipient_name: str
     recipient_avatar: str
+    verified: bool
     is_read: bool
 
 
