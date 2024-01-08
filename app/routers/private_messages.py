@@ -81,3 +81,5 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     # )
     # result = await session.execute(query)
     # return result.scalar() is not None
+    
+# return
