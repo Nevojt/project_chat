@@ -27,34 +27,34 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
         messages = messages_query.all()
 
         # Filter and map results
-        read_users = {}
-        unread_users = {}
+        users_info = {}
         for message, user in messages:
-            if message.recipient_id == user_id and not message.is_read:
-                continue  
-
             other_user_id = message.sender_id if message.recipient_id == user_id else message.recipient_id
             other_user = db.query(models.User).filter(models.User.id == other_user_id).first()
 
-            target_dict = read_users if message.is_read and message.recipient_id == user_id else unread_users
-            if other_user_id not in target_dict:
-                target_dict[other_user_id] = schemas.PrivateInfoRecipient(
+            # Determine if the message is read or not
+            is_read = message.is_read if message.recipient_id == user_id else False
+
+            # Update or add the user info
+            if other_user_id not in users_info or not users_info[other_user_id].is_read:
+                users_info[other_user_id] = schemas.PrivateInfoRecipient(
                     recipient_id=other_user_id,
                     recipient_name=other_user.user_name,
                     recipient_avatar=other_user.avatar,
                     verified=other_user.verified,
-                    is_read=message.is_read if message.recipient_id == user_id else False
+                    is_read=is_read
                 )
 
-        # Combine and sort results
-        result = list(read_users.values()) + list(unread_users.values())
+        # Convert to list and sort if needed
+        result = list(users_info.values())
 
-        if not result:  
+        if not result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail="Sorry, no recipients or senders found.")
     except Exception as e:
         logger.error(f"Error creating {e}", exc_info=True)
     return result
+
 
 
 
