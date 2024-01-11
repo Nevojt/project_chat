@@ -45,8 +45,11 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
                     is_read=is_read
                 )
 
-        # Convert to list and sort if needed
+        # Convert to list
         result = list(users_info.values())
+
+        # Sort the list so that read messages (is_read = True) come first
+        result = sorted(result, key=lambda x: x.is_read)
 
         if not result:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
