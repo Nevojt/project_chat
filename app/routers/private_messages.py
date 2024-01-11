@@ -15,6 +15,19 @@ logger = logging.getLogger(__name__)
 
 @router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
 async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
+    """
+    Get a list of recipients in a private chat.
+
+    Args:
+        user_id (int): The ID of the user whose recipients you want to retrieve.
+        db (Session): The database session.
+
+    Returns:
+        List[schemas.PrivateInfoRecipient]: A list of recipients in the private chat.
+
+    Raises:
+        HTTPException: If the user does not have any recipients or senders in the chat.
+    """
     try:
         # Query for recipients and senders
         messages_query = db.query(models.PrivateMessage, models.User).join(

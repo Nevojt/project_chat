@@ -138,6 +138,19 @@ async def delete_user(
 
 @router.get('/{email}', response_model=schemas.UserInfo)
 def get_user_mail(email: str, db: Session = Depends(get_db)):
+    """
+    Get a user by their email.
+
+    Parameters:
+    email (str): The email of the user to retrieve.
+    db (Session): The database session to use.
+
+    Returns:
+    schemas.UserInfo: The user information, if found.
+
+    Raises:
+    HTTPException: If the user is not found.
+    """
     
     # Query the database for a user with the given email
     user = db.query(models.User).filter(models.User.email == email).first()
