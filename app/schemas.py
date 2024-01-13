@@ -20,9 +20,13 @@ class UserOut(BaseModel):
 class SocketModel(BaseModel):
     created_at: datetime
     receiver_id: int
+    id: int
     message: str
     user_name: str
     avatar: str
+    verified: bool
+    vote: int
+    id_return: Optional[int] = None 
     
     class Config:
         from_attributes = True
