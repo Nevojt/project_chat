@@ -1,5 +1,5 @@
 from fastapi import status, HTTPException, Depends, APIRouter
-from sqlalchemy import desc
+from sqlalchemy import desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_async_session
 from .. import models, schemas
@@ -51,11 +51,34 @@ async def get_posts(session: AsyncSession = Depends(get_async_session), limit: i
 
 
 @router.get("/{rooms}", response_model=List[schemas.SocketModel])
-async def get_posts(rooms: str, session: AsyncSession = Depends(get_async_session), limit: int = 50, skip: int = 0):
-   
-    query = select(models.Socket, models.User).join(
+async def get_messages_room(rooms: str, session: AsyncSession = Depends(get_async_session), limit: int = 50, skip: int = 0):
+    """
+    Retrieves a list of socket messages with associated user details, paginated by a limit and offset.
+
+    Args:
+        rooms (str): The rooms of the message.
+        session (AsyncSession, optional): Asynchronous database session. Defaults to Depends(get_async_session).
+        limit (int, optional): Maximum number of messages to retrieve. Defaults to 50.
+        skip (int, optional): Number of messages to skip for pagination. Defaults to 0.
+
+    Returns:
+        List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
+    """
+    query = select(
+        models.Socket, 
+        models.User, 
+        func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
+    ).outerjoin(
+        models.Vote, models.Socket.id == models.Vote.message_id
+    ).join(
         models.User, models.Socket.receiver_id == models.User.id
-    ).filter(models.Socket.rooms == rooms).order_by(desc(models.Socket.id)).limit(limit).offset(skip)
+    ).filter(
+        models.Socket.rooms == rooms
+    ).group_by(
+        models.Socket.id, models.User.id
+    ).order_by(
+        desc(models.Socket.created_at)
+    ).limit(50)
 
     result = await session.execute(query)
     raw_messages = result.all()
@@ -67,16 +90,16 @@ async def get_posts(rooms: str, session: AsyncSession = Depends(get_async_sessio
             receiver_id=socket.receiver_id,
             message=socket.message,
             user_name=user.user_name,
-            avatar=user.avatar
+            avatar=user.avatar,
+            verified=user.verified,
+            id=socket.id,
+            vote=votes, # Додавання кількості голосів
+            id_return=socket.id_return
         )
-        for socket, user in raw_messages
+        for socket, user, votes in raw_messages
     ]
-    if not messages:  
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Post with rooms: {rooms} not found")
-
+    messages.reverse()
     return messages
-
 
 
 
