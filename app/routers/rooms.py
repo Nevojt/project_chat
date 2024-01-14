@@ -61,6 +61,20 @@ async def get_rooms_info(db: Session = Depends(get_db)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_async_session), current_user: str = Depends(oauth2.get_current_user)):
+    """
+    Create a new room.
+
+    Args:
+        room (schemas.RoomCreate): Room creation data.
+        db (AsyncSession): Database session.
+        current_user (str): Currently authenticated user.
+
+    Raises:
+        HTTPException: If the room already exists.
+
+    Returns:
+        models.Rooms: The newly created room.
+    """
     
     room_get = select(models.Rooms).where(models.Rooms.name_room == room.name_room)
     result = await db.execute(room_get)
@@ -80,6 +94,16 @@ async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_a
 
 @router.get("/{name_room}", response_model=schemas.RoomPost)
 async def get_room(name_room: str, db: Session = Depends(get_db)):
+    """
+    Get a specific room by name.
+
+    Parameters:
+    name_room (str): The name of the room to retrieve.
+    db (Session): The database session.
+
+    Returns:
+    schemas.RoomPost: The room with the specified name, or a 404 Not Found error if no room with that name exists.
+    """
     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room).first()
     
     if not post:
