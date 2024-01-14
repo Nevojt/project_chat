@@ -22,6 +22,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 async def get_db() -> Session:
+    """
+    Creates a new database session.
+    """
     db = SessionLocal()
     try:
         yield db

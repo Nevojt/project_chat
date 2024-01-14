@@ -18,6 +18,13 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 
 async def create_access_token(data: dict):
+    """
+    Generate a JWT access token
+    Args:
+        data (dict): payload to include in the access token
+    Returns:
+        str: the access token
+    """
     to_encode = data.copy()
 
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -29,6 +36,19 @@ async def create_access_token(data: dict):
 
 
 def verify_access_token(token: str, credentials_exception):
+    """
+    Verify an access token and retrieve the user's ID.
+
+    Args:
+        token (str): The access token to verify.
+        credentials_exception (HTTPException): The exception to raise if the credentials are invalid.
+
+    Returns:
+        TokenData: The user's ID.
+
+    Raises:
+        HTTPException: If the credentials are invalid.
+    """
 
     try:
 
@@ -44,6 +64,19 @@ def verify_access_token(token: str, credentials_exception):
     return token_data
     
 async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(database.get_async_session)):
+    """
+    Get the currently authenticated user.
+
+    Args:
+        token (str): The access token.
+        db (AsyncSession): The database session.
+
+    Returns:
+        models.User: The currently authenticated user.
+
+    Raises:
+        HTTPException: If the credentials are invalid.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, 
         detail="Could not validate credentials", 

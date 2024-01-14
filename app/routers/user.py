@@ -15,17 +15,17 @@ router = APIRouter(
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
 async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
-    Creates a new user in the database with the provided user details. It also checks for email uniqueness and hashes the password.
+    This function creates a new user in the database.
 
     Args:
-        user (schemas.UserCreate): The user details for creating a new user.
-        db (AsyncSession, optional): Asynchronous Database session dependency. Defaults to Depends(get_async_session).
-
-    Raises:
-        HTTPException: Raises a 424 error if a user with the given email already exists.
+        user (schemas.UserCreate): The user data to create.
+        db (AsyncSession): The database session to use.
 
     Returns:
-        models.User: The newly created user, along with their information, after being added to the database.
+        schemas.UserOut: The newly created user.
+
+    Raises:
+        HTTPException: If a user with the given email already exists.
     """
     
     # Check if a user with the given email already exists
