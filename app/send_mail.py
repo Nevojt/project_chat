@@ -23,6 +23,20 @@ env = Environment(loader=FileSystemLoader('templates'))
 template = env.get_template('password_reset.html')
 
 async def password_reset(subject: str, email_to: str, body: dict):
+    """
+    This function is used to send a password reset email to the user.
+
+    Args:
+        subject (str): The subject of the email.
+        email_to (str): The email address of the user.
+        body (dict): The body of the email, which includes the reset link.
+
+    Returns:
+        dict: A dictionary containing a message indicating that the email was sent.
+
+    Raises:
+        Exception: An exception is raised if there is an error sending the email.
+    """
 
     html_content = template.render(body)
 
@@ -41,6 +55,20 @@ async def password_reset(subject: str, email_to: str, body: dict):
 templare_mail_regostration = env.get_template('email.html')
 
 async def send_registration_mail(subject: str, email_to: str, body: dict):
+    """
+    This function is used to send a registration email to the user.
+
+    Args:
+        subject (str): The subject of the email.
+        email_to (str): The email address of the user.
+        body (dict): The body of the email, which includes the activation link.
+
+    Returns:
+        dict: A dictionary containing a message indicating that the email was sent.
+
+    Raises:
+        Exception: An exception is raised if there is an error sending the email.
+    """
     
     html_content = templare_mail_regostration.render(body)
     message = MessageSchema(
