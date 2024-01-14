@@ -11,13 +11,34 @@ router = APIRouter(
 
 @router.get("/")
 async def get_posts(db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+    """
+    Get a list of all user status.
+
+    Args:
+        db (Session, optional): The database session object.
+
+    Returns:
+        List[schemas.UserStatus]: A list of user status objects.
+    """
     posts = db.query(models.User_Status).all()
     return posts
 
 
 @router.get("/{user_name}")
 async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_user: int = Depends(oauth2.get_current_user)
-    
+    """
+    Get a single user status by their username.
+
+    Args:
+        user_name (str): The username of the user whose status is to be retrieved.
+        db (Session, optional): The database session object.
+
+    Raises:
+        HTTPException: A 404 NOT FOUND error is raised if no user status is found for the given username.
+
+    Returns:
+        List[schemas.UserStatus]: A list of user status objects, or an empty list if no user status is found.
+    """
     post = db.query(models.User_Status).filter(models.User_Status.user_name == user_name).all()
     
     if not post:
