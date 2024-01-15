@@ -1,6 +1,8 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy import desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import oauth2
 from ..database import get_async_session
 from .. import models, schemas
 from sqlalchemy.future import select
@@ -178,3 +180,26 @@ async def get_messages_room(rooms: str, session: AsyncSession = Depends(get_asyn
     
 #     db.commit()
 #     return post_query.first()
+
+@router.put("/{id}")
+async def change_message(id_message: int, message_update: schemas.SocketUpdate,
+                         current_user: models.User = Depends(oauth2.get_current_user), 
+                         session: AsyncSession = Depends(get_async_session)):
+    
+    
+    query = select(models.Socket).where(models.Socket.id == id_message, models.Socket.receiver_id == current_user.id)
+    result = await session.execute(query)
+    message = result.scalar()
+
+    if message is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found or you don't have permission to edit this message")
+
+    # Оновлення повідомлення
+    message.message = message_update.message
+    session.add(message)
+    await session.commit()
+
+    return {"message": "Message updated successfully"}
+    
+
+        

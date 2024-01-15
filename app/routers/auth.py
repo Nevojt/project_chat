@@ -41,6 +41,7 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
         query = select(models.User).where(models.User.email == user_credentials.username)
         result = await db.execute(query)
         user = result.scalar_one_or_none()
+        
         if not user or not utils.verify(user_credentials.password, user.password):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
 

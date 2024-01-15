@@ -30,6 +30,9 @@ class SocketModel(BaseModel):
     
     class Config:
         from_attributes = True
+        
+class SocketUpdate(BaseModel):
+    message: str
 
 
 class PrivateRecipient(BaseModel):
