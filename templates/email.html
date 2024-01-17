@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome to Teamchat</title>
+<title>Welcome to TeamChat</title>
 <style>
   body {
     font-family: 'Arial', sans-serif;
@@ -22,13 +22,12 @@
     padding: 2em;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
+    text-align: center; /* Center align the inner content */
   }
   .header {
-    text-align: center;
     color: #333;
   }
   .welcome-message {
-    text-align: center;
     margin: 20px 0;
   }
   .verification-button {
@@ -38,11 +37,14 @@
     padding: 10px 20px;
     border-radius: 5px;
     cursor: pointer;
-    display: block;
-    width: 100%;
+    width: 50%; /* Set the width to be 50% of its container */
     text-align: center;
     text-decoration: none; /* Remove default anchor underline */
+    display: inline-block; /* Allows margin auto to work */
     margin-top: 20px; /* Add some margin to the top of the button */
+    margin-bottom: 20px; /* Add some margin to the bottom of the button */
+    margin-left: auto; /* Center the button */
+    margin-right: auto; /* Center the button */
   }
 </style>
 </head>
