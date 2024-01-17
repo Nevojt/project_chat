@@ -1,21 +1,64 @@
 <!DOCTYPE html>
-<html>
-<body style="margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif;">
-<div style="width: 100%; background: #efefef; border-radius: 10px; padding: 10px; box-sizing: border-box;">
-  <div style="margin: 0 auto; width: 90%; text-align: center; box-sizing: border-box;">
-    <h1 style="background-color: rgba(0, 53, 102, 1); padding: 5px 10px; border-radius: 5px; color: white;">{{ title }}</h1>
-    <div style="margin: 30px auto; background: white; width: 100%; max-width: 500px; border-radius: 10px; padding: 50px; text-align: center; box-sizing: border-box;">
-      <h3 style="margin-bottom: 100px; font-size: 24px;">Hi {{ name }}!</h3>
-      <p style="margin-bottom: 30px;">Welcome to the community, your registration has been successful. Enjoy our services.</p>
-
-        <a style="display: inline-block; margin: 0 auto; border: none; background-color: rgba(255, 214, 10, 1); color: white; width: 200px; line-height: 24px; padding: 10px; font-size: 24px; border-radius: 10px; cursor: pointer; text-decoration: none;"
-            href="{{ registration_link }}"
-            target="_blank"
-          >
-            Verification
-        </a>
-    </div>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome to Teamchat</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  .container {
+    background-color: #fff;
+    width: 80%;
+    max-width: 600px;
+    padding: 2em;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  .header {
+    text-align: center;
+    color: #333;
+  }
+  .welcome-message {
+    text-align: center;
+    margin: 20px 0;
+  }
+  .verification-button {
+    background-color: #0084ff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    text-align: center;
+    text-decoration: none; /* Remove default anchor underline */
+    margin-top: 20px; /* Add some margin to the top of the button */
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Welcome to the TeamChat</h1>
   </div>
+  <div class="welcome-message">
+    <p>Hi, {{ title }}! 👋</p>
+    <p>We are very glad that you chose our chat for exciting communication with interesting people on various topics.</p>
+    <p>In our chat you will find rooms for communication on any topic. But if you have your own interesting topic, then become the creator of your wonderful chat room.</p>
+    <p>In order to use all the capabilities of TeamChat, click the button below to verify your e-mail.</p>
+    <p>The TeamChat team wishes you a great day!</p>
+  </div>
+  <a href="{{ registration_link }}" target="_blank" class="verification-button">Verification</a>
 </div>
 </body>
 </html>
