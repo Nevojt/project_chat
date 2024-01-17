@@ -40,6 +40,6 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
 });
 
 function isValidPassword(password) {
-    var passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=]).{4,8}$/;
+    var passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!?]).{4,8}$/;
     return passwordRegex.test(password);
 }
