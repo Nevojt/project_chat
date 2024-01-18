@@ -43,3 +43,19 @@ function isValidPassword(password) {
     var passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!?]).{4,8}$/;
     return passwordRegex.test(password);
 }
+
+function togglePassword(inputId) {
+    var passwordInput = document.getElementById(inputId);
+    var toggleIcon = document.querySelector('.toggle-' + inputId);
+    var toggleIconSlash = document.querySelector('.toggle-' + inputId + '-slash');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        if (toggleIcon) toggleIcon.style.display = 'none';
+        if (toggleIconSlash) toggleIconSlash.style.display = 'block';
+    } else {
+        passwordInput.type = 'password';
+        if (toggleIcon) toggleIcon.style.display = 'block';
+        if (toggleIconSlash) toggleIconSlash.style.display = 'none';
+    }
+}
