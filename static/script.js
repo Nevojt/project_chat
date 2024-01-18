@@ -3,7 +3,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     var password2 = document.getElementById('password2').value;
 
     if (!isValidPassword(password1)) {
-        document.getElementById('message').textContent = 'The password must be between 4 and 8 characters long, contain at least one uppercase letter, one number, and one special character.';
+        document.getElementById('message').textContent = 'The password must be between 4 and 8 characters long, contain at least one uppercase letter, one number, and one special character ?@#$%^&+=!.';
         return;
     }
 
@@ -51,11 +51,12 @@ function togglePassword(inputId) {
 
     if (passwordInput.type === 'password') {
         passwordInput.type = 'text';
-        if (toggleIcon) toggleIcon.style.display = 'none';
-        if (toggleIconSlash) toggleIconSlash.style.display = 'block';
+        toggleIcon.style.display = 'none';
+        toggleIconSlash.style.display = 'block';
     } else {
         passwordInput.type = 'password';
-        if (toggleIcon) toggleIcon.style.display = 'block';
-        if (toggleIconSlash) toggleIconSlash.style.display = 'none';
+        toggleIcon.style.display = 'block';
+        toggleIconSlash.style.display = 'none';
     }
 }
+
