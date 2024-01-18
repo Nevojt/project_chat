@@ -39,7 +39,7 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with email: {request.email} not found")
     if user is not None:
-        token = oauth2.create_access_token(data={"user_id": user.id})
+        token = await oauth2.create_access_token(data={"user_id": user.id})
         reset_link = f"http://cool-chat.club/reset?token={token}"
         
         await password_reset("Password Reset", user.email,
