@@ -2,7 +2,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     var password1 = document.getElementById('password1').value;
     var password2 = document.getElementById('password2').value;
     if (!isValidPassword(password1)) {
-        document.getElementById('message').textContent = 'The password must be between 4 and 8 characters long, contain at least one uppercase letter, one number, and one special character.';
+        document.getElementById('message').textContent = 'The password must be between 4 and 8 characters long, contain at least one uppercase letter, one number, and one special character @#$%^&+=!? .';
         return;
     }
     if (password1 !== password2) {
