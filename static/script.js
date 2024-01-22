@@ -16,7 +16,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     const token = urlParams.get('token'); // Отримання токену з URL
 
     try {
-        const response = await fetch(`/password/reset?token=${token}`, {
+        const response = await fetch(`https://cool-chat.club/password/reset?token=${token}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
@@ -28,7 +28,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
 
         if (response.ok) {
             // Успішне скидання пароля
-            window.location.href = '/success-page'; // Перенаправлення на сторінку успіху
+            window.location.href = 'https://cool-chat.club/success-page'; // Перенаправлення на сторінку успіху
         } else {
             console.error('Error resetting password:', data);
             document.getElementById('message').textContent = 'Error resetting password';
