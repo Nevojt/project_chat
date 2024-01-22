@@ -16,7 +16,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     const token = urlParams.get('token'); // Отримання токену з URL
 
     try {
-        const response = await fetch(`https://cool-chat.club/password/reset?token=${token}`, {
+        const response = await fetch(`https://cool-chat.club/reset?token=${token}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
