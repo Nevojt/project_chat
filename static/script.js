@@ -16,13 +16,14 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     const token = urlParams.get('token'); // Отримання токену з URL
 
     try {
-        const response = await fetch(`/password/reset?token=${token}`, {
+        const response = await fetch(`https://cool-chat.club/password/reset?token=${token}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ password: password1 })
         });
+
 
         const data = await response.json();
 
@@ -44,19 +45,19 @@ function isValidPassword(password) {
     return passwordRegex.test(password);
 }
 
-// function togglePassword(inputId) {
-//     var passwordInput = document.getElementById(inputId);
-//     var toggleIcon = document.querySelector('.toggle-' + inputId);
-//     var toggleIconSlash = document.querySelector('.toggle-' + inputId + '-slash');
+function togglePassword(inputId) {
+    var passwordInput = document.getElementById(inputId);
+    var toggleIcon = document.querySelector('.toggle-' + inputId);
+    var toggleIconSlash = document.querySelector('.toggle-' + inputId + '-slash');
 
-//     if (passwordInput.type === 'password') {
-//         passwordInput.type = 'text';
-//         toggleIcon.style.display = 'none';
-//         toggleIconSlash.style.display = 'block';
-//     } else {
-//         passwordInput.type = 'password';
-//         toggleIcon.style.display = 'block';
-//         toggleIconSlash.style.display = 'none';
-//     }
-// }
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.style.display = 'none';
+        toggleIconSlash.style.display = 'block';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.style.display = 'block';
+        toggleIconSlash.style.display = 'none';
+    }
+}
 
