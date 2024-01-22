@@ -12,7 +12,7 @@ document.getElementById('submitBtn').addEventListener('click', async function() 
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token'); // Отримання токену з URL
     try {
-        const response = await fetch(`http://cool-chat.club/password/reset?token=${token}`, {
+        const response = await fetch(`/password/reset?token=${token}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
