@@ -58,7 +58,7 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
         )
         
         
-@router.put("/reset/", response_description="Reset password")
+@router.put("/reset", response_description="Reset password")
 async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depends(get_async_session)):
     """
     Handles the actual password reset using a provided token. Validates the token and updates the user's password.
