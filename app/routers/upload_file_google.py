@@ -12,8 +12,6 @@ router = APIRouter(
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "sinuous-grove-405612-a7d9d516c960.json"
 BUCKET_NAME="chatbuscket"
 
-from mimetypes import guess_type
-from google.cloud import storage
 
 def upload_to_gcs(bucket_name, file_stream, blob_name):
     """Завантажує файл у Google Cloud Storage."""

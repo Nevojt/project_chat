@@ -122,8 +122,9 @@ celerybeat.pid
 
 # Environments
 .env.mail
-.env
+.env*
 .venv
+/venv*
 env/
 venv/
 ENV/
