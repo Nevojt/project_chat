@@ -3,6 +3,7 @@ from fastapi import File, UploadFile, APIRouter
 from google.cloud import storage
 from mimetypes import guess_type
 import os
+import re
 
 router = APIRouter(
     prefix="/upload_google",
@@ -13,10 +14,26 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "sinuous-grove-405612-a7d9d516c96
 BUCKET_NAME="chatbuscket"
 
 
+def generate_new_name(bucket, original_blob_name):
+    """Генерує нове ім'я файлу, якщо воно вже існує."""
+    counter = 1
+    blob_name = original_blob_name
+    while bucket.blob(blob_name).exists():
+        # Розділяємо ім'я файлу та його розширення
+        name, extension = re.match(r"(.*?)(\.[^.]*$|$)", original_blob_name).groups()
+        # Додаємо лічильник до імені файлу
+        blob_name = f"{name}_{counter}{extension}"
+        counter += 1
+    return blob_name
+
+
 def upload_to_gcs(bucket_name, file_stream, blob_name):
     """Завантажує файл у Google Cloud Storage."""
     storage_client = storage.Client()
     bucket = storage_client.bucket(bucket_name)
+    
+    # Перевіряємо, чи файл вже існує, і змінюємо ім'я, якщо потрібно
+    blob_name = generate_new_name(bucket, blob_name)
     blob = bucket.blob(blob_name)
 
     # Визначення MIME-типу файлу
