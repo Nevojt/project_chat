@@ -18,9 +18,8 @@ This module serves as a pivotal segment of the main application, focusing primar
 
 - **Virtualization & Hosting**: The project is hosted on a virtual machine procured from `Google Cloud Platform`. 
 
-- **Web Server**: For serving the main site, I employed the `Apache` server, known for its stability and performance.
+- **Web Server**: For serving the main site, I employed the `Nginx` server, known for its stability and performance.
 
-- **Containerization**: The API is encapsulated within a `Docker` container running on the same virtual machine. This provides an isolated environment, ensuring consistency across deployments and scalability.
 
 - **Operating System**: The entirety of this setup operates on a `Linux` environment, harnessing its security features and performance optimizations.
 
