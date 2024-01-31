@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from .database import engine
 from .routers import message, upload_file_supabase, user, rooms, auth, user_status, vote, images, private_messages, count_users_messages, password_reset, verify_user
-from .routers import upload_file_google
+from .routers import upload_file_google, ass
 from app import models, send_mail
 
 models.Base.metadata.create_all(bind=engine)
@@ -39,6 +39,7 @@ app.include_router(send_mail.router)
 app.include_router(verify_user.router)
 app.include_router(upload_file_supabase.router)
 app.include_router(upload_file_google.router)
+app.include_router(ass.router)
 
 
 
