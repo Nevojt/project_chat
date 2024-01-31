@@ -18,6 +18,18 @@ credentials_exception = HTTPException(
 
 @router.get('/ass')
 def ass_endpoint(token: str, session: Session = Depends(get_db)):
+    """_summary_
+
+    Args:
+        token (str): token verification
+        session (Session, optional): session database. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException:: Token not validation
+
+    Returns:
+        Response: return server
+    """
     try:
         user = oauth2.verify_access_token(token, credentials_exception)
         return Response(status_code=status.HTTP_200_OK)
