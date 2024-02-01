@@ -1,12 +1,10 @@
-import logging
+
 from fastapi import APIRouter, Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 
 from .. import oauth2
 
-logging.basicConfig(filename='log/ass.log', format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=['ASS'])
 
