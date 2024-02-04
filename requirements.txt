@@ -17,6 +17,7 @@ dnspython==2.5.0
 ecdsa==0.18.0
 email-validator==2.1.0.post1
 enumb==0.1.5
+exceptiongroup==1.2.0
 expo==0.1.2
 fastapi==0.109.0
 fastapi-mail==1.4.1
@@ -54,7 +55,7 @@ pyproject_hooks==1.0.0
 python-dateutil==2.8.2
 python-dotenv==1.0.1
 python-jose==3.3.0
-python-multipart==0.0.6
+python-multipart==0.0.7
 PyYAML==6.0.1
 realtime==1.0.2
 requests==2.31.0
@@ -67,6 +68,7 @@ storage3==0.7.0
 StrEnum==0.4.15
 supabase==2.3.4
 supafunc==0.3.3
+tomli==2.0.1
 typing==3.7.4.3
 typing_extensions==4.9.0
 urllib3==2.1.0
