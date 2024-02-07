@@ -10,7 +10,7 @@ router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 
-@router.get("/success_registration")
+@router.get("/success_registration", include_in_schema=False)
 async def verify_email(token: str, request: Request, db: AsyncSession = Depends(get_async_session)):
     """
     Verifies the user's email address using the provided token.

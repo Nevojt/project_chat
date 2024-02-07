@@ -48,15 +48,15 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def read_root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
-@app.get("/reset")
+@app.get("/reset", include_in_schema=False)
 async def read_reset(request: Request):
     return templates.TemplateResponse("window_new_password.html", {"request": request})
 
-@app.get("/success-page")
+@app.get("/success-page", include_in_schema=False)
 async def finally_reset(request: Request):
     return templates.TemplateResponse("success-page.html", {"request": request})
