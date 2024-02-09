@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from .database import engine
@@ -60,3 +61,7 @@ async def read_reset(request: Request):
 @app.get("/success-page", include_in_schema=False)
 async def finally_reset(request: Request):
     return templates.TemplateResponse("success-page.html", {"request": request})
+
+@app.get('/privacy-policy')
+async def privacy_policy(request: Request):
+    return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/#/PrivacyPolicy")
