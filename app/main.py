@@ -65,3 +65,5 @@ async def finally_reset(request: Request):
 @app.get('/privacy-policy')
 async def privacy_policy(request: Request):
     return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/#/PrivacyPolicy")
+
+# commit changes
