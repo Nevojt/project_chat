@@ -29,9 +29,22 @@ async def get_posts(session: AsyncSession = Depends(get_async_session), limit: i
         List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
     """
 
-    query = select(models.Socket, models.User).join(
+    query = select(
+        models.Socket, 
+        models.User, 
+        func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
+    ).outerjoin(
+        models.Vote, models.Socket.id == models.Vote.message_id
+    ).join(
         models.User, models.Socket.receiver_id == models.User.id
-    ).order_by(desc(models.Socket.id)).limit(limit).offset(skip)
+    ).group_by(
+        models.Socket.id, models.User.id
+    ).order_by(
+        desc(models.Socket.created_at)
+    ).limit(50)
+
+    result = await session.execute(query)
+    raw_messages = result.all()
 
     result = await session.execute(query)
     raw_messages = result.all()
@@ -41,11 +54,15 @@ async def get_posts(session: AsyncSession = Depends(get_async_session), limit: i
         schemas.SocketModel(
             created_at=socket.created_at,
             receiver_id=socket.receiver_id,
+            id=socket.id,
             message=socket.message,
             user_name=user.user_name,
-            avatar=user.avatar
+            avatar=user.avatar,
+            verified=user.verified,
+            vote=votes,
+            id_return=socket.id_return,
         )
-        for socket, user in raw_messages
+        for socket, user, votes in raw_messages
     ]
 
     return messages

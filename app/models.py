@@ -44,6 +44,7 @@ class User(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     verified = Column(Boolean, nullable=False, server_default='false')
     token_verify = Column(String, nullable=True)
+    refresh_token = Column(String, nullable=True)
     
 class User_Status(Base):
     __tablename__ = 'user_status' 

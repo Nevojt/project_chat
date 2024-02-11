@@ -90,3 +90,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         user = user.scalar()
     
     return user
+
+
+async def create_refresh_token(user_id: str):
+    expire = datetime.utcnow() + timedelta(days=7)  # Наприклад, токен оновлення дійсний 7 днів
+    to_encode = {"exp": expire, "user_id": user_id}
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt

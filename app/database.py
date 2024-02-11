@@ -21,7 +21,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-async def get_db() -> Session:
+async def get_db():
     """
     Creates a new database session.
     """

@@ -2,6 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from pydantic.types import conint
+from typing_extensions import Annotated
         
         
 
@@ -151,6 +152,7 @@ class UserInfo(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
     
 class TokenData(BaseModel):
@@ -159,7 +161,7 @@ class TokenData(BaseModel):
     
 class Vote(BaseModel):
     message_id: int
-    dir: conint(le=1)
+    dir: Annotated[int, Field(strict=True, le=1)]
     
     
     

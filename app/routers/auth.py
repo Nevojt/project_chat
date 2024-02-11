@@ -2,10 +2,15 @@
 import logging
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
+from ..config import settings
 from .. import database, schemas, models, utils, oauth2
+
+SECRET_KEY = settings.secret_key
+ALGORITHM = settings.algorithm
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
 logging.basicConfig(filename='log/authentication.log', format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -44,9 +49,17 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
 
         access_token = await oauth2.create_access_token(data={"user_id": user.id})
+        
+        refresh_token = await oauth2.create_refresh_token(user.id)
+        user.refresh_token = refresh_token
+        await db.commit()
 
         # Return the token
-        return {"access_token": access_token, "token_type": "bearer"}
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"}
+        
     except HTTPException as ex_error:
         logger.error(f"Error processing Authentication {ex_error}", exc_info=True)
         # Re-raise HTTPExceptions without modification
@@ -56,3 +69,21 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
         logger.error(f"An error occurred: Authentication {e}", exc_info=True)
         print(f"An error occurred: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while processing the request.")
+
+@router.post("/refresh")
+async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(database.get_async_session)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid refresh token",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise credentials_exception
+        # Тут можна додати перевірку, чи існує користувач у базі даних
+        new_access_token = await oauth2.create_access_token({"user_id": user_id})
+        return {"access_token": new_access_token, "token_type": "bearer"}
+    except JWTError:
+        raise credentials_exception
