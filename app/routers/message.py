@@ -211,7 +211,6 @@ async def change_message(id_message: int, message_update: schemas.SocketUpdate,
     if message is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Message not found or you don't have permission to edit this message")
 
-    # Оновлення повідомлення
     message.message = message_update.message
     session.add(message)
     await session.commit()

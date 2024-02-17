@@ -72,6 +72,19 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
 
 @router.post("/refresh")
 async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(database.get_async_session)):
+    """
+    Endpoint to refresh an access token using a refresh token.
+
+    Args:
+        refresh_token (str): The refresh token to use for refreshing the access token.
+        db (AsyncSession): The database session to use for accessing the database.
+
+    Returns:
+        JSON: The new access token and its type.
+
+    Raises:
+        HTTPException: If the refresh token is invalid or expired.
+    """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid refresh token",
@@ -82,7 +95,7 @@ async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(da
         user_id: str = payload.get("user_id")
         if user_id is None:
             raise credentials_exception
-        # Тут можна додати перевірку, чи існує користувач у базі даних
+        
         new_access_token = await oauth2.create_access_token({"user_id": user_id})
         return {"access_token": new_access_token, "token_type": "bearer"}
     except JWTError:

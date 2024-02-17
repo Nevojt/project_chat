@@ -3,6 +3,7 @@ from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from pydantic.types import conint
 from typing_extensions import Annotated
+from .models import UserRole
         
         
 
@@ -126,6 +127,8 @@ class UserCreate(BaseModel):
     password: str
     avatar: str
     verified: bool = Field(False)
+    role: UserRole = UserRole.user
+    
     
 class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(...)

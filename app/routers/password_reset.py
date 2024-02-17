@@ -80,10 +80,10 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Хешування нового пароля
+    # hashed new password
     hashed_password = utils.hash(new_password.password)
 
-    # Оновлення пароля в базі даних
+    # Update password to database
     user.password = hashed_password
     db.add(user)
     await db.commit()

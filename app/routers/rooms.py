@@ -27,22 +27,22 @@ async def get_rooms_info(db: Session = Depends(get_db)):
         List[schemas.RoomBase]: A list containing information about each room, such as room name, image, count of users, count of messages, and creation date.
     """
     
-    # Отримання інформації про кімнати
+    # get info rooms and not room "Hell"
     rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').all()
 
-    # Отримання кількості повідомлень
+    # Count messages for room
     messages_count = db.query(
         models.Socket.rooms, 
         func.count(models.Socket.id).label('count')
     ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
 
-    # Отримання кількості користувачів
+    # Count users for room
     users_count = db.query(
         models.User_Status.name_room, 
         func.count(models.User_Status.id).label('count')
     ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
 
-    # Об'єднання результатів
+    # merge result
     rooms_info = []
     for room in rooms:
         room_info = {
@@ -112,17 +112,33 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
     return post
 
 
-# @router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
-# def delete_room(name_room: str, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
-#     post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
+@router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_room(name_room: str, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
+    """Deletes a room.
+
+    Args:
+        name_room (str): The name of the room to delete.
+        db (Session): The database session.
+        current_user (str): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the user does not have sufficient permissions.
+
+    Returns:
+        Response: An empty response with status code 204 No Content.
+    """
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     
-#     if post.first() == None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f"Room with: {name_room} not found")
+    room = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
     
-#     post.delete(synchronize_session=False)
-#     db.commit()
-#     return Response(status_code=status.HTTP_204_NO_CONTENT)
+    if room.first() == None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with: {name_room} not found")
+    
+    room.delete(synchronize_session=False)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 
