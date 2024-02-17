@@ -9,7 +9,7 @@ router = APIRouter(
     tags=['Direct'],
 )
 
-logging.basicConfig(filename='log/private.log', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='_log/private.log', format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 

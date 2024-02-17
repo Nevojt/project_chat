@@ -12,7 +12,7 @@ SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.access_token_expire_minutes
 
-logging.basicConfig(filename='log/authentication.log', format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(filename='_log/authentication.log', format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=['Authentication'])
