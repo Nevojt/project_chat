@@ -50,8 +50,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", include_in_schema=False)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+async def home(request: Request):
+    return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/")
 
 
 @app.get("/reset", include_in_schema=False)
@@ -62,7 +62,7 @@ async def read_reset(request: Request):
 async def finally_reset(request: Request):
     return templates.TemplateResponse("success-page.html", {"request": request})
 
-@app.get('/privacy-policy')
+@app.get('/privacy-policy', include_in_schema=False)
 async def privacy_policy(request: Request):
     return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/#/PrivacyPolicy")
 
