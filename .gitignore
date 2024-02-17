@@ -27,6 +27,7 @@ share/python-wheels/
 MANIFEST
 .env*
 sinuous-grove-405612-a7d9d516c960.json
+_log
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
