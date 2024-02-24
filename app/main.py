@@ -12,6 +12,7 @@ from app import models, send_mail
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
+    root_path="/api"
     title="Cool Chat",
     description="Cool Chat",
     docs_url="/docs",
