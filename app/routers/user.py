@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_async_session
 from ..database import get_db
 from .. import models, schemas, utils, oauth2, send_mail
-from typing import List
+from typing import Annotated, List
 
 router = APIRouter(
     prefix="/users",
@@ -56,7 +56,7 @@ async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_
     await db.commit()
     await db.refresh(post)
     
-    registration_link = f"http://cool-chat.club/success_registration?token={new_user.token_verify}"
+    registration_link = f"http://cool-chat.club/api/success_registration?token={new_user.token_verify}"
     await send_mail.send_registration_mail("Thank you for registration!", new_user.email,
                                            {
                                             "title": "Registration",
@@ -168,3 +168,16 @@ async def get_email(db: Session = Depends(get_db)):
     # Query the database for all users
     posts = db.query(models.User).all()
     return posts
+
+@router.get('/me/', response_model=schemas.UserInfo)
+async def read_current_user(current_user: schemas.UserOut = Depends(oauth2.get_current_user)):
+    """
+    Get the currently authenticated user.
+
+    Parameters:
+    current_user (schemas.UserOut): The currently authenticated user.
+
+    Returns:
+    schemas.UserInfo: The user information.
+    """
+    return current_user
