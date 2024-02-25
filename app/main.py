@@ -15,7 +15,8 @@ app = FastAPI(
     root_path="/api",
     docs_url="/docs",
     title="Cool Chat",
-    description="Cool Chat",
+    description="Cool Chat documentation",
+    version="0.1.0"
 )
 
 origins = ["*"]
