@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, asc
 from sqlalchemy.future import select
 from ..database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -28,7 +28,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     """
     
     # get info rooms and not room "Hell"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').order_by(asc(models.Rooms.id)).all()
 
     # Count messages for room
     messages_count = db.query(
