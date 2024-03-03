@@ -141,6 +141,13 @@ class UserCreate(BaseModel):
     verified: bool = Field(False)
     role: UserRole = UserRole.user
     
+class UserUpdate(BaseModel):
+    user_name: str
+    avatar: str
+    
+    class Config:
+        from_attributes = True
+    
     
 class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(...)
