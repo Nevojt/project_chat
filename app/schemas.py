@@ -61,6 +61,9 @@ class RoomBase(BaseModel):
     count_users: int
     count_messages: int
     created_at: datetime
+
+    class Config:
+        from_attributes = True
     
     
 class RoomCreate(BaseModel):
@@ -74,6 +77,15 @@ class RoomPost(RoomBase):
     class Config:
         from_attributes = True
         
+class RoomUpdate(BaseModel):
+    id: int
+    name_room: str
+    image_room: str
+    owner: int
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True        
         
 class Images(BaseModel):
     images: str

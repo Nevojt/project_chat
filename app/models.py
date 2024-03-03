@@ -37,6 +37,7 @@ class Rooms(Base):
     name_room = Column(String, nullable=False, unique=True)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     image_room = Column(String, nullable=False)
+    owner = Column(Integer, (ForeignKey("users.id")), nullable=False)
     
     
 class User(Base):

@@ -60,7 +60,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_async_session), current_user: str = Depends(oauth2.get_current_user)):
+async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_async_session), current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Create a new room.
 
@@ -84,7 +84,7 @@ async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_a
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"Room {room.name_room} already exists")
     
-    new_room = models.Rooms(**room.model_dump())
+    new_room = models.Rooms(owner=current_user.id, **room.model_dump())
     db.add(new_room)
     await db.commit()
     await db.refresh(new_room)
@@ -92,7 +92,7 @@ async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_a
 
 
 
-@router.get("/{name_room}", response_model=schemas.RoomPost)
+@router.get("/{name_room}", response_model=schemas.RoomUpdate)
 async def get_room(name_room: str, db: Session = Depends(get_db)):
     """
     Get a specific room by name.
@@ -112,8 +112,8 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
     return post
 
 
-@router.delete("/{name_room}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(name_room: str, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
+@router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_room(room_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     """Deletes a room.
 
     Args:
@@ -127,34 +127,54 @@ def delete_room(name_room: str, db: Session = Depends(get_db), current_user: str
     Returns:
         Response: An empty response with status code 204 No Content.
     """
-    if current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-    
-    room = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
-    
-    if room.first() == None:
+    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id)
+    room = room_query.first()
+
+    if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Room with: {name_room} not found")
-    
-    room.delete(synchronize_session=False)
+                            detail=f"Room with ID {room_id} not found")
+
+    if current_user.role != "admin" and current_user.id != room.owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+
+    room_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.put("/{room_id}", response_model=schemas.RoomUpdate)  # Assuming you're using room_id
+def update_room(room_id: int, update: schemas.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Update a room.
 
+    Args:
+        room_id (int): The ID of the room to update.
+        update (schemas.RoomCreate): The updated room data.
+        db (Session): The database session.
+        current_user (User): The currently authenticated user.
 
+    Raises:
+        HTTPException: If the room does not exist, or the user does not have sufficient permissions.
 
-# @router.put("/{name_room}")
-# def update_room(name_room: str, update_post: schemas.RoomCreate, db: Session = Depends(get_db), current_user: str = Depends(oauth2.get_current_user)):
+    Returns:
+        JSON: A JSON object with a "Message" key containing a message indicating that the room was updated.
+    """
+    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id)
+    room = room_query.first()
     
-#     post_query = db.query(models.Rooms).filter(models.Rooms.name_room == name_room)
-#     post = post_query.first()
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID: {room_id} not found")
+        
+    if current_user.role != "admin" and current_user.id != room.owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     
-#     if post == None:
-#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-#                             detail=f"post with name_room: {name_room} not found")
+    # Assuming update.model_dump() returns a dictionary of attributes to update
+    room_query.update(update.model_dump(), synchronize_session=False)
     
-#     post_query.update(update_post.model_dump(), synchronize_session=False)
-    
-#     db.commit()
-#     return {"Message": f"Room {name_room} update"}
+    db.commit()
+
+    # Re-fetch or update the room object to reflect the changes
+    updated_room = room_query.first()
+    return updated_room
+
