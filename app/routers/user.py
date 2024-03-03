@@ -136,7 +136,21 @@ async def delete_user(
 @router.put('/{user_id}', response_model=schemas.UserInfo)
 async def update_user(user_id: int, update: schemas.UserUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     
-    
+    """
+    Update a user's information.
+
+    Args:
+        user_id (int): The ID of the user to update.
+        update (schemas.UserUpdate): The updated user information.
+        db (Session): The database session to use.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        schemas.UserInfo: The updated user information.
+
+    Raises:
+        HTTPException: If the user does not exist or if the user is not authorized to update the specified user.
+    """
     if current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
