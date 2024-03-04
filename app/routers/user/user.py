@@ -2,9 +2,15 @@ from fastapi import Response, status, HTTPException, Depends, APIRouter, Body
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..database import get_async_session
-from ..database import get_db
-from .. import models, schemas, utils, oauth2, send_mail
+
+from app.mail import send_mail
+
+from ...config import utils
+
+from ...auth import oauth2
+from ...database.async_db import get_async_session
+from ...database.database import get_db
+from app.model_schema import models, schemas
 from typing import Annotated, List
 
 router = APIRouter(

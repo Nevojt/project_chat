@@ -2,9 +2,9 @@ from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy import desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import oauth2
-from ..database import get_async_session
-from .. import models, schemas
+from app.auth import oauth2
+from app.database.async_db import get_async_session
+from app.model_schema import models, schemas
 from sqlalchemy.future import select
 from typing import List
 

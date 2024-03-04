@@ -3,11 +3,13 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 
 from sqlalchemy import select
-from . import schemas, database, models
+
+from app.database import async_db
+from app.model_schema import schemas, models
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
-from .config import settings
+from app.config.config import settings
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -63,7 +65,7 @@ def verify_access_token(token: str, credentials_exception):
 
     return token_data
     
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(database.get_async_session)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(async_db.get_async_session)):
     """
     Get the currently authenticated user.
 

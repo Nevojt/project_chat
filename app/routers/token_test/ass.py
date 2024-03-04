@@ -1,9 +1,9 @@
 
 from fastapi import APIRouter, Response, status, HTTPException, Depends
 from sqlalchemy.orm import Session
-from app.database import get_db
+from app.database.database import get_db
 
-from .. import oauth2
+from app.auth import oauth2
 
 
 router = APIRouter(tags=['ASS'])

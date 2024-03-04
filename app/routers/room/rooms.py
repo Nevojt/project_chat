@@ -3,10 +3,12 @@ from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc
 from sqlalchemy.future import select
-from ..database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..database import get_async_session
-from .. import models, schemas, oauth2
+from app.auth import oauth2
+from app.database.database import get_db
+from app.database.async_db import get_async_session
+
+from app.model_schema import models, schemas
 
 router = APIRouter(
     prefix="/rooms",

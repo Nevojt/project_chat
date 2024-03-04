@@ -3,7 +3,7 @@ from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 # from sqlalchemy.orm import relationship
 from enum import Enum as PythonEnum
-from .database import Base
+from app.database.database import Base
 
 
 class UserRole(str, PythonEnum):

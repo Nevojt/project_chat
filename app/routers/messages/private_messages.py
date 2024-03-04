@@ -2,8 +2,10 @@ import logging
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
-from ..database import get_db
-from .. import models, schemas
+from app.database.database import get_db
+from app.model_schema import models, schemas
+
+
 router = APIRouter(
     prefix="/direct",
     tags=['Direct'],

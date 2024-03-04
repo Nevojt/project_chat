@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from jinja2 import Environment, FileSystemLoader
-from .config_mail import setting
+from app.config.config_mail import setting
 
 router = APIRouter()
 

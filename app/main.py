@@ -4,10 +4,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from .database import engine
-from .routers import message, upload_file_supabase, user, rooms, auth, user_status, vote, images, private_messages, count_users_messages, password_reset, verify_user
-from .routers import upload_file_google, ass
-from app import models, send_mail
+
+from .mail import send_mail
+
+
+from .routers.user import auth, user, verify_user, user_status
+from .routers.messages import message, private_messages, vote
+from .routers.images_rout import images, upload_file_google, upload_file_supabase
+from .routers.room import rooms, count_users_messages
+from .routers.token_test import ass
+from .routers.reset import password_reset
+from .database.database import engine
+from app.model_schema import models
 
 models.Base.metadata.create_all(bind=engine)
 

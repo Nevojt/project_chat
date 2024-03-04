@@ -5,8 +5,13 @@ from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from ..config import settings
-from .. import database, schemas, models, utils, oauth2
+
+from app.database import async_db
+
+from ...config import utils
+from ...auth import oauth2
+from app.config.config import settings
+from app.model_schema import schemas, models
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
@@ -18,7 +23,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=['Authentication'])
 
 @router.post('/login', response_model=schemas.Token)
-async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(database.get_async_session)):
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(async_db.get_async_session)):
         
     """
     OAuth2-compatible token login, get an access token for future requests.
@@ -71,7 +76,7 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Asy
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An error occurred while processing the request.")
 
 @router.post("/refresh")
-async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(database.get_async_session)):
+async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(async_db.get_async_session)):
     """
     Endpoint to refresh an access token using a refresh token.
 
