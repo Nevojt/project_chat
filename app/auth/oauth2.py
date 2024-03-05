@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from sqlalchemy import select
 
 from app.database import async_db
-from app.model_schema import schemas, models
+from app.models import models
+from app.schemas.token import TokenData
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,7 +59,7 @@ def verify_access_token(token: str, credentials_exception):
         id: str = payload.get("user_id")
         if id is None:
             raise credentials_exception
-        token_data = schemas.TokenData(id=id)
+        token_data = TokenData(id=id)
     except JWTError:
         
         raise credentials_exception

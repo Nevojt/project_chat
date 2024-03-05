@@ -8,7 +8,8 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import room
 
 router = APIRouter(
     prefix="/rooms",
@@ -16,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.RoomBase])
+@router.get("/", response_model=List[room.RoomBase])
 async def get_rooms_info(db: Session = Depends(get_db)):
     
     """
@@ -55,14 +56,16 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at
         }
-        rooms_info.append(schemas.RoomBase(**room_info))
+        rooms_info.append(room.RoomBase(**room_info))
 
     return rooms_info
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_async_session), current_user: models.User = Depends(oauth2.get_current_user)):
+async def create_room(room: room.RoomCreate, 
+                      db: AsyncSession = Depends(get_async_session), 
+                      current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Create a new room.
 
@@ -94,7 +97,7 @@ async def create_room(room: schemas.RoomCreate, db: AsyncSession = Depends(get_a
 
 
 
-@router.get("/{name_room}", response_model=schemas.RoomUpdate)
+@router.get("/{name_room}", response_model=room.RoomUpdate)
 async def get_room(name_room: str, db: Session = Depends(get_db)):
     """
     Get a specific room by name.
@@ -144,8 +147,8 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{room_id}", response_model=schemas.RoomUpdate)  # Assuming you're using room_id
-def update_room(room_id: int, update: schemas.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.put("/{room_id}", response_model=room.RoomUpdate)  # Assuming you're using room_id
+def update_room(room_id: int, update: room.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Update a room.
 

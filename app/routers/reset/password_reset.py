@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.model_schema import models
+from app.models import models
+from app.schemas.reset import PasswordReset, PasswordResetRequest
 from app.auth import oauth2
 from app.config import utils
 from app.mail.send_mail import password_reset
 from app.database.database import get_db
 from app.database.async_db import get_async_session
-from app.model_schema.schemas import PasswordReset, PasswordResetRequest
+
 
 
 

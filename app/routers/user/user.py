@@ -10,7 +10,8 @@ from ...config import utils
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import user
 from typing import Annotated, List
 
 router = APIRouter(
@@ -18,8 +19,8 @@ router = APIRouter(
     tags=['Users'],
 )
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.UserOut)
-async def created_user(user: schemas.UserCreate, db: AsyncSession = Depends(get_async_session)):
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
+async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_async_session)):
     """
     This function creates a new user in the database.
 
@@ -139,8 +140,11 @@ async def delete_user(
 
      
         
-@router.put('/{user_id}', response_model=schemas.UserInfo)
-async def update_user(user_id: int, update: schemas.UserUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.put('/{user_id}', response_model=user.UserInfo)
+async def update_user(user_id: int, 
+                      update: user.UserUpdate, 
+                      db: Session = Depends(get_db), 
+                      current_user: models.User = Depends(oauth2.get_current_user)):
     
     """
     Update a user's information.
@@ -184,7 +188,7 @@ async def update_user(user_id: int, update: schemas.UserUpdate, db: Session = De
     
 
 
-@router.get('/{email}', response_model=schemas.UserInfo)
+@router.get('/{email}', response_model=user.UserInfo)
 def get_user_mail(email: str, db: Session = Depends(get_db)):
     """
     Get a user by their email.
@@ -211,14 +215,14 @@ def get_user_mail(email: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/", response_model=List[schemas.UserInfo])
+@router.get("/", response_model=List[user.UserInfo])
 async def get_email(db: Session = Depends(get_db)):
     # Query the database for all users
     posts = db.query(models.User).all()
     return posts
 
-@router.get('/me/', response_model=schemas.UserInfo)
-async def read_current_user(current_user: schemas.UserOut = Depends(oauth2.get_current_user)):
+@router.get('/me/', response_model=user.UserInfo)
+async def read_current_user(current_user: user.UserOut = Depends(oauth2.get_current_user)):
     """
     Get the currently authenticated user.
 

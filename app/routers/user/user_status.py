@@ -2,7 +2,8 @@ from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from ...auth import oauth2
 from app.database.database import get_db
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import user
 
 router = APIRouter(
     prefix="/user_status",
@@ -61,7 +62,7 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
 
 
 @router.put("/{user_id}", status_code=status.HTTP_200_OK)
-def update_post(user_id: int, update_post: schemas.UserStatusUpdate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
+def update_post(user_id: int, update_post: user.UserStatusUpdate, db: Session = Depends(get_db)): # , current_user: int = Depends(oauth2.get_current_user)
     """
     Updates the status of a user post based on the provided user ID and updated post details.
 

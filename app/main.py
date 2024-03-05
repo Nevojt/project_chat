@@ -15,7 +15,7 @@ from .routers.room import rooms, count_users_messages
 from .routers.token_test import ass
 from .routers.reset import password_reset
 from .database.database import engine
-from app.model_schema import models
+from app.models import models
 
 models.Base.metadata.create_all(bind=engine)
 

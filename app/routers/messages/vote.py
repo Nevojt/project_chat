@@ -1,6 +1,7 @@
-from fastapi import status, HTTPException, Depends, APIRouter, Response
+from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import message
 from app.auth import oauth2
 from app.database import database
 
@@ -10,7 +11,7 @@ router = APIRouter(
 )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def vote(vote: schemas.Vote, db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
+def vote(vote: message.Vote, db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
     """
     Handles the voting process for a message. Users can cast or retract their vote on a specific message.
 

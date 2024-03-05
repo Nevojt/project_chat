@@ -3,7 +3,8 @@ from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 from app.database.database import get_db
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import private
 
 
 router = APIRouter(
@@ -15,7 +16,7 @@ logging.basicConfig(filename='_log/private.log', format='%(asctime)s - %(levelna
 logger = logging.getLogger(__name__)
 
 
-@router.get("/{user_id}", response_model=List[schemas.PrivateInfoRecipient])
+@router.get("/{user_id}", response_model=List[private.PrivateInfoRecipient])
 async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     """
     Get a list of recipients in a private chat.
@@ -52,7 +53,7 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
 
             # Update or add the user info
             if other_user_id not in users_info or not users_info[other_user_id].is_read:
-                users_info[other_user_id] = schemas.PrivateInfoRecipient(
+                users_info[other_user_id] = private.PrivateInfoRecipient(
                     recipient_id=other_user_id,
                     recipient_name=other_user.user_name,
                     recipient_avatar=other_user.avatar,
@@ -72,32 +73,3 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error creating {e}", exc_info=True)
     return result
-
-
-
-
-
-
-
-
-
-
-# @router.get('/is_read/{user_id}')    
-# async def check_is_read_messages(user_id: int, session: AsyncSession = Depends(get_async_session)) -> bool:
-    # """
-    # Перевіряє, чи є у користувача непрочитані повідомлення.
-
-    # Args:
-    #     user_id (int): ID користувача.
-
-    # Returns:
-    #     bool: True, якщо є непрочитані повідомлення, інакше False.
-    # """
-    # query = select(models.PrivateMessage).where(
-    #     models.PrivateMessage.recipient_id == user_id,
-    #     models.PrivateMessage.is_read == False
-    # )
-    # result = await session.execute(query)
-    # return result.scalar() is not None
-    
-# 

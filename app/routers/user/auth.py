@@ -11,7 +11,8 @@ from app.database import async_db
 from ...config import utils
 from ...auth import oauth2
 from app.config.config import settings
-from app.model_schema import schemas, models
+from app.models import models
+from app.schemas.token import Token
 
 SECRET_KEY = settings.secret_key
 ALGORITHM = settings.algorithm
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=['Authentication'])
 
-@router.post('/login', response_model=schemas.Token)
+@router.post('/login', response_model=Token)
 async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(async_db.get_async_session)):
         
     """

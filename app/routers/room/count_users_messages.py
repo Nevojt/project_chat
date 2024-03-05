@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List
 from app.database.database import get_db
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import room
 
 router = APIRouter(
     prefix="/count",
@@ -12,7 +13,7 @@ router = APIRouter(
 
 
 
-@router.get("/messages", response_model=List[schemas.CountMessages])
+@router.get("/messages", response_model=List[room.CountMessages])
 async def get_count_messages(db: Session = Depends(get_db)):
     """
     Get the count of messages in each room.
@@ -38,7 +39,7 @@ async def get_count_messages(db: Session = Depends(get_db)):
 
 
 
-@router.get("/users", response_model=List[schemas.CountUsers])
+@router.get("/users", response_model=List[room.CountUsers])
 async def get_count_users(db: Session = Depends(get_db)):
     """
     Get the count of users in each room.

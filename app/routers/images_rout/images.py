@@ -1,7 +1,8 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from app.database.database import get_db
-from app.model_schema import models, schemas
+from app.models import models
+from app.schemas import image
 
 router = APIRouter(
     prefix="/images",
@@ -16,8 +17,8 @@ async def get_images(db: Session = Depends(get_db)):
 
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.ImagesResponse)
-async def create_image(images: schemas.ImagesCreate, db: Session = Depends(get_db)):
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=image.ImagesResponse)
+async def create_image(images: image.ImagesCreate, db: Session = Depends(get_db)):
  
     images = models.ImagesAll(**images.model_dump())
     db.add(images)
