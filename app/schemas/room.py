@@ -38,6 +38,13 @@ class RoomUpdate(BaseModel):
     class Config:
         from_attributes = True
         
+        
+class RoomManager(BaseModel):
+    room_id: int
+    
+    class Config:
+        from_attributes = True
+        
 
 class CountMessages(BaseModel):
     rooms: str

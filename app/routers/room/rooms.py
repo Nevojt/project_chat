@@ -9,7 +9,7 @@ from app.database.database import get_db
 from app.database.async_db import get_async_session
 
 from app.models import models
-from app.schemas import room
+from app.schemas import room as room_schema
 
 router = APIRouter(
     prefix="/rooms",
@@ -17,7 +17,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[room.RoomBase])
+@router.get("/", response_model=List[room_schema.RoomBase])
 async def get_rooms_info(db: Session = Depends(get_db)):
     
     """
@@ -56,14 +56,63 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at
         }
-        rooms_info.append(room.RoomBase(**room_info))
+        rooms_info.append(room_schema.RoomBase(**room_info))
+
+    return rooms_info
+
+@router.get("/manager")
+    
+async def get_user_rooms_info(db: Session = Depends(get_db), 
+                              current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomBase]:
+    """
+    Retrieves detailed information about chat rooms associated with the current user, excluding a specific room ('Hell').
+
+    Args:
+        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+
+    Returns:
+        List[schemas.RoomBase]: A list containing detailed information about each room associated with the user.
+    """
+    
+    # Fetch room IDs for the current user
+    user_room_ids = db.query(models.RoomsManager.room_id).filter(models.RoomsManager.user_id == current_user.id).all()
+    user_room_ids = [str(room_id[0]) for room_id in user_room_ids]  # Extracting room IDs from the tuple
+
+    # Query rooms details based on user_room_ids, excluding 'Hell'
+    rooms = db.query(models.Rooms).filter(models.Rooms.id.in_(user_room_ids), 
+                                          models.Rooms.name_room != 'Hell').all()
+
+    # Fetch message count for each user-associated room
+    messages_count = db.query(
+        models.Socket.rooms, 
+        func.count(models.Socket.id).label('count')
+    ).group_by(models.Socket.rooms).filter(models.Socket.rooms.in_(user_room_ids)).all()
+
+    # Fetch user count for each user-associated room
+    users_count = db.query(
+        models.User_Status.name_room, 
+        func.count(models.User_Status.id).label('count')
+    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room.in_(user_room_ids)).all()
+
+    # Merging room info, message count, and user count
+    rooms_info = []
+    for room in rooms:
+        room_info = {
+            "id": room.id,
+            "name_room": room.name_room,
+            "image_room": room.image_room,
+            "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
+            "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
+            "created_at": room.created_at
+        }
+        rooms_info.append(room_schema.RoomBase(**room_info))
 
     return rooms_info
 
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_room(room: room.RoomCreate, 
+async def create_room(room: room_schema.RoomCreate, 
                       db: AsyncSession = Depends(get_async_session), 
                       current_user: models.User = Depends(oauth2.get_current_user)):
     """
@@ -97,7 +146,7 @@ async def create_room(room: room.RoomCreate,
 
 
 
-@router.get("/{name_room}", response_model=room.RoomUpdate)
+@router.get("/{name_room}", response_model=room_schema.RoomUpdate)
 async def get_room(name_room: str, db: Session = Depends(get_db)):
     """
     Get a specific room by name.
@@ -147,8 +196,8 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{room_id}", response_model=room.RoomUpdate)  # Assuming you're using room_id
-def update_room(room_id: int, update: room.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+@router.put("/{room_id}", response_model=room_schema.RoomUpdate)  # Assuming you're using room_id
+def update_room(room_id: int, update: room_schema.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Update a room.
 
