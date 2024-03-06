@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi.templating import Jinja2Templates
 from app.models import models
-from ...database.async_db import get_async_session
+from app.database.async_db import get_async_session
 
 
 router = APIRouter()
