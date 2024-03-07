@@ -38,6 +38,7 @@ class Rooms(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     image_room = Column(String, nullable=False)
     owner = Column(Integer, (ForeignKey("users.id")), nullable=False)
+    private = Column(Boolean, default=False)
     
     
 class RoomsManager(Base):

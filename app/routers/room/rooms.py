@@ -54,7 +54,8 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "image_room": room.image_room,
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
-            "created_at": room.created_at
+            "created_at": room.created_at,
+            "private": room.private
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
 
@@ -103,7 +104,8 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
             "image_room": room.image_room,
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
-            "created_at": room.created_at
+            "created_at": room.created_at,
+            "private": room.private 
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
 
