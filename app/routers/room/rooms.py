@@ -111,7 +111,46 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
 
     return rooms_info
 
+@router.post('/favorites')
+async def toggle_room_in_favorites(room_id: int, 
+                                   db: AsyncSession = Depends(get_async_session), 
+                                   current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id)
+    result = await db.execute(room_get)
+    existing_room = result.scalar_one_or_none()
+    
+    if existing_room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID {room_id} not found")
 
+    manager_room_query = select(models.RoomsManager).where(
+        models.RoomsManager.user_id == current_user.id,
+        models.RoomsManager.room_id == room_id
+    )
+    existing_manager_room = await db.execute(manager_room_query)
+    manager_room = existing_manager_room.scalar_one_or_none()
+
+    if manager_room:
+        await db.delete(manager_room)
+    else:
+        new_manager_room = models.RoomsManager(user_id=current_user.id, room_id=room_id)
+        db.add(new_manager_room)
+    
+    await db.commit()
+
+    if manager_room:
+        return {"message": "Room removed from favorites"}
+    else:
+        await db.refresh(new_manager_room)
+        return new_manager_room
+
+    
+    
+    
+    
+    
+    
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_room(room: room_schema.RoomCreate, 
