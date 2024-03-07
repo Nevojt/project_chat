@@ -171,7 +171,7 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
     """Deletes a room.
 
     Args:
-        name_room (str): The name of the room to delete.
+        room_id (int): The name of the room to delete.
         db (Session): The database session.
         current_user (str): The currently authenticated user.
 
