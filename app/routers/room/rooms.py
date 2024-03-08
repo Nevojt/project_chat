@@ -66,13 +66,14 @@ async def get_rooms_info(db: Session = Depends(get_db)):
 async def get_user_rooms_info(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomBase]:
     """
-    Retrieves detailed information about chat rooms associated with the current user, excluding a specific room ('Hell').
+    Retrieve a list of rooms accessible by the current user, along with their associated message and user counts.
 
     Args:
-        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+        db (Session): The database session.
+        current_user (User): The currently authenticated user.
 
     Returns:
-        List[schemas.RoomBase]: A list containing detailed information about each room associated with the user.
+        List[room_schema.RoomBase]: A list of room information, including name, image, user count, message count, and creation date.
     """
     
     # Fetch room IDs for the current user
@@ -115,6 +116,20 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
 async def toggle_room_in_favorites(room_id: int, 
                                    db: AsyncSession = Depends(get_async_session), 
                                    current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Toggles a room as a favorite for the current user.
+
+    Args:
+        room_id (int): The ID of the room to toggle.
+        db (AsyncSession): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the room does not exist or the user does not have sufficient permissions.
+
+    Returns:
+        JSON: A JSON object with a "message" key indicating whether the room was added or removed from the user's favorites.
+    """
     
     room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.private != True)
     result = await db.execute(room_get)
