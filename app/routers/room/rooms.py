@@ -31,7 +31,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     """
     
     # get info rooms and not room "Hell"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell').order_by(asc(models.Rooms.id)).all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.private != True).order_by(asc(models.Rooms.id)).all()
 
     # Count messages for room
     messages_count = db.query(
@@ -116,7 +116,7 @@ async def toggle_room_in_favorites(room_id: int,
                                    db: AsyncSession = Depends(get_async_session), 
                                    current_user: models.User = Depends(oauth2.get_current_user)):
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.private != True)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
