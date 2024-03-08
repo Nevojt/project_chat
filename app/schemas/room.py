@@ -17,6 +17,9 @@ class RoomBase(BaseModel):
 
     class Config:
         from_attributes = True
+        
+class RoomFavorite(RoomBase):
+    favorite: bool
     
     
 class RoomCreate(BaseModel):

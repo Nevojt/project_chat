@@ -62,9 +62,8 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     return rooms_info
 
 @router.get("/manager")
-    
 async def get_user_rooms_info(db: Session = Depends(get_db), 
-                              current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomBase]:
+                              current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomFavorite]:
     """
     Retrieve a list of rooms accessible by the current user, along with their associated message and user counts.
 
@@ -81,8 +80,12 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
     user_room_ids = [str(room_id[0]) for room_id in user_room_ids]  # Extracting room IDs from the tuple
 
     # Query rooms details based on user_room_ids, excluding 'Hell'
-    rooms = db.query(models.Rooms).filter(models.Rooms.id.in_(user_room_ids), 
-                                          models.Rooms.name_room != 'Hell').all()
+    rooms = db.query(models.Rooms, models.RoomsManager.favorite
+                     ).filter(models.Rooms.id.in_(user_room_ids), 
+                    models.Rooms.name_room != 'Hell',
+                    models.RoomsManager.room_id == models.Rooms.id,  # Ensure the mapping between Rooms and RoomsManager
+                    models.RoomsManager.user_id == current_user.id  # Ensure we're getting the favorite status for the current user
+    ).all()
 
     # Fetch message count for each user-associated room
     messages_count = db.query(
@@ -98,7 +101,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
 
     # Merging room info, message count, and user count
     rooms_info = []
-    for room in rooms:
+    for room, favorite in rooms:
         room_info = {
             "id": room.id,
             "name_room": room.name_room,
@@ -106,9 +109,11 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "private": room.private 
+            "private": room.private,
+            "favorite": favorite
         }
-        rooms_info.append(room_schema.RoomBase(**room_info))
+        rooms_info.append(room_schema.RoomFavorite(**room_info))
+        rooms_info.sort(key=lambda x: x.favorite, reverse=True)
 
     return rooms_info
 
@@ -159,10 +164,42 @@ async def toggle_room_in_favorites(room_id: int,
     else:
         await db.refresh(new_manager_room)
         return new_manager_room
+    
 
+@router.put('/favorites/{room_id}')
+async def favorite_room(room_id: int, 
+                        db: AsyncSession = Depends(get_async_session), 
+                        current_user: models.User = Depends(oauth2.get_current_user)):
     
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.private!= True)
+    result = await db.execute(room_get)
+    existing_room = result.scalar_one_or_none()
     
+    if existing_room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID {room_id} not found")
+        
+    manager_room_query = select(models.RoomsManager).where(
+        models.RoomsManager.user_id == current_user.id,
+        models.RoomsManager.room_id == room_id
+    )
+    existing_manager_room = await db.execute(manager_room_query)
+    manager_room = existing_manager_room.scalar_one_or_none()
+    if manager_room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID {room_id} not found")
     
+    if manager_room.favorite == True:
+        manager_room.favorite = False
+    else:
+        manager_room.favorite = True
+
+    await db.commit()
+    await db.refresh(manager_room)
+
+    return {"favorite": manager_room.favorite}
+
+        
     
     
     
@@ -259,7 +296,10 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
 
 
 @router.put("/{room_id}", response_model=room_schema.RoomUpdate)  # Assuming you're using room_id
-def update_room(room_id: int, update: room_schema.RoomCreate, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+def update_room(room_id: int, 
+                update: room_schema.RoomCreate, 
+                db: Session = Depends(get_db), 
+                current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Update a room.
 

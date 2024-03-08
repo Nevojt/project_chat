@@ -47,6 +47,7 @@ class RoomsManager(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, (ForeignKey("users.id")), nullable=False)
     room_id = Column(Integer, (ForeignKey("rooms.id")), nullable=False)
+    favorite = Column(Boolean, default=False)
     
     
 class User(Base):
