@@ -50,6 +50,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     for room in rooms:
         room_info = {
             "id": room.id,
+            "owner": room.owner,
             "name_room": room.name_room,
             "image_room": room.image_room,
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
@@ -104,6 +105,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
     for room, favorite in rooms:
         room_info = {
             "id": room.id,
+            "owner": room.owner,
             "name_room": room.name_room,
             "image_room": room.image_room,
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),

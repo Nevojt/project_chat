@@ -45,8 +45,8 @@ class RoomsManager(Base):
     __tablename__ = 'rooms_manager'
     
     id = Column(Integer, primary_key=True, nullable=False)
-    user_id = Column(Integer, (ForeignKey("users.id")), nullable=False)
-    room_id = Column(Integer, (ForeignKey("rooms.id")), nullable=False)
+    user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
+    room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     favorite = Column(Boolean, default=False)
     
     

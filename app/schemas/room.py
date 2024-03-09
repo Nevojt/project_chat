@@ -8,6 +8,7 @@ from typing import Optional
 
 class RoomBase(BaseModel):
     id: int
+    owner: int
     name_room: str
     image_room: str
     count_users: int
