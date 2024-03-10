@@ -17,6 +17,18 @@ router = APIRouter(
 
 @router.get('/user/{substring}', response_model=List[user.UserInfo])
 def get_user_name(substring: str, db: Session = Depends(get_db)):
+    """
+    Get a list of users filtered by a substring.
+
+    Parameters:
+    - `substring`: The substring to filter by.
+
+    Returns:
+    - A list of users that match the given substring.
+
+    Raises:
+    - HTTPException 404 if no users match the given substring.
+    """
     
     pattern = f"{substring.lower()}%"  # Matches any username starting with 'substring'
     # Query the database for a user with the given username
@@ -30,7 +42,18 @@ def get_user_name(substring: str, db: Session = Depends(get_db)):
 
 @router.get('/room/{substring}', response_model=List[schema_room.RoomBase])
 def get_rooms(substring: str, db: Session = Depends(get_db)):
+    """
+    Get a list of rooms filtered by a substring.
 
+    Parameters:
+    - `substring`: The substring to filter by.
+
+    Returns:
+    - A list of rooms that match the given substring.
+
+    Raises:
+    - HTTPException 404 if no rooms match the given substring.
+    """
     
     pattern = f"{substring.lower()}%"
     rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.private != True, func.lower(models.Rooms.name_room).like(pattern)).all()
@@ -64,9 +87,5 @@ def get_rooms(substring: str, db: Session = Depends(get_db)):
             "private": room.private
         }
         rooms_info.append(schema_room.RoomBase(**room_info))
-    
-    # rooms = db.query(models.Rooms).filter(func.lower(models.Rooms.name_room).like(pattern)).all()
-    
-
         
     return rooms_info
