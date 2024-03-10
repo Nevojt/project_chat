@@ -17,7 +17,7 @@ class Socket(Base):
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     message = Column(String, nullable=False)
     receiver_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE'), nullable=False)
+    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     id_return = Column(Integer)
 
 class PrivateMessage(Base):
@@ -67,7 +67,7 @@ class User_Status(Base):
     __tablename__ = 'user_status' 
     
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    name_room = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE"), nullable=False)
+    name_room = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE", onupdate='CASCADE'), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),unique=True, nullable=False)
     user_name = Column(String, nullable=False)
     status = Column(Boolean, server_default='True', nullable=False)

@@ -84,6 +84,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
     rooms = db.query(models.Rooms, models.RoomsManager.favorite
                      ).filter(models.Rooms.id.in_(user_room_ids), 
                     models.Rooms.name_room != 'Hell',
+                    
                     models.RoomsManager.room_id == models.Rooms.id,  # Ensure the mapping between Rooms and RoomsManager
                     models.RoomsManager.user_id == current_user.id  # Ensure we're getting the favorite status for the current user
     ).all()
@@ -138,7 +139,7 @@ async def toggle_room_in_favorites(room_id: int,
         JSON: A JSON object with a "message" key indicating whether the room was added or removed from the user's favorites.
     """
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.private != True)
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
@@ -167,6 +168,43 @@ async def toggle_room_in_favorites(room_id: int,
         await db.refresh(new_manager_room)
         return new_manager_room
     
+    
+@router.post('/favorites/add_user')
+async def toggle_user_in_room(room_id: int, user_id: int, 
+                              db: AsyncSession = Depends(get_async_session), 
+                              current_user: models.User = Depends(oauth2.get_current_user)):
+
+    # Перевірка чи існує кімната і чи є поточний користувач її власником
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id,
+                                          models.Rooms.owner == current_user.id,
+                                          models.Rooms.private == True)
+    result = await db.execute(room_get)
+    existing_room = result.scalar_one_or_none()
+
+    if existing_room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID {room_id} not found")
+
+    # Перевірка чи користувач вже є у кімнаті
+    manager_room_query = select(models.RoomsManager).where(
+        models.RoomsManager.user_id == user_id,
+        models.RoomsManager.room_id == room_id
+    )
+    existing_manager_room = await db.execute(manager_room_query)
+    manager_room = existing_manager_room.scalar_one_or_none()
+
+    # Додавання або видалення користувача з кімнати
+    if manager_room:
+        await db.delete(manager_room)
+        await db.commit()
+        return {"message": "User removed from the room"}
+    else:
+        new_manager_room = models.RoomsManager(user_id=user_id, room_id=room_id)
+        db.add(new_manager_room)
+        await db.commit()
+        await db.refresh(new_manager_room)
+        return {"message": "User added to the room"}
+
 
 @router.put('/favorites/{room_id}')
 async def favorite_room(room_id: int, 
