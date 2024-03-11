@@ -31,7 +31,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     """
     
     # get info rooms and not room "Hell"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.private != True).order_by(asc(models.Rooms.id)).all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True).order_by(asc(models.Rooms.id)).all()
 
     # Count messages for room
     messages_count = db.query(
@@ -56,7 +56,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "private": room.private
+            "secret_room": room.secret_room
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
 
@@ -112,7 +112,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "private": room.private,
+            "secret_room": room.secret_room,
             "favorite": favorite
         }
         rooms_info.append(room_schema.RoomFavorite(**room_info))
@@ -177,7 +177,7 @@ async def toggle_user_in_room(room_id: int, user_id: int,
     # Перевірка чи існує кімната і чи є поточний користувач її власником
     room_get = select(models.Rooms).where(models.Rooms.id == room_id,
                                           models.Rooms.owner == current_user.id,
-                                          models.Rooms.private == True)
+                                          models.Rooms.secret_room == True)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
 
@@ -211,7 +211,7 @@ async def favorite_room(room_id: int,
                         db: AsyncSession = Depends(get_async_session), 
                         current_user: models.User = Depends(oauth2.get_current_user)):
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.private!= True)
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room!= True)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     

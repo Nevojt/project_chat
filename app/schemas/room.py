@@ -14,7 +14,7 @@ class RoomBase(BaseModel):
     count_users: int
     count_messages: int
     created_at: datetime
-    private: bool
+    secret_room: bool
 
     class Config:
         from_attributes = True
@@ -26,7 +26,7 @@ class RoomFavorite(RoomBase):
 class RoomCreate(BaseModel):
     name_room: str
     image_room: str
-    private: bool = False
+    secret_room: bool = False
 
 class RoomPost(RoomBase):
     id: int
@@ -41,7 +41,7 @@ class RoomUpdate(BaseModel):
     image_room: str
     owner: int
     created_at: datetime
-    private: Optional[Optional[bool]]
+    secret_room: Optional[Optional[bool]]
     
     class Config:
         from_attributes = True
