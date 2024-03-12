@@ -1,18 +1,17 @@
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from ..models.models import UserRole
         
         
         
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     user_name: str
     avatar: str
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
         
         
 class UserStatus(BaseModel):
@@ -32,11 +31,10 @@ class UserStatusUpdate(BaseModel):
 
 
 class UserStatusPost(UserStatus):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
      
            
 class UserCreate(BaseModel):
@@ -49,11 +47,10 @@ class UserCreate(BaseModel):
    
     
 class UserUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     user_name: str
     avatar: str
-    
-    class Config:
-        from_attributes = True
         
         
 class UserLogin(BaseModel):
@@ -62,11 +59,10 @@ class UserLogin(BaseModel):
       
       
 class UserInfo(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     email: str
     user_name: str
     avatar: str
     created_at: datetime
-    
-    class Config:
-        from_attributes = True
