@@ -1,24 +1,14 @@
 import pytest
-from jose import jwt
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
-from fastapi import FastAPI
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.main import app
-from app.config.config import settings
-from app.schemas import user, token
-
-from app.models import models
-from app.schemas.token import Token
 
 
 
 
 
-# @pytest.fixture
-# def client():
-#     return TestClient(app)
+@pytest.fixture
+def client():
+    return TestClient(app)
     
 
 # @pytest.mark.asyncio
