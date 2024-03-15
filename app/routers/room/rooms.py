@@ -320,18 +320,26 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
     Returns:
         Response: An empty response with status code 204 No Content.
     """
-    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id)
-    room = room_query.first()
-
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with ID {room_id} not found")
 
-    if current_user.role != "admin" and current_user.id != room.owner:
+    if current_user.role != "admin" and current_user.id != room.owner_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-
-    room_query.delete(synchronize_session=False)
+    
+    # Updating user statuses
+    users_in_room = db.query(models.User_Status).filter(models.User_Status.room_id == room_id).all()
+    for user_status in users_in_room:
+        user_status.name_room = 'Hell'
+        user_status.room_id = 1  # Assuming 'Hell' room ID is 1
+        db.add(user_status)
+    
+    # Deleting the room
+    db.delete(room)
     db.commit()
+    
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

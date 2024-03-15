@@ -67,6 +67,7 @@ class User_Status(Base):
     __tablename__ = 'user_status' 
     
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False)
     name_room = Column(String, ForeignKey("rooms.name_room", ondelete="CASCADE", onupdate='CASCADE'), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"),unique=True, nullable=False)
     user_name = Column(String, nullable=False)
