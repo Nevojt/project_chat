@@ -56,7 +56,7 @@ def get_rooms(substring: str, db: Session = Depends(get_db)):
     """
     
     pattern = f"{substring.lower()}%"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.private != True, func.lower(models.Rooms.name_room).like(pattern)).all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True, func.lower(models.Rooms.name_room).like(pattern)).all()
 
     if not rooms:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -84,7 +84,7 @@ def get_rooms(substring: str, db: Session = Depends(get_db)):
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "private": room.private
+            "secret_room": room.secret_room
         }
         rooms_info.append(schema_room.RoomBase(**room_info))
         
