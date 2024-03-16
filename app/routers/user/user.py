@@ -58,7 +58,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
     await db.refresh(new_user)
     
     # Create a User_Status entry for the new user
-    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell")
+    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
     db.add(post)
     await db.commit()
     await db.refresh(post)
