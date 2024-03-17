@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=['Authentication'])
 
 @router.post('/login', response_model=Token)
-async def login(user_credentials: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(async_db.get_async_session)):
+async def login(user_credentials: OAuth2PasswordRequestForm = Depends(),
+                db: AsyncSession = Depends(async_db.get_async_session)):
         
     """
     OAuth2-compatible token login, get an access token for future requests.

@@ -1,66 +1,30 @@
 import pytest
-import asyncio
-from jose import jwt
-from app.config.config import settings
-from unittest.mock import MagicMock
 from httpx import AsyncClient
+from jose import jwt
+import asyncio
+# from fastapi import FastAPI
+from app.config.config import settings
 from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas import user, token
-from tests.utils.utils import random_email, random_lower_string
 
 
-# mock_session=MagicMock()
 
 @pytest.fixture
 def client():
     return TestClient(app)
 
-# @pytest.fixture
-# def mock_db_session():
-#     # Mock the AsyncSession here
-#     yield mock_session
-    
-    
-# email = random_email()
-# password = random_lower_string()
+
 @pytest.fixture
 def test_user():
-    return {"email":"hello123@gmail.com",
+    return {"email":"test_user@gmail.com",
             "password":"password123"}
 
 
-# @pytest.mark.asyncio
-# async def test_created_user(test_user, mock_db_session):
-#     async with AsyncClient(app=app, base_url="http://testserver") as ac:
-#         res = await ac.post("/users/", json={
-#             "email": test_user["username"],
-#             "user_name": "TestUser",
-#             "password": test_user["password"],
-#             "avatar": "avatar",
-#         })
-
-#     new_user = user.UserOut(**res.json())
-#     assert new_user.user_name == "TestUser"
-#     assert res.status_code == 201
-
-
-
-# @pytest.mark.asyncio
-# async def test_valid_login(test_user, mock_db_session):
-#     async with AsyncClient(app=app, base_url="http://testserver") as ac:
-#         response = await ac.post("/login", data=test_user)
-
-#     assert response.status_code == 200  # Assuming a successful login returns 200
-#     assert "access_token" in response.json()
-
-
-
-
-def test_create_user(client):
+def test_create_user(test_user, client):
     res = client.post(
-        "/users/", json={"email": "hello123@gmail.com",
-                         "password": "password123",
+        "/users/", json={"email": test_user["email"],
+                         "password": test_user["password"],
                          "user_name": "TestUser",
                          "avatar": "avatar"})
 
@@ -91,10 +55,49 @@ def test_incorrect_login(test_user, client, email, password, status_code):
         "/login", data={"username": email, "password": password})
 
     assert res.status_code == status_code
-    # assert res.json().get('detail') == 'Invalid Credentials'
+
 def test_incorrect_error(client):
     res = client.post(
         "/login", data={"username": "email@gmail.com", "password": "password"})
 
     assert res.status_code == 401
-    # assert res.json().get('detail') == 'Invalid Credentials'
+
+
+@pytest.mark.asyncio
+async def test_update_user(test_user):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        # Authenticate the user
+        login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+        assert login_res.status_code == 200
+        login_data = login_res.json()
+        token = login_data['access_token']
+
+        # Get user's information to find the user ID
+        user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        assert user_info_res.status_code == 200
+        users_list = user_info_res.json()
+
+    # Find the user ID from the list
+    user_id = None
+    for user in users_list:
+        if user.get('email') == test_user['email']:
+            user_id = user.get('id')
+            break
+
+    assert user_id is not None, "User ID not found"
+
+    # Step 2: Update the user
+    new_data = {
+        "user_name": "User test Update",
+        "avatar": "New avatar"
+    }
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # The 'put' request must also be inside the 'async with' block
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.put(f"/users/{user_id}", json=new_data, headers=headers)
+
+    # Step 3: Assert the response
+    assert response.status_code == 200
