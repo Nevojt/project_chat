@@ -78,8 +78,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
-    id: int, 
-    password: str = Body(...),  # Вимагайте пароль у тілі запиту
+    schemas_delete: user.UserDelete,
     db: AsyncSession = Depends(get_async_session), 
     current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -103,14 +102,14 @@ async def delete_user(
     
     
     # Переконайтесь, що користувач видаляє лише свій профіль
-    if current_user.id != id:
+    if current_user.id != schemas_delete.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not permitted to delete other users' profiles."
         )
     
     # Знайдіть користувача
-    query = select(models.User).where(models.User.id == id)
+    query = select(models.User).where(models.User.id == schemas_delete.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
@@ -126,7 +125,7 @@ async def delete_user(
         )
     
     # Перевірте пароль
-    if not utils.verify(password, existing_user.password):
+    if not utils.verify(schemas_delete.password, existing_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."
@@ -140,9 +139,8 @@ async def delete_user(
 
      
         
-@router.put('/{user_id}', response_model=user.UserInfo)
-async def update_user(user_id: int, 
-                      update: user.UserUpdate, 
+@router.put('/', response_model=user.UserInfo)
+async def update_user(update: user.UserUpdate, 
                       db: Session = Depends(get_db), 
                       current_user: models.User = Depends(oauth2.get_current_user)):
     
@@ -161,20 +159,24 @@ async def update_user(user_id: int,
     Raises:
         HTTPException: If the user does not exist or if the user is not authorized to update the specified user.
     """
-    if current_user.id != user_id:
+    if not current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not permitted to delete other users' profiles."
         )
-    user_query = db.query(models.User).filter(models.User.id == user_id)
+    user_query = db.query(models.User).filter(models.User.id == current_user.id)
     user = user_query.first()
+    
+    user_status = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    status = user_status.first()
     
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with ID: {user_id} not found")
+                            detail=f"User with ID: {user.id} not found")
     
     # Assuming update.model_dump() returns a dictionary of attributes to update
     user_query.update(update.model_dump(), synchronize_session=False)
+    user_status.update({models.User_Status.user_name: update.user_name}, synchronize_session="fetch")
     
     db.commit()
 

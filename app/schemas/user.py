@@ -19,6 +19,7 @@ class UserStatus(BaseModel):
     user_name: str
     user_id: int
     status: bool = True
+    room_id: int
    
     
 class UserStatusCreate(UserStatus):
@@ -66,3 +67,7 @@ class UserInfo(BaseModel):
     user_name: str
     avatar: str
     created_at: datetime
+    
+class UserDelete(BaseModel):
+    id: int
+    password: str
