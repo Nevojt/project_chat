@@ -92,3 +92,9 @@ def test_incorrect_login(test_user, client, email, password, status_code):
 
     assert res.status_code == status_code
     # assert res.json().get('detail') == 'Invalid Credentials'
+def test_incorrect_error(client):
+    res = client.post(
+        "/login", data={"username": "email@gmail.com", "password": "password"})
+
+    assert res.status_code == 401
+    # assert res.json().get('detail') == 'Invalid Credentials'
