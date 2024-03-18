@@ -116,7 +116,7 @@ async def delete_user(
     # Якщо користувач не існує, підніміть помилку 404
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with ID {id} does not exist.")
+                            detail=f"User with ID  does not exist.")
     # Перевірте, чи користувач верифікований
     if not existing_user.verified:
         raise HTTPException(
