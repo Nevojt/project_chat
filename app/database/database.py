@@ -7,11 +7,11 @@ import time
 from app.config.config import settings
 
 
-SQLALCHEMY_DATABASE_URL = f'postgresql://{settings.database_name}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_username}'
+SQLALCHEMY_DATABASE_URL = f'postgresql+psycopg2://{settings.database_name}:{settings.database_password}@{settings.database_hostname}:{settings.database_port}/{settings.database_username}'
 
 
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_size=20, max_overflow=30)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 connection = engine.connect()
 connection.close() 
 
