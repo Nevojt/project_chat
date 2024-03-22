@@ -12,8 +12,6 @@ SQLALCHEMY_DATABASE_URL = f'postgresql+psycopg2://{settings.database_name}:{sett
 
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
-connection = engine.connect()
-connection.close() 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
