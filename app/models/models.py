@@ -83,6 +83,15 @@ class Vote(Base):
     message_id = Column(Integer, ForeignKey("socket.id", ondelete="SET NULL"), primary_key=True)
     dir = Column(Integer)
     
+    
+class PrivateMessageVote(Base):
+    __tablename__ = 'private_message_votes'
+    
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    message_id = Column(Integer, ForeignKey("private_messages.id", ondelete="CASCADE"), primary_key=True)
+    dir = Column(Integer) 
+    
+    
 class ImagesAll(Base):
     __tablename__ = 'imagesAll'
     
