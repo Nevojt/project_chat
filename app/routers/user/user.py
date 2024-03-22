@@ -216,6 +216,32 @@ def get_user_mail(email: str, db: Session = Depends(get_db)):
         
     return user
 
+@router.get('/audit/{user_name}', response_model=user.UserInfo)
+def get_user_name(user_name: str, db: Session = Depends(get_db)):
+    """
+    Get a user by their use_name.
+
+    Parameters:
+    user_name (str): The user_name of the user to retrieve.
+    db (Session): The database session to use.
+
+    Returns:
+    schemas.UserInfo: The user information, if found.
+
+    Raises:
+    HTTPException: If the user is not found.
+    """
+    
+    # Query the database for a user with the given email
+    user = db.query(models.User).filter(models.User.user_name == user_name).first()
+    
+    # If the user is not found, raise an HTTP 404 error
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with user name {user_name} not found")
+        
+    return user
+
 
 @router.get("/", response_model=List[user.UserInfo])
 async def get_email(db: Session = Depends(get_db)):
