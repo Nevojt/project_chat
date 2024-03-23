@@ -8,12 +8,12 @@ from typing_extensions import Annotated
 
 class SocketModel(BaseModel):
     created_at: datetime
-    receiver_id: int
+    receiver_id: Optional[int] = None
     id: int
     message: str
-    user_name: str
-    avatar: str
-    verified: bool
+    user_name: Optional[str] = "DELETE"
+    avatar: Optional[str] = "https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/inne/image/boy_1.webp"
+    verified: Optional[bool] = None
     vote: int
     id_return: Optional[int] = None 
     
