@@ -1,4 +1,4 @@
-from fastapi import Response, status, HTTPException, Depends, APIRouter, Body
+from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.mail import send_mail
 
 from ...config import utils
-
+from .hello import say_hello_system
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
@@ -70,6 +70,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
                                             "name": user.user_name,
                                             "registration_link": registration_link
                                             })
+    await say_hello_system(new_user.id)
     
     return new_user
 
