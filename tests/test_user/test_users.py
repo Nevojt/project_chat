@@ -2,8 +2,7 @@ import pytest
 from httpx import AsyncClient
 from jose import jwt
 import json
-import asyncio
-# from fastapi import FastAPI
+
 from app.config.config import settings
 from fastapi.testclient import TestClient
 from app.main import app
