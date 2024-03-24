@@ -326,7 +326,7 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with ID {room_id} not found")
 
-    if current_user.role != "admin" and current_user.id != room.owner_id:
+    if current_user.role != "admin" and current_user.id != room.owner:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     
     # Updating user statuses
