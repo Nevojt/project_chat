@@ -76,20 +76,12 @@ async def test_update_user(test_user, test_user_update):
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
-
+        
+    async with AsyncClient(app=app, base_url="http://test") as client:
         # Get user's information to find the user ID
         user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
         assert user_info_res.status_code == 200
-        users_list = user_info_res.json()
 
-    # Find the user ID from the list
-    user_id = None
-    for user in users_list:
-        if user.get('email') == test_user['email']:
-            user_id = user.get('id')
-            break
-
-    assert user_id is not None, "User ID not found"
 
     # Step 2: Update the user
     new_data = {
@@ -100,12 +92,17 @@ async def test_update_user(test_user, test_user_update):
         "Authorization": f"Bearer {token}"
     }
 
-    # The 'put' request must also be inside the 'async with' block
+    # # The 'put' request must also be inside the 'async with' block
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.put(f"/users/{user_id}", json=new_data, headers=headers)
+        response = await client.put(f"/users/",
+                                    headers=headers,
+                                    json=new_data,
+                                    follow_redirects=False
+                                    )
 
     # Step 3: Assert the response
     assert response.status_code == 200
+    assert response['user_name'] == new_data['user_name']
 
 
 @pytest.mark.asyncio
@@ -119,31 +116,22 @@ async def test_delete_user(test_user):
         token = login_data['access_token']
 
         # Get user's information to find the user ID
-        user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
-        assert user_info_res.status_code == 200
-        users_list = user_info_res.json()
-
-    # Find the user ID from the list
-    user_id = None
-    for user in users_list:
-        if user.get('email') == test_user['email']:
-            user_id = user.get('id')
-            break
-
-    assert user_id is not None, "User ID not found"
-    
-    custom_header_payload = json.dumps({
-        "id": user_id,
-        "password": test_user['password']
-    })
-    headers = {
-        "Authorization": f"Bearer {token}",
+        # user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        # assert user_info_res.status_code == 200
+        # users_list = user_info_res.json()
+        # user_id = users_list[0]['id']
         
+    headers = {
+        "Authorization": f"Bearer {token}"
     }
+    data = {"password": test_user["password"]}
 
         # Attempt to delete the user using the 'request' method directly
     async with AsyncClient(app=app, base_url="http://test") as client:
-        delete_res = await client.delete(f"/users/{user_id}", headers=headers, params=custom_header_payload)
+        delete_res = await client.delete(f"/users/",
+                                         headers=headers,
+                                         json=data,
+                                         follow_redirects=False)
 
     assert delete_res.status_code == 204
 

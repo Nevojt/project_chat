@@ -69,5 +69,4 @@ class UserInfo(BaseModel):
     created_at: datetime
     
 class UserDelete(BaseModel):
-    id: int
     password: str

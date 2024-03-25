@@ -77,7 +77,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 
 
-@router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     schemas_delete: user.UserDelete,
     db: AsyncSession = Depends(get_async_session), 

@@ -69,7 +69,7 @@ def test_get_one_name(client, test_room):
     
     
 @pytest.mark.asyncio
-async def test_update_rooms(test_user,test_room, test_update_room):
+async def test_update_rooms(test_user, test_room, test_update_room):
     async with AsyncClient(app=app, base_url="http://test") as client:
         login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
         assert login_res.status_code == 200
