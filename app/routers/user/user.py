@@ -79,7 +79,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
-    schemas_delete: user.UserDelete,
+    password: user.UserDelete,
     db: AsyncSession = Depends(get_async_session), 
     current_user: int = Depends(oauth2.get_current_user)
 ):
@@ -101,16 +101,7 @@ async def delete_user(
     - Response: An empty response with a 204 No Content status, indicating successful deletion.
     """
     
-    
-    # Переконайтесь, що користувач видаляє лише свій профіль
-    if current_user.id != schemas_delete.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not permitted to delete other users' profiles."
-        )
-    
-    # Знайдіть користувача
-    query = select(models.User).where(models.User.id == schemas_delete.id)
+    query = select(models.User).where(models.User.id == current_user.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
@@ -125,8 +116,7 @@ async def delete_user(
             detail="Only verified users can delete their profiles."
         )
     
-    # Перевірте пароль
-    if not utils.verify(schemas_delete.password, existing_user.password):
+    if not utils.verify(password.password, existing_user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."

@@ -102,7 +102,7 @@ async def test_update_user(test_user, test_user_update):
 
     # Step 3: Assert the response
     assert response.status_code == 200
-    assert response['user_name'] == new_data['user_name']
+    assert response.json()['user_name'] == test_user_update["user_name"]
 
 
 @pytest.mark.asyncio
@@ -114,24 +114,19 @@ async def test_delete_user(test_user):
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
-
-        # Get user's information to find the user ID
-        # user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
-        # assert user_info_res.status_code == 200
-        # users_list = user_info_res.json()
-        # user_id = users_list[0]['id']
-        
+    
     headers = {
-        "Authorization": f"Bearer {token}"
+        "Authorization": f"Bearer {token}",
     }
-    data = {"password": test_user["password"]}
+    data = {
+        "password": test_user['password']
+    }
 
-        # Attempt to delete the user using the 'request' method directly
+    # Attempt to delete the user using the 'request' method with JSON body
     async with AsyncClient(app=app, base_url="http://test") as client:
-        delete_res = await client.delete(f"/users/",
-                                         headers=headers,
-                                         json=data,
-                                         follow_redirects=False)
+        delete_res = await client.request("DELETE", "/users/", headers=headers, json=data)
 
     assert delete_res.status_code == 204
+
+
 
