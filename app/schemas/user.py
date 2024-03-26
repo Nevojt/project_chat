@@ -2,6 +2,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from datetime import datetime
 from ..models.models import UserRole
+from typing import Optional
         
         
         
@@ -67,6 +68,7 @@ class UserInfo(BaseModel):
     user_name: str
     avatar: str
     created_at: datetime
+    token_verify: Optional[str]
     
 class UserDelete(BaseModel):
     password: str
