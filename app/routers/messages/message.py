@@ -57,6 +57,7 @@ async def get_posts(session: AsyncSession = Depends(get_async_session), limit: i
             receiver_id=socket.receiver_id,
             id=socket.id,
             message=socket.message,
+            fileUrl=socket.fileUrl,
             user_name=user.user_name,
             avatar=user.avatar,
             verified=user.verified,
