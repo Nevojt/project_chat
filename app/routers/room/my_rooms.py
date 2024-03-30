@@ -12,14 +12,14 @@ from app.models import models
 from app.schemas import room as room_schema
 
 router = APIRouter(
-    prefix="/rooms",
+    prefix='/favorites',
     tags=['Favorites'],
 )
 
 
 
-@router.get("/manager")
-async def get_user_rooms_info(db: Session = Depends(get_db), 
+@router.get("/")
+async def get_user_rooms_favorites(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomFavorite]:
     """
     Retrieve a list of rooms accessible by the current user, along with their associated message and user counts.
@@ -40,7 +40,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
     rooms = db.query(models.Rooms, models.RoomsManager.favorite
                      ).filter(models.Rooms.id.in_(user_room_ids), 
                     models.Rooms.name_room != 'Hell',
-                    
+                    models.Rooms.secret_room == False,
                     models.RoomsManager.room_id == models.Rooms.id,  # Ensure the mapping between Rooms and RoomsManager
                     models.RoomsManager.user_id == current_user.id  # Ensure we're getting the favorite status for the current user
     ).all()
@@ -76,7 +76,7 @@ async def get_user_rooms_info(db: Session = Depends(get_db),
 
     return rooms_info
 
-@router.post('/favorites')
+@router.post('/add_room')
 async def toggle_room_in_favorites(room_id: int, 
                                    db: AsyncSession = Depends(get_async_session), 
                                    current_user: models.User = Depends(oauth2.get_current_user)):
@@ -125,7 +125,7 @@ async def toggle_room_in_favorites(room_id: int,
         return new_manager_room
     
     
-@router.post('/favorites/add_user')
+@router.post('/add_user')
 async def toggle_user_in_room(room_id: int, user_id: int, 
                               db: AsyncSession = Depends(get_async_session), 
                               current_user: models.User = Depends(oauth2.get_current_user)):
@@ -133,7 +133,7 @@ async def toggle_user_in_room(room_id: int, user_id: int,
     # Перевірка чи існує кімната і чи є поточний користувач її власником
     room_get = select(models.Rooms).where(models.Rooms.id == room_id,
                                           models.Rooms.owner == current_user.id,
-                                          models.Rooms.secret_room == True)
+                                          models.Rooms.secret_room == False)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
 
@@ -162,10 +162,13 @@ async def toggle_user_in_room(room_id: int, user_id: int,
         return {"message": "User added to the room"}
 
 
-@router.put('/favorites/{room_id}')
+@router.put('/{room_id}')
 async def favorite_room(room_id: int, 
                         db: AsyncSession = Depends(get_async_session), 
                         current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+
+    """
     
     room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room!= True)
     result = await db.execute(room_get)
