@@ -4,6 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mail import send_mail
+from app.schemas.reset import PasswordReset
 
 from ...config import utils
 from .hello import say_hello_system
@@ -176,7 +177,38 @@ async def update_user(update: user.UserUpdate,
     return updated_user
     
     
+@router.put("/password", response_description="Reset password")
+async def reset(new_password: PasswordReset,
+                db: AsyncSession = Depends(get_async_session),
+                current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Handles the actual password reset using a provided token. Validates the token and updates the user's password.
+
+    Args:
+        token (str): The token for user verification, used to ensure the password reset request is valid.
+        new_password (PasswordReset): The payload containing the new password.
+        db (AsyncSession, optional): Asynchronous database session. Defaults to Depends(get_async_session).
+
+    Raises:
+        HTTPException: Raises a 404 error if no user is found associated with the provided token.
+
+    Returns:
+        dict: A message confirming that the password has been successfully reset.
+    """
     
+    
+    if not current_user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    # hashed new password
+    hashed_password = utils.hash(new_password.password)
+
+    # Update password to database
+    current_user.password = hashed_password
+    db.add(current_user)
+    await db.commit()
+
+    return {"msg": "Password has been reset successfully."}
     
     
 

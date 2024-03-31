@@ -21,9 +21,9 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     root_path="/api",
     docs_url="/docs",
-    title="Cool Chat",
-    description="Cool Chat documentation",
-    version="0.1.0"
+    title="Chat",
+    description="Chat documentation",
+    version="0.1.3"
 )
 
 origins = ["*"]
