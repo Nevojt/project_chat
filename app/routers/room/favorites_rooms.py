@@ -126,11 +126,11 @@ async def toggle_room_in_favorites(room_id: int,
     
     
 @router.post('/add_user')
-async def toggle_user_in_room(room_id: int, user_id: int, 
+async def toggle_user_in_favorite_room(room_id: int, user_id: int, 
                               db: AsyncSession = Depends(get_async_session), 
                               current_user: models.User = Depends(oauth2.get_current_user)):
 
-    # Перевірка чи існує кімната і чи є поточний користувач її власником
+    # audit room and user from owner room 
     room_get = select(models.Rooms).where(models.Rooms.id == room_id,
                                           models.Rooms.owner == current_user.id,
                                           models.Rooms.secret_room == False)
@@ -141,7 +141,7 @@ async def toggle_user_in_room(room_id: int, user_id: int,
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with ID {room_id} not found")
 
-    # Перевірка чи користувач вже є у кімнаті
+    # Audit user in room
     manager_room_query = select(models.RoomsManager).where(
         models.RoomsManager.user_id == user_id,
         models.RoomsManager.room_id == room_id
@@ -149,7 +149,7 @@ async def toggle_user_in_room(room_id: int, user_id: int,
     existing_manager_room = await db.execute(manager_room_query)
     manager_room = existing_manager_room.scalar_one_or_none()
 
-    # Додавання або видалення користувача з кімнати
+    # add or delete user for room
     if manager_room:
         await db.delete(manager_room)
         await db.commit()
@@ -163,14 +163,26 @@ async def toggle_user_in_room(room_id: int, user_id: int,
 
 
 @router.put('/{room_id}')
-async def favorite_room(room_id: int, 
+async def update_favorite_room(room_id: int, 
                         db: AsyncSession = Depends(get_async_session), 
                         current_user: models.User = Depends(oauth2.get_current_user)):
     """
+    Update the favorite status of a room.
+
+    Parameters:
+        room_id (int): The ID of the room to update.
+        db (AsyncSession): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the room does not exist or the user does not have sufficient permissions.
+
+    Returns:
+        JSON: A JSON object with a "favorite" key indicating the new favorite status of the room.
 
     """
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room!= True)
+    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room != True)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     

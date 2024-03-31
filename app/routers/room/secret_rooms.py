@@ -115,7 +115,7 @@ async def toggle_user_in_room(room_id: int, user_id: int,
 
 
 @router.put('/{room_id}')
-async def favorite_room(room_id: int, 
+async def secret_room_update(room_id: int, 
                         db: AsyncSession = Depends(get_async_session), 
                         current_user: models.User = Depends(oauth2.get_current_user)):
     """
