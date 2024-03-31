@@ -134,7 +134,7 @@ async def test_get_rooms_manager(test_user):
         headers = {"Authorization": f"Bearer {token}"}
         
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/rooms/manager", headers=headers)
+        response = await client.get("/favorites/", headers=headers)
         assert response.status_code == 200
         
         

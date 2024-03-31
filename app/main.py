@@ -10,7 +10,7 @@ from .mail import send_mail
 from .routers.user import auth, finds, user, verify_user, user_status
 from .routers.messages import message, private_messages, vote
 from .routers.images_rout import images, upload_file_google, upload_file_supabase
-from .routers.room import rooms, count_users_messages, my_rooms, secret_rooms
+from .routers.room import favorites_rooms, rooms, count_users_messages, secret_rooms, user_rooms
 from .routers.token_test import ass
 from .routers.reset import password_reset
 from .database.database import engine
@@ -39,7 +39,8 @@ app.add_middleware(
 
 app.include_router(message.router)
 app.include_router(rooms.router)
-app.include_router(my_rooms.router)
+app.include_router(user_rooms.router)
+app.include_router(favorites_rooms.router)
 app.include_router(secret_rooms.router)
 
 app.include_router(user.router)
