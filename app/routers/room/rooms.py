@@ -1,7 +1,7 @@
 from typing import List
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-from sqlalchemy import func, asc
+from sqlalchemy import desc, func, asc
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import oauth2
@@ -31,8 +31,20 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     """
     
     # get info rooms and not room "Hell"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True).order_by(asc(models.Rooms.id)).all()
-
+    # rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True).order_by(asc(models.Rooms.id)).all()
+    rooms = db.query(
+        models.Rooms.id,
+        models.Rooms.owner,
+        models.Rooms.name_room,
+        models.Rooms.image_room,
+        models.Rooms.created_at,
+        models.Rooms.secret_room,
+        func.count(models.Socket.id).label('count_messages')
+    ).outerjoin(models.Socket, models.Rooms.name_room == models.Socket.rooms) \
+    .filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True) \
+    .group_by(models.Rooms.id) \
+    .order_by(desc('count_messages')) \
+    .all()
     # Count messages for room
     messages_count = db.query(
         models.Socket.rooms, 

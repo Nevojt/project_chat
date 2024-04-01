@@ -181,7 +181,20 @@ async def update_user(update: user.UserUpdate,
 async def reset(password: user.UserUpdatePassword,
                 db: AsyncSession = Depends(get_async_session),
                 current_user: models.User = Depends(oauth2.get_current_user)):
-    
+    """
+    Reset the password of the currently authenticated user.
+
+    Args:
+        password (schemas.UserUpdatePassword): The new password and confirmation.
+        db (AsyncSession): The database session to use.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        dict: A message indicating that the password was reset successfully.
+
+    Raises:
+        HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
+    """
     query = select(models.User).where(models.User.id == current_user.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
