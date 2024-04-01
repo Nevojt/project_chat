@@ -72,3 +72,7 @@ class UserInfo(BaseModel):
     
 class UserDelete(BaseModel):
     password: str
+    
+class UserUpdatePassword(BaseModel):
+    old_password: str
+    new_password: str

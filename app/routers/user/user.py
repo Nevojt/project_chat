@@ -178,30 +178,25 @@ async def update_user(update: user.UserUpdate,
     
     
 @router.put("/password", response_description="Reset password")
-async def reset(new_password: PasswordReset,
+async def reset(password: user.UserUpdatePassword,
                 db: AsyncSession = Depends(get_async_session),
                 current_user: models.User = Depends(oauth2.get_current_user)):
-    """
-    Handles the actual password reset using a provided token. Validates the token and updates the user's password.
-
-    Args:
-        token (str): The token for user verification, used to ensure the password reset request is valid.
-        new_password (PasswordReset): The payload containing the new password.
-        db (AsyncSession, optional): Asynchronous database session. Defaults to Depends(get_async_session).
-
-    Raises:
-        HTTPException: Raises a 404 error if no user is found associated with the provided token.
-
-    Returns:
-        dict: A message confirming that the password has been successfully reset.
-    """
     
+    query = select(models.User).where(models.User.id == current_user.id)
+    result = await db.execute(query)
+    existing_user = result.scalar_one_or_none()
     
     if not current_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    if not utils.verify(password.old_password, existing_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect password."
+        )
 
     # hashed new password
-    hashed_password = utils.hash(new_password.password)
+    hashed_password = utils.hash(password.new_password)
 
     # Update password to database
     current_user.password = hashed_password
