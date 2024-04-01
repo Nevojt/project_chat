@@ -86,39 +86,42 @@ async def get_messages_room(rooms: str, session: AsyncSession = Depends(get_asyn
         List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
     """
     query = select(
-    models.Socket, 
-    models.User, 
-    func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
+        models.Socket, 
+        models.User, 
+        func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
     ).outerjoin(
         models.Vote, models.Socket.id == models.Vote.message_id
-    ).outerjoin(  # Змінено на outerjoin
+    ).join(
         models.User, models.Socket.receiver_id == models.User.id
-    ).filter(
-        models.Socket.rooms == rooms
     ).group_by(
         models.Socket.id, models.User.id
     ).order_by(
         desc(models.Socket.created_at)
-    )
+    ).limit(50)
 
     result = await session.execute(query)
     raw_messages = result.all()
 
+    result = await session.execute(query)
+    raw_messages = result.all()
+
+    # Convert raw messages to SocketModel
     messages = [
         message.SocketModel(
             created_at=socket.created_at,
             receiver_id=socket.receiver_id,
-            message=socket.message,
-            user_name=user.user_name if user is not None else "DELETED",  # Додана перевірка на None
-            avatar=user.avatar if user is not None else "https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/inne/image/boy_1.webp",
-            verified=user.verified if user is not None else None,
             id=socket.id,
+            message=socket.message,
+            fileUrl=socket.fileUrl,
+            user_name=user.user_name,
+            avatar=user.avatar,
+            verified=user.verified,
             vote=votes,
-            id_return=socket.id_return
+            id_return=socket.id_return,
         )
         for socket, user, votes in raw_messages
     ]
-    messages.reverse()
+
     return messages
 
 
