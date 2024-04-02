@@ -122,7 +122,6 @@ async def test_verify_user(test_user):
         
         # Find the specific user
         user = next((u for u in users if u['email'] == test_user['email']), None)
-        print(user)
         assert user is not None
         token_verify = user['token_verify']
 
@@ -140,13 +139,46 @@ async def test_verify_user(test_user):
 
     # Step 3: Assert the response
     assert response.status_code == 200
+    
+@pytest.fixture
+def test_user_new_password():
+    return {"email":"test_user@gmail.com",
+            "password":"NewPassword"}
 
 @pytest.mark.asyncio
-async def test_delete_user(test_user):
+async def test_change_user_password(test_user, test_user_new_password):
     # Authenticate the user to get a token
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Authenticate the user
         login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+        assert login_res.status_code == 200
+        login_data = login_res.json()
+        token = login_data['access_token']
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+    }
+    change_password = {
+        "old_password": test_user['password'],
+        "new_password": test_user_new_password['password']
+    }
+
+    # Attempt to change the user's password using the 'put' method with JSON body
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        res_password = await client.put("/users/password",
+                                        headers={"Authorization": f"Bearer {token}"},
+                                        json=change_password)
+        
+        
+        assert res_password.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_delete_user(test_user_new_password):
+    # Authenticate the user to get a token
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        # Authenticate the user
+        login_res = await client.post("/login", data={"username": test_user_new_password['email'], "password": test_user_new_password['password']})
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
@@ -155,7 +187,7 @@ async def test_delete_user(test_user):
         "Authorization": f"Bearer {token}",
     }
     data = {
-        "password": test_user['password']
+        "password": test_user_new_password['password']
     }
 
     # Attempt to delete the user using the 'request' method with JSON body
