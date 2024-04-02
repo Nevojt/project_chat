@@ -57,7 +57,8 @@ def test_login_user(test_user, client):
     
 def test_incorrect_login(test_user, client, email, password, status_code):
     res = client.post(
-        "/login", data={"username": email, "password": password})
+        "/login", 
+        data={"username": email, "password": password})
 
     assert res.status_code == status_code
 
@@ -72,14 +73,17 @@ def test_incorrect_error(client):
 async def test_update_user(test_user, test_user_update):
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Authenticate the user
-        login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+        login_res = await client.post("/login", 
+                                      data={"username": test_user['email'],
+                                            "password": test_user['password']})
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
         
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Get user's information to find the user ID
-        user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        user_info_res = await client.get("/users/", 
+                                         headers={"Authorization": f"Bearer {token}"})
         assert user_info_res.status_code == 200
 
 
@@ -109,14 +113,17 @@ async def test_update_user(test_user, test_user_update):
 async def test_verify_user(test_user):
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Authenticate the user
-        login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+        login_res = await client.post("/login", 
+                                      data={"username": test_user['email'],
+                                            "password": test_user['password']})
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
         
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Get user's information to find the user ID
-        user_info_res = await client.get("/users/", headers={"Authorization": f"Bearer {token}"})
+        user_info_res = await client.get("/users/", 
+                                         headers={"Authorization": f"Bearer {token}"})
         assert user_info_res.status_code == 200
         users = user_info_res.json()
         
@@ -150,7 +157,9 @@ async def test_change_user_password(test_user, test_user_new_password):
     # Authenticate the user to get a token
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Authenticate the user
-        login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+        login_res = await client.post("/login",
+                                      data={"username": test_user['email'],
+                                            "password": test_user['password']})
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
@@ -178,7 +187,8 @@ async def test_delete_user(test_user_new_password):
     # Authenticate the user to get a token
     async with AsyncClient(app=app, base_url="http://test") as client:
         # Authenticate the user
-        login_res = await client.post("/login", data={"username": test_user_new_password['email'], "password": test_user_new_password['password']})
+        login_res = await client.post("/login", data={"username": test_user_new_password['email'],
+                                                      "password": test_user_new_password['password']})
         assert login_res.status_code == 200
         login_data = login_res.json()
         token = login_data['access_token']
@@ -192,7 +202,8 @@ async def test_delete_user(test_user_new_password):
 
     # Attempt to delete the user using the 'request' method with JSON body
     async with AsyncClient(app=app, base_url="http://test") as client:
-        delete_res = await client.request("DELETE", "/users/", headers=headers, json=data)
+        delete_res = await client.request("DELETE", "/users/", 
+                                          headers=headers, json=data)
 
     assert delete_res.status_code == 204
 
