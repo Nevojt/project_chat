@@ -9,7 +9,7 @@ from .mail import send_mail
 
 from .routers.user import auth, finds, user, verify_user, user_status
 from .routers.messages import message, private_messages, vote
-from .routers.images import images, upload_file_google, upload_file_supabase
+from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return
 from .routers.room import favorites_rooms, rooms, count_users_messages, secret_rooms, user_rooms
 from .routers.token_test import ass
 from .routers.reset import password_reset
@@ -48,7 +48,11 @@ app.include_router(auth.router)
 app.include_router(finds.router)
 app.include_router(user_status.router)
 app.include_router(vote.router)
+
 app.include_router(images.router)
+app.include_router(upload_file_supabase.router)
+app.include_router(upload_file_google.router)
+app.include_router(upload_and_return.router)
 
 app.include_router(private_messages.router)
 app.include_router(count_users_messages.router)
@@ -56,8 +60,7 @@ app.include_router(password_reset.router)
 app.include_router(send_mail.router)
 
 app.include_router(verify_user.router)
-app.include_router(upload_file_supabase.router)
-app.include_router(upload_file_google.router)
+
 app.include_router(ass.router)
 
 
