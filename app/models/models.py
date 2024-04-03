@@ -100,3 +100,17 @@ class ImagesAll(Base):
     image_room = Column(String, nullable=False)
     images = Column(String, nullable=False)
     
+    
+class ImagesAvatar(Base):
+    __tablename__ = 'imagesAvatar'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    avatar = Column(String, nullable=False)
+    images_url = Column(String, nullable=False)
+    
+class ImagesRooms(Base):
+    __tablename__ = 'imagesRooms'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    rooms = Column(String, nullable=False)
+    images_url = Column(String, nullable=False)

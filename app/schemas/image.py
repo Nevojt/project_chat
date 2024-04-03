@@ -10,6 +10,14 @@ class Images(BaseModel):
     
 class ImagesCreate(Images):
     pass
+      
+class UploadAvatar(BaseModel):
+    avatar: str
+    images_url: str 
+
+class UploadRooms(BaseModel):
+    rooms: str
+    images_url: str    
        
 class ImagesResponse(Images):
     id: Optional[int]
