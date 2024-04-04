@@ -15,7 +15,15 @@ async def get_images(db: Session = Depends(get_db)):
     posts = db.query(models.ImagesAll).all()
     return posts
 
+@router.get("/avatars")
+async def get_images(db: Session = Depends(get_db)):
+    posts = db.query(models.ImagesAvatar).all()
+    return posts
 
+@router.get("/rooms")
+async def get_images(db: Session = Depends(get_db)):
+    posts = db.query(models.ImagesRooms).all()
+    return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=image.ImagesResponse)
 async def create_image(images: image.ImagesCreate, db: Session = Depends(get_db)):
