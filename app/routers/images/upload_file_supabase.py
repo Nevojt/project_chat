@@ -19,7 +19,8 @@ def public_url(bucket_name, file_path):
     return res
 
 @router.post("/upload-to-supabase/")
-async def upload_to_supabase(file: UploadFile = File(...), bucket_name: str = "image_chat"):
+async def upload_to_supabase(file: UploadFile = File(..., limit="5MB"),
+                             bucket_name: str = "image_chat"):
     """
     This function is used to upload a file to supabase storage.
 
