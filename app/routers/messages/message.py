@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[message.SocketModel])
+@router.get("/", response_model=List[message.SocketModel], include_in_schema=False)
 async def get_posts(session: AsyncSession = Depends(get_async_session), 
                     limit: int = 50, skip: int = 0):
     
@@ -129,7 +129,7 @@ async def get_messages_room(rooms: str,
 
 
 
-@router.put("/{id}")
+@router.put("/{id}", include_in_schema=False)
 async def change_message(id_message: int, message_update: message.SocketUpdate,
                          current_user: models.User = Depends(oauth2.get_current_user), 
                          session: AsyncSession = Depends(get_async_session)):
