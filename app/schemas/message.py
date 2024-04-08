@@ -12,7 +12,7 @@ class SocketModel(BaseModel):
     id: int
     message: Optional[str] = None
     fileUrl: Optional[str] = None
-    user_name: Optional[str] = "USER DELETE"
+    user_name: Optional[str] = "Unknown user"
     avatar: Optional[str] = "https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/inne/image/boy_1.webp"
     verified: Optional[bool] = None
     vote: int
