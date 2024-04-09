@@ -34,8 +34,7 @@ async def get_user_tabs(db: Session = Depends(get_db),
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
         ).filter(models.RoomsTabs.user_id == current_user.id,
                  models.Rooms.id == models.RoomsTabs.room_id).all()
-        
-    
+         
     
 #     # Fetch message count for each user-associated room
     messages_count = db.query(
@@ -76,6 +75,10 @@ async def get_user_tabs(db: Session = Depends(get_db),
 
         # Append room info to the correct tab
         tabs_with_rooms[tab.tab_name].append(room_info)
+        
+        for tab_name, rooms in tabs_with_rooms.items():
+            rooms.sort(key=lambda x: x['favorite'], reverse=True)
+        
 
     return tabs_with_rooms
 
