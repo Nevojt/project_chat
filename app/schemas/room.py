@@ -1,7 +1,7 @@
 
 from pydantic import BaseModel, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 
 
@@ -53,14 +53,13 @@ class RoomManager(BaseModel):
     class Config:
         from_attributes = True
         
-        
-        
-        
-class RoomTabs(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+
     
-    room_id: int
-    tab_name: Optional[str]
+    
+class Tab(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    name: str
+    rooms: List[RoomBase]
 
 class CountMessages(BaseModel):
     rooms: str

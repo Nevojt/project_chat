@@ -40,8 +40,8 @@ app.add_middleware(
 app.include_router(message.router)
 app.include_router(rooms.router)
 app.include_router(user_rooms.router)
-app.include_router(tabs_rooms.router)
 app.include_router(secret_rooms.router)
+app.include_router(tabs_rooms.router)
 
 app.include_router(user.router)
 app.include_router(auth.router)
