@@ -29,14 +29,25 @@ router = APIRouter(
 @router.get("/")
 async def get_user_tabs(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
+    """
+    Get all the tabs for the current user.
 
+    Args:
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        List[room_schema.RoomTabs]: A list of room tabs for the current user.
+
+    Raises:
+        HTTPException: If the user does not have any tabs.
+    """
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
         ).filter(models.RoomsTabs.user_id == current_user.id,
                  models.Rooms.id == models.RoomsTabs.room_id).all()
          
-    
-#     # Fetch message count for each user-associated room
+    # Fetch message count for each user-associated room
     messages_count = db.query(
         models.Socket.rooms, 
         func.count(models.Socket.id).label('count')
@@ -49,7 +60,7 @@ async def get_user_tabs(db: Session = Depends(get_db),
     ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
 
 
-
+    # Initialize an empty dictionary to store tabs with their associated rooms
     tabs_with_rooms = {}
 
     # Iterate over each room and tab pair
@@ -76,6 +87,7 @@ async def get_user_tabs(db: Session = Depends(get_db),
         # Append room info to the correct tab
         tabs_with_rooms[tab.tab_name].append(room_info)
         
+        # Sort the rooms in each tab based on their favorite status
         for tab_name, rooms in tabs_with_rooms.items():
             rooms.sort(key=lambda x: x['favorite'], reverse=True)
         
