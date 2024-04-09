@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 from typing import Optional
 
@@ -53,6 +53,14 @@ class RoomManager(BaseModel):
     class Config:
         from_attributes = True
         
+        
+        
+        
+class RoomTabs(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    room_id: int
+    tab_name: Optional[str]
 
 class CountMessages(BaseModel):
     rooms: str

@@ -21,17 +21,7 @@ class Socket(Base):
     id_return = Column(Integer)
     fileUrl = Column(String)
     
-class SocketTest(Base):
-    __tablename__ = 'socket_test'
-    
-    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
-    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    message = Column(String)
-    receiver_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
-    rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
-    id_return = Column(Integer)
-    fileUrl = Column(String)
-    
+
     
 class PrivateMessage(Base):
     __tablename__ = 'private_messages'
@@ -52,6 +42,8 @@ class Rooms(Base):
     image_room = Column(String, nullable=False)
     owner = Column(Integer, (ForeignKey("users.id", ondelete='SET NULL')), nullable=False)
     secret_room = Column(Boolean, default=False)
+    block = Column(Boolean, default=False)
+    
     
     
 class RoomsManager(Base):
@@ -62,7 +54,16 @@ class RoomsManager(Base):
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     favorite = Column(Boolean, default=False)
     
+class RoomsTabs(Base):
+    __tablename__ = 'tabs'
     
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
+    room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
+    tab_name = Column(String)
+    favorite = Column(Boolean, default=False)
+
+
 class User(Base):
     __tablename__ = 'users'
     
