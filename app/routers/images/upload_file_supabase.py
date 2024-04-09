@@ -42,7 +42,7 @@ def public_url(bucket_name, file_path):
     return res
 
 @router.post("/upload-to-supabase/")
-async def upload_to_supabase(file: UploadFile = File(..., limit="5MB"), bucket_name: str = "image_chat"):
+async def upload_to_supabase(file: UploadFile = File(..., limit="10MB"), bucket_name: str = "image_chat"):
     """
     Upload a file to Supabase storage, ensuring unique file names.
 
