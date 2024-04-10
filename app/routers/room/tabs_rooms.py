@@ -29,89 +29,14 @@ router = APIRouter(
 @router.get("/")
 async def get_user_tabs(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
-    """
-    Get all tabs for a user
 
-    Args:
-        db (Session): The database session
-        current_user (models.User): The currently authenticated user
-
-    Returns:
-        dict: A dictionary of tabs, where each tab is a list of rooms
-    """
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
         ).filter(models.RoomsTabs.user_id == current_user.id,
                  models.Rooms.id == models.RoomsTabs.room_id).all()
          
-    # Fetch message count for each user-associated room
-    messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
-
-    # Count users for room
-    users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
-
-
-    # Initialize an empty dictionary to store tabs with their associated rooms
-    tabs_with_rooms = {}
-
-    # Iterate over each room and tab pair
-    for room, tab in rooms_and_tabs:
-        room_info = {
-            "id": room.id,
-            "owner": room.owner,
-            "name_room": room.name_room,
-            "image_room": room.image_room,
-            "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
-            "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
-            "created_at": room.created_at,
-            "secret_room": room.secret_room,
-            "favorite": tab.favorite,
-            "block": room.block,
-            
-            # Add any other room details you want to include
-        }
-
-        # If the tab name isn't in the dictionary, add it with an empty list
-        if tab.tab_name not in tabs_with_rooms:
-            tabs_with_rooms[tab.tab_name] = []
-
-        # Append room info to the correct tab
-        tabs_with_rooms[tab.tab_name].append(room_info)
-        
-        # Sort the rooms in each tab based on their favorite status
-        for tab_name, rooms in tabs_with_rooms.items():
-            rooms.sort(key=lambda x: x['favorite'], reverse=True)
-        
-
-    return tabs_with_rooms
-
-
-
-
-
-
-@router.get('/{tab}')
-async def get_user_tabs(db: Session = Depends(get_db), 
-                              current_user: models.User = Depends(oauth2.get_current_user),
-                              tab: str = None):
-
-    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).filter(models.RoomsTabs.user_id == current_user.id,
-                 models.Rooms.id == models.RoomsTabs.room_id,
-                 models.RoomsTabs.tab_name == tab).all()
-    if len(rooms_and_tabs) < 1  :
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tab {tab} not found",
-        )
-         
-    # Fetch message count for each user-associated room
+    
+#     # Fetch message count for each user-associated room
     messages_count = db.query(
         models.Socket.rooms, 
         func.count(models.Socket.id).label('count')
