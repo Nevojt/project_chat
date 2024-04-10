@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, HttpUrl
 from datetime import datetime
 from typing import Optional, List
 
@@ -53,7 +53,11 @@ class RoomManager(BaseModel):
     class Config:
         from_attributes = True
         
-
+class RoomTabsCreate(BaseModel):
+    name_tab: str
+    image_tab: str
+    
+  
     
     
 class Tab(BaseModel):

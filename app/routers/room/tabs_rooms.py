@@ -25,6 +25,37 @@ router = APIRouter(
 #     all_tabs = db.query(models.RoomsTabs).filter(models.RoomsTabs.user_id == current_user.id).all()
     
 #     return all_tabs
+@router.post('/')
+async def create_user_tab(tab: room_schema.RoomTabsCreate, 
+                          db: AsyncSession = Depends(get_async_session), 
+                          current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Create a new tab.
+    """
+    try:
+        # Check if tab already exists
+        post_tab = select(models.RoomTabsInfo).where(models.RoomTabsInfo.name_tab == tab.name_tab)
+        result = await db.execute(post_tab)
+        existing_room = result.scalar_one_or_none()
+
+        if existing_room:
+            raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                                detail=f"Tab {tab.name_tab} already exists")
+        
+        # Create a new tab
+        new_tab = models.RoomTabsInfo(owner_id=current_user.id, **tab.model_dump())
+        db.add(new_tab)
+        await db.commit()
+        await db.refresh(new_tab)
+        return new_tab
+
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=str(e))
+
+    
+
 
 @router.get("/")
 async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db), 

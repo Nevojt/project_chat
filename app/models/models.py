@@ -45,7 +45,6 @@ class Rooms(Base):
     block = Column(Boolean, default=False)
     
     
-    
 class RoomsManager(Base):
     __tablename__ = 'rooms_manager'
     
@@ -53,11 +52,23 @@ class RoomsManager(Base):
     user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     favorite = Column(Boolean, default=False)
+
+class RoomTabsInfo(Base):
+    __tablename__ = 'tabs_info'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    name_tab = Column(String)
+    image_tab = Column(String)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    owner_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
+    
+
     
 class RoomsTabs(Base):
     __tablename__ = 'tabs'
     
     id = Column(Integer, primary_key=True, nullable=False)
+    tab_id = Column(Integer, (ForeignKey("tabs_info.id", ondelete="CASCADE")), nullable=False)
     user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     tab_name = Column(String)
