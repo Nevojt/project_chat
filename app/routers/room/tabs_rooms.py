@@ -67,7 +67,7 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
                  models.Rooms.id == models.RoomsTabs.room_id).all()
          
     
-#     # Fetch message count for each user-associated room
+    # Fetch message count for each user-associated room
     messages_count = db.query(
         models.Socket.rooms, 
         func.count(models.Socket.id).label('count')
