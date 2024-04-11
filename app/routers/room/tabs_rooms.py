@@ -116,11 +116,24 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
 
 
 
-
 @router.get('/{tab}')
 async def get_rooms_in_one_tab(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user),
                               tab: str = None):
+    """
+    Get all rooms in a specific tab.
+
+    Args:
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+        tab (str): The name of the tab.
+
+    Returns:
+        List[room_schema.RoomTabs]: A list of rooms in the specified tab.
+
+    Raises:
+        HTTPException: If the tab does not exist.
+    """
 
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
         ).filter(models.RoomsTabs.user_id == current_user.id,
