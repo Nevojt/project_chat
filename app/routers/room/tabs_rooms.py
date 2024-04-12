@@ -29,9 +29,7 @@ router = APIRouter(
 async def create_user_tab(tab: room_schema.RoomTabsCreate, 
                           db: AsyncSession = Depends(get_async_session), 
                           current_user: models.User = Depends(oauth2.get_current_user)):
-    """
-    Create a new tab.
-    """
+
     try:
         # Check if tab already exists
         post_tab = select(models.RoomTabsInfo).where(models.RoomTabsInfo.name_tab == tab.name_tab)
@@ -60,6 +58,20 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
 @router.get("/")
 async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db), 
                               current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
+    """
+    Get all rooms in all tabs for the current user.
+
+    Args:
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary of tabs with their associated rooms. Each room is represented as a dictionary with its details.
+
+    Raises:
+        HTTPException: If the user does not have any rooms.
+    """
+
 
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
