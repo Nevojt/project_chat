@@ -29,6 +29,20 @@ router = APIRouter(
 async def create_user_tab(tab: room_schema.RoomTabsCreate, 
                           db: AsyncSession = Depends(get_async_session), 
                           current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Create a new tab for the current user.
+
+    Args:
+        tab (room_schema.RoomTabsCreate): A dictionary containing the details of the new tab.
+        db (AsyncSession): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the tab already exists or if there is an internal server error.
+
+    Returns:
+        JSON: A JSON object containing the details of the newly created tab.
+    """
 
     try:
         # Check if tab already exists
