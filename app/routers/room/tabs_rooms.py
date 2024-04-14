@@ -187,7 +187,52 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
 
 
 
+@router.post('/add-room-to-tab/{tab_id}/{room_id}')
+async def add_room_to_tab(tab_id: int, room_id: int, 
+                          db: Session = Depends(get_db), 
+                          current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Add a room to a tab, remove from other if exists.
 
+    Args:
+        tab_id (int): The ID of the tab to add the room to.
+        room_id (int): The ID of the room to add.
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        dict: Confirmation of the room added to the tab.
+
+    Raises:
+        HTTPException: If the room or tab does not exist, or if the room is already in the specified tab.
+    """
+    
+    # Check if the tab exists and belongs to the current user
+    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == tab_id, 
+                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    if not tab:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
+
+    # Check if the room exists
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+
+    # Check if the room is already in the specified tab
+    existing_link = db.query(models.RoomsTabs).filter(models.RoomsTabs.room_id == room_id,
+                                                      models.RoomsTabs.tab_id == tab_id).first()
+    if existing_link:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Room already in this tab")
+
+    # Remove the room from any other tab
+    db.query(models.RoomsTabs).filter(models.RoomsTabs.room_id == room_id).delete()
+
+    # Add the room to the tab
+    new_room_tab = models.RoomsTabs(room_id=room_id, tab_id=tab_id, user_id=current_user.id, tab_name=tab.name_tab)
+    db.add(new_room_tab)
+    db.commit()
+
+    return {"message": f"Room {room_id} added to tab {tab_id}"}
 
 
 
