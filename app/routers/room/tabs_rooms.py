@@ -17,14 +17,6 @@ router = APIRouter(
 )
 
 
-
-# @router.get("/")
-# async def get_user_tabs(db: Session = Depends(get_db), 
-#                               current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomTabs]:
-    
-#     all_tabs = db.query(models.RoomsTabs).filter(models.RoomsTabs.user_id == current_user.id).all()
-    
-#     return all_tabs
 @router.post('/')
 async def create_user_tab(tab: room_schema.RoomTabsCreate, 
                           db: AsyncSession = Depends(get_async_session), 
@@ -71,28 +63,18 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
 
 @router.get("/")
 async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db), 
-                              current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
-    """
-    Get all rooms in all tabs for the current user.
+                                         current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
+    # Fetch all tabs for the current user
+    user_tabs = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id).all()
 
-    Args:
-        db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
-
-    Returns:
-        dict: A dictionary of tabs with their associated rooms. Each room is represented as a dictionary with its details.
-
-    Raises:
-        HTTPException: If the user does not have any rooms.
-    """
-
+    # Create a dictionary for each tab with an empty room list
+    tabs_with_rooms = {tab.name_tab: {"image_tab": tab.image_tab, "rooms": []} for tab in user_tabs}
 
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).filter(models.RoomsTabs.user_id == current_user.id,
-                 models.Rooms.id == models.RoomsTabs.room_id).all()
-         
-    
+        ).join(models.RoomsTabs, models.Rooms.id == models.RoomsTabs.room_id
+        ).filter(models.RoomsTabs.user_id == current_user.id).all()
+
     # Fetch message count for each user-associated room
     messages_count = db.query(
         models.Socket.rooms, 
@@ -104,10 +86,6 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
         models.User_Status.name_room, 
         func.count(models.User_Status.id).label('count')
     ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
-
-
-    # Initialize an empty dictionary to store tabs with their associated rooms
-    tabs_with_rooms = {}
 
     # Iterate over each room and tab pair
     for room, tab in rooms_and_tabs:
@@ -121,24 +99,18 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
             "created_at": room.created_at,
             "secret_room": room.secret_room,
             "favorite": tab.favorite,
-            "block": room.block,
-            
-            # Add any other room details you want to include
+            "block": room.block
         }
-
-        # If the tab name isn't in the dictionary, add it with an empty list
-        if tab.tab_name not in tabs_with_rooms:
-            tabs_with_rooms[tab.tab_name] = []
-
+        
         # Append room info to the correct tab
-        tabs_with_rooms[tab.tab_name].append(room_info)
-        
-        # Sort the rooms in each tab based on their favorite status
-        for tab_name, rooms in tabs_with_rooms.items():
-            rooms.sort(key=lambda x: x['favorite'], reverse=True)
-        
+        tabs_with_rooms[tab.tab_name]["rooms"].append(room_info)
+
+    # Sort rooms in each tab
+    for tab_name in tabs_with_rooms:
+        tabs_with_rooms[tab_name]["rooms"].sort(key=lambda x: x['favorite'], reverse=True)
 
     return tabs_with_rooms
+
 
 
 
@@ -161,15 +133,19 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
         HTTPException: If the tab does not exist.
     """
 
-    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).filter(models.RoomsTabs.user_id == current_user.id,
-                 models.Rooms.id == models.RoomsTabs.room_id,
-                 models.RoomsTabs.tab_name == tab).all()
-    if len(rooms_and_tabs) < 1  :
+    tab_exists = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id, 
+                                                      models.RoomTabsInfo.name_tab == tab).first()
+    if not tab_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Tab {tab} not found",
+            detail=f"Tab {tab} not found"
         )
+
+    # Fetch rooms and tabs details for the current user in the specified tab
+    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
+        ).join(models.RoomsTabs, models.Rooms.id == models.RoomsTabs.room_id
+        ).filter(models.RoomsTabs.user_id == current_user.id,
+                 models.RoomsTabs.tab_name == tab).all()
          
     # Fetch message count for each user-associated room
     messages_count = db.query(
@@ -185,38 +161,29 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
 
 
     # Initialize an empty dictionary to store tabs with their associated rooms
-    tabs_with_rooms = {}
-
-    # Iterate over each room and tab pair
-    for room, tab in rooms_and_tabs:
+     # Prepare room details
+    room_details = []
+    for room, tab_info in rooms_and_tabs:
         room_info = {
             "id": room.id,
             "owner": room.owner,
             "name_room": room.name_room,
             "image_room": room.image_room,
-            "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
-            "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
+            "count_users": 0,  # Initialize count of users
+            "count_messages": 0,  # Initialize count of messages
             "created_at": room.created_at,
             "secret_room": room.secret_room,
-            "favorite": tab.favorite,
-            "block": room.block,
-            
-            # Add any other room details you want to include
+            "favorite": tab_info.favorite,
+            "block": room.block
         }
 
-        # If the tab name isn't in the dictionary, add it with an empty list
-        if tab.tab_name not in tabs_with_rooms:
-            tabs_with_rooms[tab.tab_name] = []
+        # Append room info to the list
+        room_details.append(room_info)
 
-        # Append room info to the correct tab
-        tabs_with_rooms[tab.tab_name].append(room_info)
-        
-        # Sort the rooms in each tab based on their favorite status
-        for tab_name, rooms in tabs_with_rooms.items():
-            rooms.sort(key=lambda x: x['favorite'], reverse=True)
-        
+    # Optionally, sort rooms by a specific criterion
+    room_details.sort(key=lambda x: x['favorite'], reverse=True)
 
-    return tabs_with_rooms
+    return room_details
 
 
 
