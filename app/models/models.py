@@ -20,6 +20,7 @@ class Socket(Base):
     rooms = Column(String, ForeignKey('rooms.name_room', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
     id_return = Column(Integer)
     fileUrl = Column(String)
+    edited = Column(Boolean, server_default='false') 
     
 
     
