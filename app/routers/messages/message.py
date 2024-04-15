@@ -64,6 +64,7 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
             verified=user.verified,
             vote=votes,
             id_return=socket.id_return,
+            edited=socket.edited
         )
         for socket, user, votes in raw_messages
     ]
@@ -119,7 +120,8 @@ async def get_messages_room(rooms: str,
             verified=user.verified if user is not None else None,
             id=socket.id,
             vote=votes,
-            id_return=socket.id_return
+            id_return=socket.id_return,
+            edited=socket.edited
         )
         for socket, user, votes in raw_messages
     ]
