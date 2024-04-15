@@ -68,7 +68,7 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
     user_tabs = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id).all()
 
     # Create a dictionary for each tab with an empty room list
-    tabs_with_rooms = {tab.name_tab: {"image_tab": tab.image_tab, "rooms": []} for tab in user_tabs}
+    tabs_with_rooms = {tab.name_tab: {"image_tab": tab.image_tab, "id": tab.id, "rooms": []} for tab in user_tabs}
 
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
