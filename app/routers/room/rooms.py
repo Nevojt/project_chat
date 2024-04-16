@@ -13,7 +13,7 @@ from app.schemas import room as room_schema
 
 router = APIRouter(
     prefix="/rooms",
-    tags=['Rooms'],
+    tags=['All Rooms'],
 )
 
 
