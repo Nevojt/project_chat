@@ -238,6 +238,29 @@ async def add_room_to_tab(tab_id: int, room_id: int,
 
 
 
+@router.delete('/')
+async def deleted_tab(id: int,
+                      db: Session = Depends(get_db), 
+                      current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
+                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    if not tab:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
+    
+    db.delete(tab)
+    db.commit()
+    
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    
+    
+    
+    
+    
+
+
+
+
 # @router.get("/")
 # async def get_user_tabs(db: Session = Depends(get_db), 
 #                               current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomTabs]:
