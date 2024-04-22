@@ -242,6 +242,20 @@ async def add_room_to_tab(tab_id: int, room_id: int,
 async def deleted_tab(id: int,
                       db: Session = Depends(get_db), 
                       current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Delete a tab.
+
+    Args:
+        id (int): The ID of the tab to delete.
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the tab does not exist or the user does not have sufficient permissions.
+
+    Returns:
+        Response: An empty response with status code 204 if the tab was deleted successfully.
+    """
     
     tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
                                                models.RoomTabsInfo.owner_id == current_user.id).first()
