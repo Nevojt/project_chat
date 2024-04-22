@@ -78,7 +78,7 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
     user_tabs = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id).all()
 
     # Create a dictionary for each tab with an empty room list
-    tabs_with_rooms = {tab.name_tab: {"image_tab": tab.image_tab, "id": tab.id, "rooms": []} for tab in user_tabs}
+    tabs_with_rooms = {tab.name_tab: {"name_tab": tab.name_tab, "image_tab": tab.image_tab, "id": tab.id, "rooms": []} for tab in user_tabs}
 
     # Fetch rooms and tabs details for the current user
     rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
@@ -245,6 +245,25 @@ async def add_room_to_tab(tab_id: int, room_id: int,
     return {"message": f"Room {room_id} added to tab {tab_id}"}
 
 
+
+@router.put('/', status_code=status.HTTP_200_OK)
+async def update_tab(id: int, update: room_schema.TabUpdate,
+                     db: Session = Depends(get_db), 
+                     current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
+                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    if not tab:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
+    
+        # Update fields if provided in the request
+    if update.name_tab is not None:
+        tab.name_tab = update.name_tab
+    if update.image_tab is not None:
+        tab.image_tab = update.image_tab
+    db.commit()
+    return {"message": "Tab updated successfully"}
+    
 
 
 

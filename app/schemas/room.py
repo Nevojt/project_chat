@@ -54,16 +54,20 @@ class RoomManager(BaseModel):
         from_attributes = True
         
 class RoomTabsCreate(BaseModel):
-    name_tab: str
-    image_tab: str
+    name_tab: Optional[str] = None
+    image_tab: Optional[str] = None
     
-  
+class TabUpdate(RoomTabsCreate):
+    pass 
     
     
 class Tab(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     name: str
     rooms: List[RoomBase]
+    
+
+
 
 class CountMessages(BaseModel):
     rooms: str
