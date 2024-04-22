@@ -64,6 +64,16 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
 @router.get("/")
 async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db), 
                                          current_user: models.User = Depends(oauth2.get_current_user)) -> dict:
+    """
+    Get all tabs for the current user.
+
+    Args:
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        List[room_schema.RoomTabs]: A list of tabs for the current user.
+    """
     # Fetch all tabs for the current user
     user_tabs = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id).all()
 
