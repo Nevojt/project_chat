@@ -15,6 +15,7 @@ class RoomBase(BaseModel):
     count_messages: int
     created_at: datetime
     secret_room: bool
+    block: bool
 
     class Config:
         from_attributes = True

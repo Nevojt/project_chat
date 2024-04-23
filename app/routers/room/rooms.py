@@ -39,6 +39,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
         models.Rooms.image_room,
         models.Rooms.created_at,
         models.Rooms.secret_room,
+        models.Rooms.block,
         func.count(models.Socket.id).label('count_messages')
     ).outerjoin(models.Socket, models.Rooms.name_room == models.Socket.rooms) \
     .filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True) \
@@ -68,7 +69,8 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "secret_room": room.secret_room
+            "secret_room": room.secret_room,
+            "block": room.block
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
 
@@ -215,3 +217,36 @@ def update_room(room_id: int,
     updated_room = room_query.first()
     return updated_room
 
+@router.put('/block/{room_id}', status_code=status.HTTP_200_OK)
+async def block_room(room_id: int, 
+                     db: Session = Depends(get_db), 
+                     current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Blocks or unblocks a room.
+
+    Args:
+        room_id (int): The ID of the room to block or unblock.
+        db (Session): The database session.
+        current_user (User): The currently authenticated user.
+
+    Raises:
+        HTTPException: If the room does not exist or the user does not have sufficient permissions.
+
+    Returns:
+        JSON: A JSON object with a "message" key containing a message indicating that the room was blocked or unblocked.
+    """
+
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID: {room_id} not found")
+        
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
+        
+    room.block = not room.block
+    db.commit()
+    
+    status_text = "unblocked" if not room.block else "blocked"
+    return {"message": f"Room with ID: {room_id} has been {status_text}"}
