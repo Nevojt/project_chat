@@ -1,6 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy import desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import NoResultFound
 
 from app.auth import oauth2
 from app.database.async_db import get_async_session
@@ -71,7 +72,14 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
 
     return messages
 
-
+async def check_room_blocked(room: str, session: AsyncSession):
+    query = select(models.Rooms).where(models.Rooms.name_room == room, models.Rooms.block.is_(True))
+    try:
+        result = await session.execute(query)
+        room_record = result.scalar_one()
+        return True
+    except NoResultFound:
+        return False
 
 @router.get("/{rooms}", response_model=List[message.SocketModel])
 async def get_messages_room(rooms: str, 
@@ -89,6 +97,10 @@ async def get_messages_room(rooms: str,
     Returns:
         List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
     """
+    room_blocked = await check_room_blocked(rooms, session)  
+    if room_blocked:
+        raise HTTPException(status_code=403, detail="Room is blocked")
+    
     query = select(
     models.Socket, 
     models.User, 
