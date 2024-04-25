@@ -17,6 +17,8 @@ class Settings(BaseSettings):
     secret_key: str
     algorithm: str
     access_token_expire_minutes: int
+    supabase_url: str
+    supabase_key: str
     model_config = SettingsConfigDict(env_file = ".env")
     # class Config:
     #     env_file = ".env"

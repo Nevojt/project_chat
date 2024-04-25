@@ -1,6 +1,6 @@
 from fastapi import File, UploadFile, APIRouter
 from supabase import create_client, Client
-from app.config.config_supabase import settings
+from app.config.config import settings
 
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session

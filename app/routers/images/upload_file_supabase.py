@@ -1,6 +1,6 @@
 from fastapi import APIRouter, File, UploadFile
 from supabase import create_client, Client
-from app.config.config_supabase import settings
+from app.config.config import settings
 import re
 
 # Налаштування Supabase
