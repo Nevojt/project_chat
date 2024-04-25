@@ -1,18 +1,18 @@
 from fastapi import APIRouter
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from jinja2 import Environment, FileSystemLoader
-from app.config.config_mail import setting
+from app.config.config import settings
 
 router = APIRouter()
 
 # Налаштування конфігурації
 conf = ConnectionConfig(
-    MAIL_USERNAME=setting.mail_username,
-    MAIL_PASSWORD=setting.mail_password,
-    MAIL_FROM=setting.mail_from,
-    MAIL_PORT=setting.mail_port,
-    MAIL_SERVER=setting.mail_server,
-    MAIL_FROM_NAME=setting.mail_from_name,
+    MAIL_USERNAME=settings.mail_username,
+    MAIL_PASSWORD=settings.mail_password,
+    MAIL_FROM=settings.mail_from,
+    MAIL_PORT=settings.mail_port,
+    MAIL_SERVER=settings.mail_server,
+    MAIL_FROM_NAME=settings.mail_from_name,
     MAIL_STARTTLS=True,
     MAIL_SSL_TLS=False,  
 )
