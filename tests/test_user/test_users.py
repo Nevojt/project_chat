@@ -37,18 +37,19 @@ def test_create_user(test_user, client):
     assert new_user.user_name == "TestUser"
     assert res.status_code == 201
     
-def test_login_user(test_user, client):
-    res = client.post(
-        "/login", data={"username": test_user['email'],
-                        "password": test_user['password']})
     
+def test_login_user(test_user, client):
+
+    res = client.post(
+        "/login", data={"username": test_user['email'], "password": test_user['password']}
+    )
+    
+    assert res.status_code == 200
     login_res = token.Token(**res.json())
-    payload = jwt.decode(login_res.access_token,
-                         settings.secret_key,
-                         algorithms=[settings.algorithm])
+    payload = jwt.decode(login_res.access_token, settings.secret_key, algorithms=[settings.algorithm])
 
     assert login_res.token_type == "bearer"
-    assert res.status_code == 200
+    
     
 @pytest.mark.parametrize("email, password, status_code", [
     (None, 'password123', 422),

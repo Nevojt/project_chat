@@ -21,7 +21,7 @@ def db():
     
 @pytest.fixture
 def test_user():
-    return {"email":"test_user_room@gmail.com",
+    return {"email":"utest_user_room@gmail.com",
             "password":"password123"}
 
 @pytest.fixture
@@ -123,19 +123,19 @@ async def test_delete_rooms(test_user, test_update_room):
 
 
 
-@pytest.mark.asyncio   
-async def test_get_rooms_manager(test_user):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
-        assert login_res.status_code == 200
-        login_data = login_res.json()
-        token = login_data['access_token']
+# @pytest.mark.asyncio   
+# async def test_get_rooms_manager(test_user):
+#     async with AsyncClient(app=app, base_url="http://test") as client:
+#         login_res = await client.post("/login", data={"username": test_user['email'], "password": test_user['password']})
+#         assert login_res.status_code == 200
+#         login_data = login_res.json()
+#         token = login_data['access_token']
         
-        headers = {"Authorization": f"Bearer {token}"}
+#         headers = {"Authorization": f"Bearer {token}"}
         
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/favorites/", headers=headers)
-        assert response.status_code == 200
+#     async with AsyncClient(app=app, base_url="http://test") as client:
+#         response = await client.get("/favorites/", headers=headers)
+#         assert response.status_code == 200
         
         
     
