@@ -80,3 +80,18 @@ async def send_registration_mail(subject: str, email_to: str, body: dict):
     
     fm = FastMail(conf)
     await fm.send_message(message, template_name='email.html')
+
+
+mail_change_password = env.get_template('mail_change_password.html')
+async def send_mail_for_change_password(subject: str, email_to: str, body: dict):
+    html_content = mail_change_password.render(body)
+
+    message = MessageSchema(
+        subject=subject,
+        recipients=[email_to],
+        body=html_content,
+        subtype="html",
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message, template_name='mail_change_password.html')

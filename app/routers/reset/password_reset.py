@@ -6,7 +6,7 @@ from app.models import models
 from app.schemas.reset import PasswordReset, PasswordResetRequest
 from app.auth import oauth2
 from app.config import utils
-from app.mail.send_mail import password_reset
+from app.mail.send_mail import password_reset, send_mail_for_change_password
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
@@ -91,5 +91,12 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
     user.password = hashed_password
     db.add(user)
     await db.commit()
+    
+    await send_mail_for_change_password("Changing your account password", user.email,
+            {
+                "title": "Changing your account password",
+                "name": user.user_name
+            }
+        )
 
     return {"msg": "Password has been reset successfully."}
