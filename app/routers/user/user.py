@@ -215,6 +215,13 @@ async def reset(password: user.UserUpdatePassword,
     current_user.password = hashed_password
     db.add(current_user)
     await db.commit()
+    
+    await send_mail.send_mail_for_change_password("Changing your account password", user.email,
+            {
+                "title": "Changing your account password",
+                "name": user.user_name
+            }
+        )
 
     return {"msg": "Password has been reset successfully."}
     
