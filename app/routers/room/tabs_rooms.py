@@ -45,6 +45,14 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
         if existing_room:
             raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                                 detail=f"Tab {tab.name_tab} already exists")
+            
+        # Check the number of tabs the user already owns
+        tab_count_query = select(func.count()).where(models.RoomTabsInfo.owner_id == current_user.id)
+        tab_count = await db.scalar(tab_count_query)
+
+        if tab_count >= 10:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="Maximum tab limit reached. You can only have 10 tabs.")
         
         # Create a new tab
         new_tab = models.RoomTabsInfo(owner_id=current_user.id, **tab.model_dump())

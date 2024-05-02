@@ -2,6 +2,7 @@
 from sqlalchemy import insert
 from app.models import models
 from app.database.async_db import async_session_maker
+import asyncio
 
 
 
@@ -31,6 +32,7 @@ async def say_hello_system(recipient_id: int):
         
     async with async_session_maker() as session:
         for message in messages:
+            # await asyncio.sleep(5)
             stmt = insert(models.PrivateMessage).values(messages=message, sender_id=2, recipient_id=recipient_id)
             await session.execute(stmt)
             await session.commit()
