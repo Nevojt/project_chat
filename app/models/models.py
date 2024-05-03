@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
+from sqlalchemy.orm import relationship
 
 from enum import Enum as PythonEnum
 from app.database.database import Base
@@ -48,6 +49,8 @@ class Rooms(Base):
     secret_room = Column(Boolean, default=False)
     block = Column(Boolean, default=False)
     
+    invitations = relationship("RoomInvitation", back_populates="room")
+    
     
 class RoomsManager(Base):
     __tablename__ = 'rooms_manager'
@@ -77,6 +80,22 @@ class RoomsTabs(Base):
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     tab_name = Column(String)
     favorite = Column(Boolean, default=False)
+    
+    
+class RoomInvitation(Base):
+    __tablename__ = 'room_invitations'
+
+    id = Column(Integer, primary_key=True, index=True)
+    room_id = Column(Integer, ForeignKey('rooms.id'))
+    sender_id = Column(Integer, ForeignKey('users.id'))
+    recipient_id = Column(Integer, ForeignKey('users.id'))
+    status = Column(Enum('pending', 'accepted', 'declined', name='invitation_status'), default='pending')
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+
+    room = relationship("Rooms", back_populates="invitations")
+    sender = relationship("User", foreign_keys=[sender_id])
+    recipient = relationship("User", foreign_keys=[recipient_id])
+
 
 
 class User(Base):

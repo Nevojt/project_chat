@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
 
 from typing_extensions import Annotated
@@ -7,6 +7,8 @@ from typing_extensions import Annotated
 
 
 class SocketModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     created_at: datetime
     receiver_id: Optional[int] = None
     id: int
@@ -18,10 +20,7 @@ class SocketModel(BaseModel):
     vote: int
     id_return: Optional[int] = None 
     edited: bool
-    
-    
-    class Config:
-        from_attributes = True
+
         
 class SocketUpdate(BaseModel):
     message: str

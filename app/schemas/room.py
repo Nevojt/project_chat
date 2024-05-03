@@ -7,6 +7,8 @@ from typing import Optional, List
 
 
 class RoomBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     owner: int
     name_room: str
@@ -16,9 +18,6 @@ class RoomBase(BaseModel):
     created_at: datetime
     secret_room: bool
     block: bool
-
-    class Config:
-        from_attributes = True
         
 class RoomFavorite(RoomBase):
     favorite: bool
@@ -30,29 +29,27 @@ class RoomCreate(BaseModel):
     secret_room: bool = False
 
 class RoomPost(RoomBase):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
 
-    class Config:
-        from_attributes = True
         
 class RoomUpdate(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     name_room: str
     image_room: str
     owner: int
     created_at: datetime
     secret_room: Optional[Optional[bool]]
-    
-    class Config:
-        from_attributes = True
-        
+       
         
 class RoomManager(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     room_id: int
     
-    class Config:
-        from_attributes = True
         
 class RoomTabsCreate(BaseModel):
     name_tab: Optional[str] = None

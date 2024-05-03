@@ -69,50 +69,15 @@ async def get_user_rooms_secret(db: Session = Depends(get_db),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
             "secret_room": room.secret_room,
-            "favorite": favorite
+            "favorite": favorite,
+            "block": room.block
         }
         rooms_info.append(room_schema.RoomFavorite(**room_info))
         rooms_info.sort(key=lambda x: x.favorite, reverse=True)
 
     return rooms_info
-    
-    
-@router.post('/add_user')
-async def toggle_user_in_room(room_id: int, user_id: int, 
-                              db: AsyncSession = Depends(get_async_session), 
-                              current_user: models.User = Depends(oauth2.get_current_user)):
 
-    # Перевірка чи існує кімната і чи є поточний користувач її власником
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id,
-                                          models.Rooms.owner == current_user.id,
-                                          models.Rooms.secret_room == True)
-    result = await db.execute(room_get)
-    existing_room = result.scalar_one_or_none()
-
-    if existing_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Room with ID {room_id} not found")
-
-    # Перевірка чи користувач вже є у кімнаті
-    manager_room_query = select(models.RoomsManager).where(
-        models.RoomsManager.user_id == user_id,
-        models.RoomsManager.room_id == room_id
-    )
-    existing_manager_room = await db.execute(manager_room_query)
-    manager_room = existing_manager_room.scalar_one_or_none()
-
-    # Додавання або видалення користувача з кімнати
-    if manager_room:
-        await db.delete(manager_room)
-        await db.commit()
-        return {"message": "User removed from the room"}
-    else:
-        new_manager_room = models.RoomsManager(user_id=user_id, room_id=room_id)
-        db.add(new_manager_room)
-        await db.commit()
-        await db.refresh(new_manager_room)
-        return {"message": "User added to the room"}
-
+        
 
 @router.put('/{room_id}')
 async def secret_room_update(room_id: int, 
