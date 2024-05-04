@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
@@ -112,6 +112,8 @@ class User(Base):
     refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
     
+    bans = relationship("Ban", back_populates="user")
+    
 class User_Status(Base):
     __tablename__ = 'user_status' 
     
@@ -123,6 +125,17 @@ class User_Status(Base):
     status = Column(Boolean, server_default='True', nullable=False)
     created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
+    
+class Ban(Base):
+    __tablename__ = 'bans'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete="CASCADE"),  nullable=False)
+    room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False)
+    start_time = Column(DateTime)
+    end_time = Column(DateTime)
+    
+    user = relationship("User", back_populates="bans")    
     
 class Vote(Base):
     __tablename__ = 'votes'

@@ -10,7 +10,7 @@ from .mail import send_mail
 from .routers.user import auth, finds, user, verify_user, user_status
 from .routers.messages import message, private_messages, vote
 from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return
-from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms
+from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms, ban_user
 from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
 from .routers.reset import password_reset
@@ -44,6 +44,7 @@ app.include_router(user_rooms.router)
 app.include_router(secret_rooms.router)
 app.include_router(invitation_secret_room.router)
 app.include_router(tabs_rooms.router)
+app.include_router(ban_user.router)
 
 app.include_router(user.router)
 app.include_router(auth.router)
