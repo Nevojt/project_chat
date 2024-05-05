@@ -43,3 +43,22 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
     
     return {"message": f"User {user_id} has been muted for {duration_minutes} minutes"}
 
+
+@router.delete('/un-mute-user')
+async def un_mute_user(user_id: int, room_id: int, 
+                    db: AsyncSession = Depends(get_async_session), 
+                    current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    
+    delete_ban = select(models.Ban).where(models.Ban.user_id == user_id, models.Ban.room_id == room_id)
+    result = await db.execute(delete_ban)
+    existing_ban = result.scalar()
+    
+    if not existing_ban:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User {user_id} is not muted in room {room_id}")
+        
+    await db.delete(existing_ban)
+    await db.commit()
+    
+    return {"message": f"User {user_id} has been un-muted in room {room_id}"}
