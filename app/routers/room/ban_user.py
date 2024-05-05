@@ -1,11 +1,13 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from app.database.async_db import get_async_session
 from datetime import datetime, timedelta
 import pytz
 from app.auth import oauth2
 from app.models import models
+from app.schemas import user as user_schema
 
 
 
@@ -13,6 +15,41 @@ router = APIRouter(
     prefix="/mute",
     tags=['Mute Users']
 )
+
+
+@router.get('/mute-users/{room_id}')
+async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_session), 
+                          current_user: models.User = Depends(oauth2.get_current_user)):
+
+    room_query = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_result = await db.execute(room_query)
+    room = room_result.scalar_one_or_none()
+
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID: {room_id} not found")
+
+    if current_user.role != 'admin' or current_user.id != room.owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You do not have permission to view banned users in this room.")
+
+    mute_users_query = select(models.Ban).options(joinedload(models.Ban.user)).where(models.Ban.room_id == room_id)
+    result = await db.execute(mute_users_query)
+    bans = result.scalars().all()
+
+    if not bans:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"No banned users found in room ID: {room_id}")
+
+    users_info = [{
+        "id": ban.user.id,
+        "user_name": ban.user.user_name,
+        "avatar": ban.user.avatar,
+    } for ban in bans if ban.user]
+
+    return users_info
+
+
 
 @router.post('/mute-user')
 async def mute_user(user_id: int, room_id: int, duration_minutes: int, 
@@ -49,6 +86,18 @@ async def un_mute_user(user_id: int, room_id: int,
                     db: AsyncSession = Depends(get_async_session), 
                     current_user: models.User = Depends(oauth2.get_current_user)):
     
+    room_query = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_result = await db.execute(room_query)
+    room = room_result.scalar_one_or_none()
+
+    if not room:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Room with ID: {room_id} not found")
+
+    if current_user.role != 'admin' or current_user.id != room.owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You do not have permission to view banned users in this room.")
+
     
     delete_ban = select(models.Ban).where(models.Ban.user_id == user_id, models.Ban.room_id == room_id)
     result = await db.execute(delete_ban)
