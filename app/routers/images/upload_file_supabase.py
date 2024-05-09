@@ -69,3 +69,33 @@ async def upload_to_supabase(file: UploadFile = File(..., limit="15MB"), bucket_
 
     except Exception as error:
         return {"error": str(error)}
+    
+    
+@router.post("/upload-to-supabase/avatars")
+async def upload_to_supabase_user_avatars(file: UploadFile = File(..., limit="15MB"), bucket_name: str = "user_avatars"):
+    """
+    Upload a file to Supabase storage, ensuring unique file names.
+
+    Args:
+        file (UploadFile): The file to be uploaded.
+        bucket_name (str): The name of the Supabase storage bucket.
+
+    Returns:
+        str: The public URL of the uploaded file, or an error message.
+    """
+    try:
+        # List existing files in the bucket
+        existing_files = [f['name'] for f in supabase.storage.from_(bucket_name).list()]
+
+        # Generate a new name if the file already exists
+        file_path = generate_new_name(existing_files, file.filename)
+        file_mime_type = file.content_type
+        contents = await file.read()
+
+        # Upload the file
+        upload_response = supabase.storage.from_(bucket_name).upload(file_path, contents, file_options={"contentType": file_mime_type})
+        
+        return public_url(bucket_name, file_path)
+
+    except Exception as error:
+        return {"error": str(error)}
