@@ -8,3 +8,7 @@ class PasswordResetRequest(BaseModel):
     
 class PasswordReset(BaseModel):
     password: str  = Field(...)
+    
+    
+class PasswordResetMobile(BaseModel):
+    code: str = Field(...)

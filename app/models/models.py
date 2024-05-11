@@ -153,6 +153,16 @@ class PrivateMessageVote(Base):
     dir = Column(Integer) 
     
     
+class PasswordReset(Base):
+    __tablename__ = 'password_reset'
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    email = Column(String, index=True)
+    reset_code = Column(String)
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    is_active = Column(Boolean, default=True)
+    
+    
 class ImagesAll(Base):
     __tablename__ = 'imagesAll'
     

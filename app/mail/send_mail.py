@@ -52,6 +52,38 @@ async def password_reset(subject: str, email_to: str, body: dict):
 
     return {"message": "Email has been sent."}
 
+
+template_mobile = env.get_template('password_reset_mobile.html')
+async def password_reset_mobile(subject: str, email_to: str, body: dict):
+    """
+    This function is used to send a password reset email to the user.
+
+    Args:
+        subject (str): The subject of the email.
+        email_to (str): The email address of the user.
+        body (dict): The body of the email, which includes the reset link.
+
+    Returns:
+        dict: A dictionary containing a message indicating that the email was sent.
+
+    Raises:
+        Exception: An exception is raised if there is an error sending the email.
+    """
+
+    html_content = template_mobile.render(body)
+
+    message = MessageSchema(
+        subject=subject,
+        recipients=[email_to],
+        body=html_content,
+        subtype="html",
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message, template_name='password_reset_mobile.html')
+
+    return {"message": "Email has been sent."}
+
 templare_mail_regostration = env.get_template('email.html')
 
 async def send_registration_mail(subject: str, email_to: str, body: dict):

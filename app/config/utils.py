@@ -1,6 +1,7 @@
 from passlib.context import CryptContext
 import secrets
 import hashlib
+import string, random
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
@@ -47,3 +48,8 @@ def generate_unique_token(email: str) -> str:
     personalized_token = f"{base_token}{email}"
     # Create a SHA256 hash of the personalized token
     return hashlib.sha256(personalized_token.encode()).hexdigest()
+
+
+
+def generate_reset_code():
+    return ''.join(random.choices(string.digits, k=6))
