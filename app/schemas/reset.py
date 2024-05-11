@@ -11,4 +11,6 @@ class PasswordReset(BaseModel):
     
     
 class PasswordResetMobile(BaseModel):
+    email: EmailStr = Field(...)
     code: str = Field(...)
+    password: str  = Field(...)
