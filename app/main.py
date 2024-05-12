@@ -92,4 +92,9 @@ async def finally_reset(request: Request):
 async def privacy_policy(request: Request):
     return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/#/PrivacyPolicy")
 
-# commit changes
+app.mount("/contact-form", StaticFiles(directory="contact-form"), name="contact-form")
+templates_form = Jinja2Templates(directory="contact-form")
+
+@app.get('/contact-form', include_in_schema=False)
+async def contact_form(request: Request):
+    return templates_form.TemplateResponse("index.html", {"request": request})
