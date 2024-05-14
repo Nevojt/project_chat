@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 import pytz
 from app.auth import oauth2
 from app.models import models
-from app.schemas import user as user_schema
 
 
 
