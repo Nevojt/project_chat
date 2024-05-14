@@ -10,6 +10,12 @@ from app.database.database import Base
 class UserRole(str, PythonEnum):
 	user = "user"
 	admin = "admin"
+ 
+class UserRoleInRoom(str, PythonEnum):
+     admin = "admin"
+     owner = "owner"
+     moderator = "moderator"
+     user = "user"
 
 class Socket(Base):
     __tablename__ = 'socket'
@@ -113,6 +119,16 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.user)
     
     bans = relationship("Ban", back_populates="user")
+    
+class RoleInRoom(Base):
+    __tablename__ = "role_in_room"
+    
+    id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    room_id = Column(Integer, ForeignKey("rooms.id", ondelete="CASCADE"), nullable=False)
+    role = Column(Enum(UserRoleInRoom,), default='user') 
+    created_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    
     
 class User_Status(Base):
     __tablename__ = 'user_status' 
