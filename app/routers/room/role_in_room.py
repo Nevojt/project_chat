@@ -71,3 +71,50 @@ async def list_role_in_room(user_id: int, db: AsyncSession = Depends(get_async_s
         
     return role_in_room
 
+@router.post('/to_moderator/{user_id}')
+async def to_moderator(user_id: int, room_id:int, db: AsyncSession = Depends(get_async_session), 
+                          current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Endpoint to toggle a user's role from moderator to regular user or vice versa in a specific room.
+    Only the room owner can perform this action.
+
+    Parameters:
+    user_id (int): The ID of the user whose role needs to be toggled.
+    room_id (int): The ID of the room where the role needs to be toggled.
+    db (AsyncSession): The database session for asynchronous operations.
+    current_user (models.User): The current user making the request.
+
+    Returns:
+    dict: A dictionary with a success message indicating the role change.
+
+    Raises:
+    HTTPException: If the current user is not the owner of the room.
+    """
+
+    # Check if the current user is the owner of the room
+    room_owner_query = select(models.Rooms).where(models.Rooms.owner == current_user.id,
+                                                  models.Rooms.id == room_id)
+    result = await db.execute(room_owner_query)
+    room_owner = result.scalar_one_or_none()
+
+    if room_owner is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not the owner of this room.")
+
+    # Request to check the existing user role in the room
+    role_query = select(models.RoleInRoom).where(models.RoleInRoom.user_id == user_id,
+                                                 models.RoleInRoom.room_id == room_id)
+    result = await db.execute(role_query)
+    role_in_room = result.scalar_one_or_none()
+   
+    if role_in_room is None:
+        # If the role does not exist, add the user as a moderator
+        add_role_moderator = models.RoleInRoom(user_id=user_id, room_id=room_id, role="moderator")
+        db.add(add_role_moderator)
+        await db.commit()
+        return {"msg": f"User with ID: {user_id} is now a moderator in room with ID: {room_id}"}
+    else:
+        # If the role exists, delete it
+        await db.delete(role_in_room)
+        await db.commit()
+        return {"msg": f"User with ID: {user_id} is no longer a moderator in room with ID: {room_id}"}
+    
