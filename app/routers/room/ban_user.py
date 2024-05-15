@@ -23,12 +23,17 @@ async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_ses
     room_query = select(models.Rooms).where(models.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
+    
+    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
+                                                models.RoleInRoom.user_id == current_user.id)
+    result = await db.execute(role_room)
+    role_in_room = result.scalar_one_or_none()
 
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with ID: {room_id} not found")
 
-    if current_user.role != 'admin' or current_user.id != room.owner:
+    if (room.owner != current_user.id and (role_in_room is None or role_in_room.role != "moderator")):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You do not have permission to view banned users in this room.")
 
@@ -60,16 +65,21 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
                             detail="Duration must be a positive integer.")
         
     current_time_utc = datetime.now(pytz.timezone('UTC'))
-    
     current_time_naive = current_time_utc.replace(tzinfo=None)
     
     room_get = select(models.Rooms).where(models.Rooms.id == room_id)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
-    if not existing_room or existing_room.owner != current_user.id:
+    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
+                                                models.RoleInRoom.user_id == current_user.id)
+    result = await db.execute(role_room)
+    role_in_room = result.scalar_one_or_none()
+    
+    # Check if the role exists and is a moderator or owner
+    if not existing_room or (existing_room.owner != current_user.id and (role_in_room is None or role_in_room.role != "moderator")):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You are not the owner of this room.")
+                            detail="You are not the owner or a moderator of this room.")
                 
     end_time = current_time_naive + timedelta(minutes=duration_minutes)
     ban = models.Ban(user_id=user_id, room_id=room_id, start_time=current_time_naive, end_time=end_time)
@@ -88,14 +98,20 @@ async def un_mute_user(user_id: int, room_id: int,
     room_query = select(models.Rooms).where(models.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
+    
+    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
+                                                models.RoleInRoom.user_id == current_user.id)
+    result = await db.execute(role_room)
+    role_in_room = result.scalar_one_or_none()
 
     if not room:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Room with ID: {room_id} not found")
-
-    if current_user.role != 'admin' or current_user.id != room.owner:
+        
+    # Check if the role exists and is a moderator or owner
+    if (room.owner != current_user.id and (role_in_room is None or role_in_room.role != "moderator")):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You do not have permission to view banned users in this room.")
+                            detail="You are not the owner or a moderator of this room.")
 
     
     delete_ban = select(models.Ban).where(models.Ban.user_id == user_id, models.Ban.room_id == room_id)
