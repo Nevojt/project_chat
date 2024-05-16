@@ -94,6 +94,21 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
 async def un_mute_user(user_id: int, room_id: int, 
                     db: AsyncSession = Depends(get_async_session), 
                     current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Un-mute a user in a specific room.
+
+    Parameters:
+    user_id (int): The ID of the user to be un-muted.
+    room_id (int): The ID of the room where the user is to be un-muted.
+    db (AsyncSession): The database session for asynchronous operations.
+    current_user (models.User): The current user making the request.
+
+    Returns:
+    dict: A dictionary containing a success message.
+
+    Raises:
+    HTTPException: If the room does not exist, the user is not a moderator or owner of the room, or the user is not muted in the room.
+    """
     
     room_query = select(models.Rooms).where(models.Rooms.id == room_id)
     room_result = await db.execute(room_query)
