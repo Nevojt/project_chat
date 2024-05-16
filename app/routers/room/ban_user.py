@@ -59,7 +59,22 @@ async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_ses
 async def mute_user(user_id: int, room_id: int, duration_minutes: int, 
                     db: AsyncSession = Depends(get_async_session), 
                     current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Mute a user in a specific room.
 
+    Parameters:
+    user_id (int): The ID of the user to be muted.
+    room_id (int): The ID of the room where the user is to be muted.
+    duration_minutes (int): The duration in minutes for which the user will be muted.
+    db (AsyncSession): The database session for asynchronous operations.
+    current_user (models.User): The current user making the request.
+
+    Returns:
+    dict: A dictionary containing a success message and the ID of the muted user.
+
+    Raises:
+    HTTPException: If the room does not exist, the user is not a moderator or owner of the room, or the user_id is not valid.
+    """
     if duration_minutes < 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Duration must be a positive integer.")
