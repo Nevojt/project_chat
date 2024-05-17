@@ -15,6 +15,7 @@ class UserRoleInRoom(str, PythonEnum):
      admin = "admin"
      owner = "owner"
      moderator = "moderator"
+     verify = "verify"
      user = "user"
 
 class Socket(Base):

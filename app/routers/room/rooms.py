@@ -104,6 +104,14 @@ async def create_room(room: room_schema.RoomCreate,
     if existing_room:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"Room {room.name_room} already exists")
+        
+    user_verification = select(models.User).where(models.User.id == current_user.id)
+    result = await db.execute(user_verification)
+    user_verification = result.scalar_one_or_none()
+    
+    if user_verification.verified is False:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID: {current_user.id} not verification")
     
     new_room = models.Rooms(owner=current_user.id, **room.model_dump())
     db.add(new_room)

@@ -96,6 +96,14 @@ async def to_moderator(user_id: int, room_id:int, db: AsyncSession = Depends(get
                                                   models.Rooms.id == room_id)
     result = await db.execute(room_owner_query)
     room_owner = result.scalar_one_or_none()
+    
+    user_verification = select(models.User).where(models.User.id == user_id)
+    result = await db.execute(user_verification)
+    user_verification = result.scalar_one_or_none()
+    
+    if user_verification.verified is False:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with ID: {user_id} not verification")
 
     if room_owner is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not the owner of this room.")
