@@ -39,9 +39,14 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
     # Func
     user = db.query(models.User).filter(models.User.email == request.email).first()
     
+    
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with email: {request.email} not found")
+    
+    if user.verified is False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with email: {request.email} not verification")
     if user is not None:
         token = await oauth2.create_access_token(data={"user_id": user.id})
         reset_link = f"http://cool-chat.club/reset?token={token}"
