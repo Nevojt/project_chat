@@ -77,9 +77,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
-# @app.get("/", include_in_schema=False)
-# async def home(request: Request):
-#     return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/")
+@app.get("/", include_in_schema=False)
+async def home(request: Request):
+    return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/")
 
 
 @app.get("/reset", include_in_schema=False)
