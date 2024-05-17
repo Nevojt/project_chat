@@ -26,13 +26,14 @@ router = APIRouter(
 async def request_password_reset(email: PasswordResetRequest,
                                  db: AsyncSession = Depends(get_async_session)):
     
-    mail_query = select(models.User).where(models.User.email == email.email)
+    mail_query = select(models.User).where(models.User.email == email.email, models.User.verified == True)
     result = await db.execute(mail_query)
     mail = result.one_or_none()
     
     if not mail:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with email {email.email} not found")
+                            detail=f"User with email {email.email} not found or user not verified")
+
     
     reset_code = utils.generate_reset_code()
     db_obj = models.PasswordReset(email=email.email, reset_code=reset_code)
