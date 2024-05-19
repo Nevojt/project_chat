@@ -156,6 +156,13 @@ async def update_user(update: user.UserUpdate,
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You are not permitted to delete other users' profiles."
         )
+        
+    if current_user.verified is False:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only verified users can update their profiles."
+        )
+        
     user_query = db.query(models.User).filter(models.User.id == current_user.id)
     user = user_query.first()
     
