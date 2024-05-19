@@ -1,17 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import update, delete
-from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 import pytz
 from datetime import datetime, timedelta
 
 from app.models import models
-from app.schemas.reset import PasswordReset, PasswordResetRequest, PasswordResetMobile
-from app.auth import oauth2
+from app.schemas.reset import PasswordResetRequest, PasswordResetMobile
+
 from app.config import utils
 from app.mail.send_mail import password_reset_mobile
-from app.database.database import get_db
 from app.database.async_db import get_async_session
 
 
