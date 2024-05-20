@@ -15,16 +15,17 @@
   background-size: cover;
   background-position:center;
   background-repeat: no-repeat;
-  width: 100%;
-  height: 100vh;
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 @media (max-width: 768px) {
   html {
-      height: 50vh;
+      height: 100%;
   }
 }
   
