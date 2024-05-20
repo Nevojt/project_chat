@@ -28,7 +28,7 @@
       margin: 15px 15px 15px 15px;
   }
 }
-@media (max-width: 300px) {
+@media (max-width: 150px) {
   html {
       height: 60%;
       margin: 25px 25px 25px 25px;
@@ -110,6 +110,13 @@ a {
   input:not(.btn-primary), #message, textarea {
     width: 100%; 
     padding: 5px; 
+  }
+}
+
+@media (max-width: 240px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 60%; 
+    padding: 10px; 
   }
 }
 
