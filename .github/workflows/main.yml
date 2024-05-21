@@ -35,7 +35,7 @@ jobs:
         ssh-add ~/.ssh/git_conect_key && \
         cd /home/dmytro/api && \
         git pull origin main && \
-        systemctl restart api.service"
+        echo $SSH_PASSWORD | sudo -S systemctl restart api.service"
 
   # deploy:
   #   runs-on: ubuntu-latest
