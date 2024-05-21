@@ -29,25 +29,13 @@ jobs:
     - name: Deploy to Server
       env:
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USER: ${{ secrets.SSH_USER }}
       run: |
-        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no dmytro@31.220.75.30 "
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
         eval \$(ssh-agent -s) && \
         ssh-add ~/.ssh/git_conect_key && \
         cd /home/dmytro/api && \
         git pull origin main && \
         echo $SSH_PASSWORD | sudo -S systemctl restart api.service"
-
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #   - name: Deploy to server
-  #     uses: appleboy/ssh-action@master
-  #     with:
-  #       host: ${{ secrets.SSH_HOST }}
-  #       username: ${{ secrets.SSH_USER }}
-  #       key: ${{ secrets.SSH_PRIVATE_KEY }}
-  #       script: |
-  #         cd /home/dmytro/api
-  #         git pull origin main
-  #         sudo systemctl restart api.service
+    
