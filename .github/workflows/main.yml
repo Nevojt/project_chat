@@ -25,7 +25,7 @@ jobs:
 
     # - name: Run tests
     #   run: |
-    #     # Додайте команди для запуску ваших тестів
+    #     # Додайте команди для запуску ваших тестів    
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
