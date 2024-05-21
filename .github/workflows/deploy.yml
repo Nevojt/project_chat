@@ -27,6 +27,7 @@ jobs:
       run: |
         # Додайте команди для запуску ваших тестів
         # Test  three try
+        # test 4
 
   deploy:
     runs-on: ubuntu-latest
