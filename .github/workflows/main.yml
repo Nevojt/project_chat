@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-# test
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,14 +18,10 @@ jobs:
       with:
         python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    # - name: Run tests
+    # - name: Install dependencies
     #   run: |
-    #     # Додайте команди для запуску ваших тестів    
+    #     python -m pip install --upgrade pip
+    #     pip install -r requirements.txt
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
@@ -34,11 +30,8 @@ jobs:
       env:
         SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
       run: |
-          sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no dmytro@31.220.75.30
-          cd /home/dmytro/api 
-        # && \
-        # git pull origin main && \
-        # sudo systemctl restart api.service"
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no dmytro@31.220.75.30 "cd /home/dmytro/api && git pull origin main && sudo systemctl restart api.service"
+
 
   # deploy:
   #   runs-on: ubuntu-latest
