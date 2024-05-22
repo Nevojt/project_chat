@@ -318,15 +318,14 @@ margin-bottom: 1rem; }
 .p-4 {
   padding: 1.5rem; }
 
-  .submitting {
+  /* .submitting {
     float: left;
     width: 100%;
     padding: 10px 0;
     display: none;
     font-size: 16px;
-    font-weight: 500;
-    color: #28a745;
-  }
+    font-weight: regular;
+  } */
   
   .contactForm .form-control {
     border: none;
@@ -369,15 +368,17 @@ margin-bottom: 1rem; }
   .dbox .icon {
     width: 50px;
     height: 50px;
+    
   }
   
   .dbox .icon span {
     font-size: 20px;
     color: #ffffff;
+    
   }
 
   .btn-primary {
-    font-weight: 500; 
+    font-weight: regular; 
     color: #ffffff;
     width: 140px;
     height: 40px;
