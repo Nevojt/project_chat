@@ -19,7 +19,8 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[room_schema.RoomBase])
-async def get_user_rooms(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+async def get_user_rooms(db: Session = Depends(get_db), 
+                         current_user: models.User = Depends(oauth2.get_current_user)):
     
     """
     Retrieves information about chat rooms, excluding a specific room ('Hell'), along with associated message and user counts.
@@ -32,7 +33,8 @@ async def get_user_rooms(db: Session = Depends(get_db), current_user: models.Use
     """
     
     # get info rooms and not room "Hell"
-    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.owner == current_user.id).order_by(asc(models.Rooms.id)).all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell',
+                                          models.Rooms.owner == current_user.id).order_by(asc(models.Rooms.id)).all()
 
     # Count messages for room
     messages_count = db.query(
@@ -57,7 +59,8 @@ async def get_user_rooms(db: Session = Depends(get_db), current_user: models.Use
             "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
-            "secret_room": room.secret_room
+            "secret_room": room.secret_room,
+            "block": room.block
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
 
