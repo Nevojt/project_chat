@@ -51,88 +51,7 @@
 
 
 
-
-    /*text style*/
-  h1, h2, h3, h4, h5, h6 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  line-height: 1.2; }
-
-  p {
-  margin-top: 0;
-  margin-bottom: 1rem; }
-
-a {
-  color: #ffffff;
-  text-decoration: none;
-  background-color: transparent; 
-}
-
-
-  input:not(.btn-primary), #message{
-    color:#ffffff;
-    border-radius: 7px 7px 7px 7px;
-    border:#e9ecef00;
-    backdrop-filter: blur(2px);
-    background: linear-gradient(180.00deg, rgba(252, 252, 252, 0),rgba(123, 191, 255, 0) 100%);
-  }
-
-  textarea {
-    resize: none;
-    width: 100%; 
-    max-width: 100%; 
-    height: auto;
-    min-height: 150px; 
-    box-sizing: border-box;
-    max-width: 320px;}
-
-
-@media (max-width: 1200px) {
-  input:not(.btn-primary), #message, textarea {
-    width: 100%; 
-  }
-}
-
-@media (max-width: 992px) {
-  input:not(.btn-primary), #message, textarea {
-    width: 90%; 
-  }
-}
-
-@media (max-width: 768px) {
-  input:not(.btn-primary), #message, textarea {
-    width: 90%; 
-  }
-}
-
-@media (max-width: 576px) {
-  input:not(.btn-primary), #message, textarea {
-    width: 100%; 
-    padding: 5px; 
-  }
-}
-
-@media (max-width: 240px) {
-  input:not(.btn-primary), #message, textarea {
-    width: 60%; 
-    padding: 10px; 
-  }
-}
-
-input {
-  margin: 0;
-  font-family: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  overflow: visible; }
-
-  h3, .h3 {
-    font-size: 1.75rem; }
-  
-  h4, .h4 {
-    font-size: 1.5rem; }
-
+ 
     .container {
       width: 100%;
       padding-right: 30px;
@@ -178,38 +97,89 @@ input {
               padding-right: 0;
               padding-left: 0; }
 
- .col-md-12 {
-  position: relative;
-  width: 100%;
-  padding-right: 15px;
-  padding-left: 15px;
-  display: flex;
-  align-items: center;
- }
+
+    /*text style*/
+  h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2; }
+
+  p {
+  margin-top: 0;
+  margin-bottom: 1rem; }
+
+a {
+  color: #ffffff;
+  text-decoration: none;
+  background-color: transparent; 
+}
+h3, .h3 {
+  font-size: 1.75rem; }
+
+h4, .h4 {
+  font-size: 1.5rem; }
 
 
-      @media (min-width: 768px) {
+/*input style*/
+  input:not(.btn-primary), #message{
+    color:#ffffff;
+    border-radius: 7px 7px 7px 7px;
+    border:#e9ecef00;
+    backdrop-filter: blur(2px);
+    background: linear-gradient(180.00deg, rgba(252, 252, 252, 0),rgba(123, 191, 255, 0) 100%);
+  }
+
+  textarea {
+    resize: none;
+    width: 100%; 
+    max-width: 100%; 
+    height: auto;
+    min-height: 150px; 
+    box-sizing: border-box;
+    max-width: 320px;}
+
+    input {
+      margin: 0;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      overflow: visible; }
+
+
+
       
-        .col-md-6 {
-          -webkit-box-flex: 0;
-          -ms-flex: 0 0 50%;
-          flex: 0 0 50%;
-          max-width: 50%; }
-      
-        .col-md-10 {
-          -webkit-box-flex: 0;
-          -ms-flex: 0 0 83.33333%;
-          flex: 0 0 83.33333%;
-          max-width: 83.33333%; }
-       
-        .col-md-12 {
-          -webkit-box-flex: 0;
-          -ms-flex: 0 0 100%;
-          flex: 0 0 100%;
-          max-width: 100%;
-           }}
+@media (max-width: 1200px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 100%; 
+  }
+}
 
-        
+@media (max-width: 992px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 90%; 
+  }
+}
+
+@media (max-width: 768px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 90%; 
+  }
+}
+
+@media (max-width: 576px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 100%; 
+    padding: 5px; 
+  }
+}
+
+@media (max-width: 240px) {
+  input:not(.btn-primary), #message, textarea {
+    width: 60%; 
+    padding: 10px; 
+  }
+}
 
 .form-control {
   display: block;
@@ -288,6 +258,41 @@ select.form-control:focus::-ms-value {
 
 .form-group {
 margin-bottom: 1rem; }
+
+ .col-md-12 {
+  position: relative;
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+ }
+
+
+      @media (min-width: 768px) {
+      
+        .col-md-6 {
+          -webkit-box-flex: 0;
+          -ms-flex: 0 0 50%;
+          flex: 0 0 50%;
+          max-width: 50%; }
+      
+        .col-md-10 {
+          -webkit-box-flex: 0;
+          -ms-flex: 0 0 83.33333%;
+          flex: 0 0 83.33333%;
+          max-width: 83.33333%; }
+       
+        .col-md-12 {
+          -webkit-box-flex: 0;
+          -ms-flex: 0 0 100%;
+          flex: 0 0 100%;
+          max-width: 100%;
+           }}
+
+        
+
+
 
 
 .justify-content-center {
