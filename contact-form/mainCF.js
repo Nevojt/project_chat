@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		var email = form.querySelector('#email').value.trim();
 		var subject = form.querySelector('#subject').value.trim();
 		var message = form.querySelector('#message').value.trim();
-		var warning = form.querySelector('#formMassageWarning');
+		var warning = form.querySelector('#form-message-warning');
 
 		var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 		var isValid = true;
@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', function() {
 			errorMessage += 'Invalid email format.<br>';
 		}
 
+		if (!subject) {
+			isValid = false;
+			errorMessage += 'Subject is required.<br>';
+		}
+
 		if (!message) {
 			isValid = false;
 			errorMessage += 'Message is required.<br>';
@@ -34,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
 		if (isValid) {
 			if (warning) {
 				warning.innerHTML = '';
+				warning.style.display = 'none';
 			}
 			alert('Form is valid and ready to be submitted');
 		} else {
@@ -46,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
 		}
 	});
 });
-
 
 
 

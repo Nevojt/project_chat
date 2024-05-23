@@ -428,9 +428,10 @@ margin-bottom: 1rem; }
   #form-message-warning {
     display: block;
     color: red;
+   
   }
 
-  
+
 /*Video-background*/
         /* .video-background {
             position: fixed;
