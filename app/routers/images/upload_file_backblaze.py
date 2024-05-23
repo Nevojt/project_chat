@@ -17,7 +17,7 @@ router = APIRouter(
     tags=['Upload file'],
 )
 
-@router.post("/upload")
+@router.post("/chat")
 async def upload_to_backblaze(file: UploadFile = File(..., limit="25MB"), bucket_name: str = Query(default="chatall")):
     try:
         # Створення тимчасового файлу
