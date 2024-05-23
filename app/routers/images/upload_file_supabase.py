@@ -1,29 +1,29 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile, Query
-from fastapi.responses import JSONResponse
-from storage3 import create_client
+from fastapi import APIRouter, File, UploadFile
+from supabase import create_client, Client
 from app.config.config import settings
 import re
-# https://tygjaceleczftbswxxei.supabase.co/storage/v1/s3
+
 # Налаштування Supabase
-url: str = f"{settings.supabase_url}/storage/v1"
+url: str = settings.supabase_url
 key: str = settings.supabase_key
-
-# Створення клієнта для Supabase Storage
-headers = {"apiKey": key, "Authorization": f"Bearer {key}"}
-storage_client = create_client(url, headers, is_async=False)
-
-# Список бакетів для перевірки з'єднання
-storage_client.list_buckets()
-# print(buckets)
-
+supabase: Client = create_client(url, key)
 
 router = APIRouter(
     prefix="/upload",
     tags=['Upload file'],
 )
 
-
 def generate_new_name(existing_files, original_filename):
+    """
+    Generate a new file name if the given name already exists in the list of existing files.
+
+    Args:
+        existing_files (list): A list of existing file names in the storage.
+        original_filename (str): The original file name.
+
+    Returns:
+        str: The new file name if the original exists, otherwise the original filename.
+    """
     if original_filename not in existing_files:
         return original_filename
 
@@ -38,7 +38,7 @@ def generate_new_name(existing_files, original_filename):
     return new_filename
 
 def public_url(bucket_name, file_path):
-    res = storage_client.from_(bucket_name).get_public_url(file_path)
+    res = supabase.storage.from_(bucket_name).get_public_url(file_path)
     return res
 
 @router.post("/upload-to-supabase/")
@@ -55,46 +55,47 @@ async def upload_to_supabase(file: UploadFile = File(..., limit="25MB"), bucket_
     """
     try:
         # List existing files in the bucket
-        existing_files = [f['name'] for f in storage_client.from_(bucket_name).list()]
+        existing_files = [f['name'] for f in supabase.storage.from_(bucket_name).list()]
 
         # Generate a new name if the file already exists
-        # file_path = generate_new_name(existing_files, file.filename)
+        file_path = generate_new_name(existing_files, file.filename)
         file_mime_type = file.content_type
         contents = await file.read()
 
         # Upload the file
-        upload_response = storage_client.from_(bucket_name).upload(file.filename, contents, file_options={"contentType": "image/png"})
+        upload_response = supabase.storage.from_(bucket_name).upload(file_path, contents, file_options={"contentType": file_mime_type})
         
-        return public_url(bucket_name, file.filename)
+        return public_url(bucket_name, file_path)
 
     except Exception as error:
         return {"error": str(error)}
     
-# @router.post("/upload-to-supabase/avatars")
-# async def upload_to_supabase_user_avatars(file: UploadFile = File(..., limit="15MB"), bucket_name: str = "user_avatars"):
-#     """
-#     Upload a file to Supabase storage, ensuring unique file names.
+    
+@router.post("/upload-to-supabase/avatars")
+async def upload_to_supabase_user_avatars(file: UploadFile = File(..., limit="15MB"), bucket_name: str = "user_avatars"):
+    """
+    Upload a file to Supabase storage, ensuring unique file names.
 
-#     Args:
-#         file (UploadFile): The file to be uploaded.
-#         bucket_name (str): The name of the Supabase storage bucket.
+    Args:
+        file (UploadFile): The file to be uploaded.
+        bucket_name (str): The name of the Supabase storage bucket.
 
-#     Returns:
-#         str: The public URL of the uploaded file, or an error message.
-#     """
-#     try:
-#         # List existing files in the bucket
-#         existing_files = [f['name'] for f in supabase.storage.from_(bucket_name).list()]
+    Returns:
+        str: The public URL of the uploaded file, or an error message.
+    """
+    try:
+        # List existing files in the bucket
+        existing_files = [f['name'] for f in supabase.storage.from_(bucket_name).list()]
 
-#         # Generate a new name if the file already exists
-#         file_path = generate_new_name(existing_files, file.filename)
-#         file_mime_type = file.content_type
-#         contents = await file.read()
+        # Generate a new name if the file already exists
+        file_path = generate_new_name(existing_files, file.filename)
+        file_mime_type = file.content_type
+        contents = await file.read()
 
-#         # Upload the file
-#         upload_response = supabase.storage.from_(bucket_name).upload(file_path, contents, file_options={"contentType": file_mime_type})
+        # Upload the file
+        upload_response = supabase.storage.from_(bucket_name).upload(file_path, contents, file_options={"contentType": file_mime_type})
         
-#         return public_url(bucket_name, file_path)
+        return public_url(bucket_name, file_path)
 
-#     except Exception as error:
-#         return {"error": str(error)}
+    except Exception as error:
+        return {"error": str(error)}
