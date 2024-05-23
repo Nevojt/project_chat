@@ -9,7 +9,7 @@ from .mail import send_mail
 
 from .routers.user import auth, finds, user, verify_user, user_status
 from .routers.messages import message, private_messages, vote
-from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return
+from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return, upload_file_backblaze
 from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms, ban_user, role_in_room
 from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
@@ -55,6 +55,7 @@ app.include_router(user_status.router)
 app.include_router(vote.router)
 
 app.include_router(images.router)
+app.include_router(upload_file_backblaze.router)
 app.include_router(upload_file_supabase.router)
 app.include_router(upload_file_google.router)
 app.include_router(upload_and_return.router)
