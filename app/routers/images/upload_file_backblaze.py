@@ -38,4 +38,3 @@ async def upload_to_backblaze(file: UploadFile = File(..., limit="25MB"), bucket
         return JSONResponse(status_code=200, content={"url": download_url})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
