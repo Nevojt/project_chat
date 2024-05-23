@@ -1,25 +1,27 @@
-document.getElementById("contactForm").addEventListener('submit', function(event) {
-	event.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+	document.getElementById("contactForm").addEventListener('submit', function(event) {
+		event.preventDefault();
 
-	var name = document.getElementById('name').value.trim();
-	var email = document.getElementById('email').value.trim();
-	var subject = document.getElementById('subject').value.trim();
-	var message = document.getElementById('message').value.trim();
-	var warning = document.getElementById('form-message-warning');
+		var form = event.target;
+		var name = form.querySelector('#name').value.trim();
+		var email = form.querySelector('#email').value.trim();
+		var subject = form.querySelector('#subject').value.trim();
+		var message = form.querySelector('#message').value.trim();
+		var warning = form.querySelector('#formMassageWarning');
 
-	var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-	var isValid = true;
-	var errorMessage = '';
+		var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		var isValid = true;
+		var errorMessage = '';
 
-	if (!name) {
-		isValid = false;
-		errorMessage += 'Name is required.<br>';
+		if (!name) {
+			isValid = false;
+			errorMessage += 'Name is required.<br>';
 		}
 
 		if (!email) {
 			isValid = false;
 			errorMessage += 'Email is required.<br>';
-		} else if(!emailPattern.test(email)) {
+		} else if (!emailPattern.test(email)) {
 			isValid = false;
 			errorMessage += 'Invalid email format.<br>';
 		}
@@ -30,13 +32,20 @@ document.getElementById("contactForm").addEventListener('submit', function(event
 		}
 
 		if (isValid) {
-			warning.innerHTML = '';
+			if (warning) {
+				warning.innerHTML = '';
+			}
 			alert('Form is valid and ready to be submitted');
 		} else {
-			warning.innerHTML = errorMessage;
+			if (warning) {
+				warning.innerHTML = errorMessage;
+				warning.style.display = 'block'; // Ensure the warning is displayed
+			} else {
+				console.error('Element with id "form-message-warning" not found.');
+			}
 		}
 	});
-
+});
 
 
 

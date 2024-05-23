@@ -425,13 +425,12 @@ margin-bottom: 1rem; }
     padding-bottom: 0;
   }
 
-  #form-message-warning, #form-message-success {
-    display: none; }
-  
   #form-message-warning {
-    color: #f65c78; }
-  
+    display: block;
+    color: red;
+  }
 
+  
 /*Video-background*/
         /* .video-background {
             position: fixed;
