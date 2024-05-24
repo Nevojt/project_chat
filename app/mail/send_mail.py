@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
 from jinja2 import Environment, FileSystemLoader
 from app.config.config import settings
+from app.schemas import mail
 
 router = APIRouter()
 
@@ -127,3 +128,30 @@ async def send_mail_for_change_password(subject: str, email_to: str, body: dict)
 
     fm = FastMail(conf)
     await fm.send_message(message, template_name='mail_change_password.html')
+    
+    
+async def send_mail_for_contact_form(contact: mail.ContactForm):
+    # support_email = "stivax@gmail.com"  # Email служби підтримки
+    support_email = "nevojt@gmail.com" # Email
+    
+    html_content = f"""
+    <html>
+        <body>
+            <h1>New Contact Form Submission</h1>
+            <p><strong>Name:</strong> {contact.name}</p>
+            <p><strong>Email:</strong> {contact.email}</p>
+            <p><strong>Subject:</strong> {contact.subject}</p>
+            <p><strong>Message:</strong> {contact.message}</p>
+        </body>
+    </html>
+    """
+    
+    message = MessageSchema(
+        subject=f"New Contact Message from {contact.name}",
+        recipients=[support_email],
+        body=html_content,
+        subtype="html"
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)

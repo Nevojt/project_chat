@@ -14,6 +14,7 @@ from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms,
 from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
 from .routers.reset import password_reset, password_reset_mobile
+from .routers.mail import contact_form
 from .database.database import engine
 from app.models import models
 
@@ -66,6 +67,7 @@ app.include_router(password_reset.router)
 app.include_router(password_reset_mobile.router)
 
 app.include_router(send_mail.router)
+app.include_router(contact_form.router)
 
 app.include_router(verify_user.router)
 
