@@ -13,6 +13,6 @@ router = APIRouter(
 async def send_email(contact: mail.ContactForm):
     try:
         await send_mail_for_contact_form(contact)
-        return {"status": "Email sent successfully to support team"}
+        return "Email sent successfully to support team"
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
