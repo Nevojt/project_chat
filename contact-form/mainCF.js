@@ -52,7 +52,7 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(response => {
             if (response.ok) {
                 // Якщо відповідь успішна, перенаправляємо користувача на домашню сторінку
-                window.location.href = '/';
+                window.location.href = 'https://cool-chat.club/api';
             }})
 
         .catch(error => {
