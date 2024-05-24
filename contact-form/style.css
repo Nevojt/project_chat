@@ -425,8 +425,7 @@ margin-bottom: 1rem; }
     padding-bottom: 0;
   }
 
-  #form-message-warning {
-    display: block;
+  .error-message{
     color: rgb(229, 88, 88);
    
   }
