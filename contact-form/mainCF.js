@@ -3,12 +3,12 @@ document.getElementById('contactForm').addEventListener('submit', function(event
     event.preventDefault();
     let valid = true;
 
-    // Clear previous error messages
+    // Очищення форми 
     document.querySelectorAll('.error-message').forEach(function(error) {
         error.textContent = '';
     });
 
-    // Form validation
+    // Валідація форми
     if (!document.getElementById('name').value.trim()) {
         document.getElementById('name-error').textContent = 'Name is required.';
         valid = false;
@@ -48,13 +48,12 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(response => response.text())
         .then(data => {
             alert(data);
+            window.location.href = 'https://cool-chat.club/api';  // Redirect to home page
         })
-        
         .catch(error => {
             console.error('Error:', error);
         });
     }
 });
-
 
 
