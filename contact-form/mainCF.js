@@ -1,3 +1,4 @@
+
 document.getElementById('contactForm').addEventListener('submit', function(event) {
     event.preventDefault();
     let valid = true;
@@ -47,11 +48,13 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(response => response.text())
         .then(data => {
             alert(data);
-            // Перенаправлення на домашню сторінку після успішного відправлення форми
-            window.location.href = 'https://cool-chat.club';
         })
+        
         .catch(error => {
             console.error('Error:', error);
         });
     }
 });
+
+
+
