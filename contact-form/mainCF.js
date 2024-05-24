@@ -1,4 +1,3 @@
-
 document.getElementById('contactForm').addEventListener('submit', function(event) {
     event.preventDefault();
     let valid = true;
@@ -48,18 +47,11 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(response => response.text())
         .then(data => {
             alert(data);
+            // Перенаправлення на домашню сторінку після успішного відправлення форми
+            window.location.href = 'https://cool-chat.club';
         })
-        .then(response => {
-            if (response.ok) {
-                // Якщо відповідь успішна, перенаправляємо користувача на домашню сторінку
-                window.location.href = 'https://cool-chat.club/api';
-            }})
-
         .catch(error => {
             console.error('Error:', error);
         });
     }
 });
-
-
-
