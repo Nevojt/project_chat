@@ -49,6 +49,12 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(data => {
             alert(data);
         })
+        .then(response => {
+            if (response.ok) {
+                // Якщо відповідь успішна, перенаправляємо користувача на домашню сторінку
+                window.location.href = '/';
+            }})
+
         .catch(error => {
             console.error('Error:', error);
         });
