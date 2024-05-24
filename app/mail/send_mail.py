@@ -131,8 +131,8 @@ async def send_mail_for_change_password(subject: str, email_to: str, body: dict)
     
     
 async def send_mail_for_contact_form(contact: mail.ContactForm):
-    # support_email = "stivax@gmail.com"  # Email служби підтримки
-    support_email = "nevojt@gmail.com" # Email
+    support_email = "stivax@gmail.com"  # Email служби підтримки
+
     
     html_content = f"""
     <html>
