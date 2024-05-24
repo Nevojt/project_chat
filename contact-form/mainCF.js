@@ -38,7 +38,7 @@ document.getElementById('contactForm').addEventListener('submit', function(event
             message: document.getElementById('message').value
         };
 
-        fetch('/submit-form', {
+        fetch('/contact-form/send-email/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
