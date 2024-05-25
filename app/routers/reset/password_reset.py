@@ -94,5 +94,6 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
 
     # Update password to database
     user.password = hashed_password
+    user.blocked = False
     db.add(user)
     await db.commit()
