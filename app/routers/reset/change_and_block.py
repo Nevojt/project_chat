@@ -73,7 +73,7 @@ async def reset(password: user.UserUpdatePassword,
     return {"msg": "Password has been reset successfully."}
 
 templates = Jinja2Templates(directory="templates")
-@router.post("/blocked")
+@router.get("/blocked")
 async def block_account(token: str, request: Request, db: AsyncSession = Depends(get_async_session)):
     
     user = await oauth2.get_current_user(token, db)
