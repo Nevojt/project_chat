@@ -1,24 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Registration Successful</title>
+    <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding-top: 100px;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+        
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1; /* Відправляє відео на задній план */
+        }
+
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+        }
+
         .message {
-            display: inline-block;
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 14px;
+            background: linear-gradient(180.00deg, rgba(171, 171, 171, 0.9), rgba(105, 104, 106, 0.2) 100%);
+            backdrop-filter: blur(2px);
+            z-index: 1;
             padding: 20px;
-            border: 1px solid #4CAF50;
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border-radius: 5px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
+            /* width: 100%;
+            height: 100%;
+            
+            
+            display: inline-block;
+            justify-content: center;
+            align-items: center;
+            
+            
+        } */
     </style>
 </head>
 <body>
+    <div class="video-background">
+        <video autoplay loop muted>
+            <source src="https://dsfokvnqjxxsziqofvss.supabase.co/storage/v1/object/public/Front_icon/coolchat/video/004.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
     <div class="message">
         <h2>Registration Successful</h2>
         <p>Your email has been verified.</p>
