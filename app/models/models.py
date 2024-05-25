@@ -12,11 +12,10 @@ class UserRole(str, PythonEnum):
 	admin = "admin"
  
 class UserRoleInRoom(str, PythonEnum):
-     admin = "admin"
-     owner = "owner"
-     moderator = "moderator"
-     verify = "verify"
-     user = "user"
+    admin = "admin"
+    owner = "owner"
+    moderator = "moderator"
+    user = "user"
 
 class Socket(Base):
     __tablename__ = 'socket'
@@ -118,6 +117,7 @@ class User(Base):
     token_verify = Column(String, nullable=True)
     refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
+    blocked = Column(Boolean, nullable=False, server_default='false')
     
     bans = relationship("Ban", back_populates="user")
     

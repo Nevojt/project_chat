@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mail import send_mail
-from app.schemas.reset import PasswordReset
+
 
 from ...config import utils
 from .hello import say_hello_system
@@ -183,54 +183,6 @@ async def update_user(update: user.UserUpdate,
     updated_user = user_query.first()
     return updated_user
     
-    
-@router.put("/password", response_description="Reset password")
-async def reset(password: user.UserUpdatePassword,
-                db: AsyncSession = Depends(get_async_session),
-                current_user: models.User = Depends(oauth2.get_current_user)):
-    """
-    Reset the password of the currently authenticated user.
-
-    Args:
-        password (schemas.UserUpdatePassword): The new password and confirmation.
-        db (AsyncSession): The database session to use.
-        current_user (models.User): The currently authenticated user.
-
-    Returns:
-        dict: A message indicating that the password was reset successfully.
-
-    Raises:
-        HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
-    """
-    query = select(models.User).where(models.User.id == current_user.id)
-    result = await db.execute(query)
-    existing_user = result.scalar_one_or_none()
-    
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    if not utils.verify(password.old_password, existing_user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password."
-        )
-
-    # hashed new password
-    hashed_password = utils.hash(password.new_password)
-
-    # Update password to database
-    current_user.password = hashed_password
-    db.add(current_user)
-    await db.commit()
-    
-    await send_mail.send_mail_for_change_password("Changing your account password", current_user.email,
-            {
-                "title": "Changing your account password",
-                "name": current_user.user_name
-            }
-        )
-
-    return {"msg": "Password has been reset successfully."}
     
     
 
