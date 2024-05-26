@@ -68,8 +68,9 @@ class UserInfo(BaseModel):
     user_name: str
     avatar: str
     created_at: datetime
-    token_verify: Optional[str]
+    # token_verify: Optional[str]
     role: Optional[str]
+    verified: bool
     
 class UserDelete(BaseModel):
     password: str
