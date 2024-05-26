@@ -35,7 +35,10 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
     Returns:
         JSON: A JSON object containing the details of the newly created tab.
     """
-
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+        
     try:
         # Check if tab already exists
         post_tab = select(models.RoomTabsInfo).where(models.RoomTabsInfo.name_tab == tab.name_tab)
@@ -224,6 +227,9 @@ async def add_rooms_to_tab(tab_id: int, room_ids: List[int],
     Raises:
         HTTPException: If the tab does not exist, any room does not exist, or if any room is already in the specified tab.
     """
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
 
     # Check if the tab exists and belongs to the current user
     tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == tab_id, 
@@ -260,6 +266,10 @@ async def update_tab(id: int, update: room_schema.TabUpdate,
                      db: Session = Depends(get_db), 
                      current_user: models.User = Depends(oauth2.get_current_user)):
     
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
                                                models.RoomTabsInfo.owner_id == current_user.id).first()
     if not tab:
@@ -294,7 +304,9 @@ async def deleted_tab(id: int,
     Returns:
         Response: An empty response with status code 204 if the tab was deleted successfully.
     """
-    
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
     tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
                                                models.RoomTabsInfo.owner_id == current_user.id).first()
     if not tab:

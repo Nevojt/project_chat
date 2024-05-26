@@ -96,7 +96,10 @@ async def create_room(room: room_schema.RoomCreate,
     Returns:
         models.Rooms: The newly created room.
     """
-    
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+        
     room_get = select(models.Rooms).where(models.Rooms.name_room == room.name_room)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
@@ -104,14 +107,7 @@ async def create_room(room: room_schema.RoomCreate,
     if existing_room:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"Room {room.name_room} already exists")
-        
-    user_verification = select(models.User).where(models.User.id == current_user.id)
-    result = await db.execute(user_verification)
-    user_verification = result.scalar_one_or_none()
     
-    if user_verification.verified is False:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with ID: {current_user.id} not verification")
     
     new_room = models.Rooms(owner=current_user.id, **room.model_dump())
     db.add(new_room)
@@ -168,6 +164,10 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
     Returns:
         Response: An empty response with status code 204 No Content.
     """
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+    
     room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
     
     if room is None:
@@ -211,6 +211,10 @@ def update_room(room_id: int,
     Returns:
         JSON: A JSON object with a "Message" key containing a message indicating that the room was updated.
     """
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+    
     room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id)
     room = room_query.first()
     
@@ -248,6 +252,9 @@ async def block_room(room_id: int,
     Returns:
         JSON: A JSON object with a "message" key containing a message indicating that the room was blocked or unblocked.
     """
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
 
     room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
     

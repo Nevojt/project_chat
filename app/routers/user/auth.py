@@ -52,6 +52,10 @@ async def login(user_credentials: OAuth2PasswordRequestForm = Depends(),
         result = await db.execute(query)
         user = result.scalar_one_or_none()
         
+        if user.blocked == True:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"User with ID {user.id} is blocked")
+        
         if not user or not utils.verify(user_credentials.password, user.password):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
 
@@ -97,9 +101,20 @@ async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(as
         detail="Invalid refresh token",
         headers={"WWW-Authenticate": "Bearer"},
     )
+    
+    
     try:
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("user_id")
+        
+        query = select(models.User).where(models.User.id == user_id)
+        result = await db.execute(query)
+        user = result.scalar_one_or_none()
+        
+        if user is None or user.blocked:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"User with ID {user_id} is blocked or does not exist")
+        
         if user_id is None:
             raise credentials_exception
         

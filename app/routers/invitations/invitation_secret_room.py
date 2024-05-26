@@ -72,6 +72,10 @@ async def respond_to_invitation(invitation_id: int, accepted: bool,
                                 db: AsyncSession = Depends(get_async_session), 
                                 current_user: models.User = Depends(oauth2.get_current_user)):
     
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     # Checking the availability of the invitation
     invitation_query = select(models.RoomInvitation).where(
         models.RoomInvitation.id == invitation_id,

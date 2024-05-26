@@ -20,6 +20,10 @@ router = APIRouter(
 async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_session), 
                           current_user: models.User = Depends(oauth2.get_current_user)):
 
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     room_query = select(models.Rooms).where(models.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
@@ -75,6 +79,10 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
     Raises:
     HTTPException: If the room does not exist, the user is not a moderator or owner of the room, or the user_id is not valid.
     """
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+    
     if duration_minutes < 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Duration must be a positive integer.")
@@ -124,7 +132,10 @@ async def un_mute_user(user_id: int, room_id: int,
     Raises:
     HTTPException: If the room does not exist, the user is not a moderator or owner of the room, or the user is not muted in the room.
     """
-    
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     room_query = select(models.Rooms).where(models.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
