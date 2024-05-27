@@ -13,7 +13,7 @@ from .routers.images import images, upload_file_google, upload_file_supabase, up
 from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms, ban_user, role_in_room
 from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
-from .routers.reset import password_reset, password_reset_mobile
+from .routers.reset import password_reset, password_reset_mobile, change_and_block
 from .routers.mail import contact_form
 from .database.database import engine
 from app.models import models
@@ -65,6 +65,8 @@ app.include_router(private_messages.router)
 app.include_router(count_users_messages.router)
 app.include_router(password_reset.router)
 app.include_router(password_reset_mobile.router)
+
+app.include_router(change_and_block.router)
 
 app.include_router(send_mail.router)
 app.include_router(contact_form.router)

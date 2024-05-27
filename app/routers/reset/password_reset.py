@@ -49,7 +49,7 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
                             detail=f"User with email: {request.email} not verification")
     if user is not None:
         token = await oauth2.create_access_token(data={"user_id": user.id})
-        reset_link = f"http://cool-chat.club/reset?token={token}"
+        reset_link = f"http://cool-chat.club/api/reset?token={token}"
         
         await password_reset("Password Reset", user.email,
             {
@@ -94,5 +94,6 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
 
     # Update password to database
     user.password = hashed_password
+    user.blocked = False
     db.add(user)
     await db.commit()

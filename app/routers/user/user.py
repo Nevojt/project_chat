@@ -4,7 +4,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mail import send_mail
-from app.schemas.reset import PasswordReset
+
 
 from ...config import utils
 from .hello import say_hello_system
@@ -111,10 +111,10 @@ async def delete_user(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with ID  does not exist.")
     # Перевірте, чи користувач верифікований
-    if not existing_user.verified:
+    if not existing_user.verified or existing_user.blocked:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only verified users can delete their profiles."
+            detail="Only verified users can delete their profiles or user in blocked."
         )
     
     if not utils.verify(password.password, existing_user.password):
@@ -135,12 +135,10 @@ async def delete_user(
 async def update_user(update: user.UserUpdate, 
                       db: Session = Depends(get_db), 
                       current_user: models.User = Depends(oauth2.get_current_user)):
-    
     """
     Update a user's information.
 
     Args:
-        user_id (int): The ID of the user to update.
         update (schemas.UserUpdate): The updated user information.
         db (Session): The database session to use.
         current_user (models.User): The currently authenticated user.
@@ -151,86 +149,48 @@ async def update_user(update: user.UserUpdate,
     Raises:
         HTTPException: If the user does not exist or if the user is not authorized to update the specified user.
     """
-    if not current_user.id:
+    if current_user.id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not permitted to delete other users' profiles."
+            detail="You are not permitted to update other users' profiles."
         )
         
-    if current_user.verified is False:
+    if not current_user.verified or current_user.blocked:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only verified users can update their profiles."
+            detail="User not verification or blocked."
         )
         
     user_query = db.query(models.User).filter(models.User.id == current_user.id)
     user = user_query.first()
     
-    user_status = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
-    status = user_status.first()
-    
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with ID: {user.id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID: {current_user.id} not found"
+        )
     
-    # Assuming update.model_dump() returns a dictionary of attributes to update
-    user_query.update(update.model_dump(), synchronize_session=False)
-    user_status.update({models.User_Status.user_name: update.user_name}, synchronize_session="fetch")
+    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status = user_status_query.first()
+    
+    if user_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User status for ID: {current_user.id} not found"
+        )
+    
+    # Assuming model_dump() returns a dictionary of attributes to update
+    update_data = update.model_dump()
+
+    user_query.update(update_data, synchronize_session=False)
+    user_status_query.update({"user_name": update.user_name}, synchronize_session="fetch")
     
     db.commit()
 
-    # Re-fetch or update the room object to reflect the changes
+    # Re-fetch or update the user object to reflect the changes
     updated_user = user_query.first()
     return updated_user
     
-    
-@router.put("/password", response_description="Reset password")
-async def reset(password: user.UserUpdatePassword,
-                db: AsyncSession = Depends(get_async_session),
-                current_user: models.User = Depends(oauth2.get_current_user)):
-    """
-    Reset the password of the currently authenticated user.
-
-    Args:
-        password (schemas.UserUpdatePassword): The new password and confirmation.
-        db (AsyncSession): The database session to use.
-        current_user (models.User): The currently authenticated user.
-
-    Returns:
-        dict: A message indicating that the password was reset successfully.
-
-    Raises:
-        HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
-    """
-    query = select(models.User).where(models.User.id == current_user.id)
-    result = await db.execute(query)
-    existing_user = result.scalar_one_or_none()
-    
-    if not current_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    
-    if not utils.verify(password.old_password, existing_user.password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password."
-        )
-
-    # hashed new password
-    hashed_password = utils.hash(password.new_password)
-
-    # Update password to database
-    current_user.password = hashed_password
-    db.add(current_user)
-    await db.commit()
-    
-    await send_mail.send_mail_for_change_password("Changing your account password", current_user.email,
-            {
-                "title": "Changing your account password",
-                "name": current_user.user_name
-            }
-        )
-
-    return {"msg": "Password has been reset successfully."}
     
     
 

@@ -29,6 +29,10 @@ async def list_role_in_room(db: AsyncSession = Depends(get_async_session),
     Raises:
     HTTPException: If the user with the given ID is not found in the database.
     """
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+    
     role_query = select(models.RoleInRoom).where(models.RoleInRoom.user_id == current_user.id)
     result = await db.execute(role_query)
     role_in_room = result.scalars().all()
@@ -58,7 +62,10 @@ async def list_role_in_room(user_id: int, db: AsyncSession = Depends(get_async_s
     HTTPException: If the user with the given ID is not found in the database.
     HTTPException: If the current user is not an admin.
     """
-    
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     role_query = select(models.RoleInRoom).where(models.RoleInRoom.user_id == user_id)
     result = await db.execute(role_query)
     role_in_room = result.scalars().all()
@@ -90,7 +97,10 @@ async def to_moderator(user_id: int, room_id:int, db: AsyncSession = Depends(get
     Raises:
     HTTPException: If the current user is not the owner of the room.
     """
-
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     # Check if the current user is the owner of the room
     room_owner_query = select(models.Rooms).where(models.Rooms.owner == current_user.id,
                                                   models.Rooms.id == room_id)

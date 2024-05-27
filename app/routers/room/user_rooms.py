@@ -31,7 +31,10 @@ async def get_user_rooms(db: Session = Depends(get_db),
     Returns:
         List[schemas.RoomBase]: A list containing information about each room, such as room name, image, count of users, count of messages, and creation date.
     """
-    
+    if current_user.blocked == True:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked")
+        
     # get info rooms and not room "Hell"
     rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell',
                                           models.Rooms.owner == current_user.id).order_by(asc(models.Rooms.id)).all()

@@ -31,7 +31,10 @@ async def get_user_rooms_secret(db: Session = Depends(get_db),
     Returns:
         List[room_schema.RoomBase]: A list of room information, including name, image, user count, message count, and creation date.
     """
-    
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+        
     # Fetch room IDs for the current user
     user_room_ids = db.query(models.RoomsManager.room_id).filter(models.RoomsManager.user_id == current_user.id).all()
     user_room_ids = [str(room_id[0]) for room_id in user_room_ids]  # Extracting room IDs from the tuple
@@ -86,6 +89,9 @@ async def secret_room_update(room_id: int,
     """
 
     """
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
     
     room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room == True)
     result = await db.execute(room_get)
