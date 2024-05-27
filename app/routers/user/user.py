@@ -248,11 +248,11 @@ def get_user_name(user_name: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/", response_model=List[user.UserInfo])
-async def get_email(db: Session = Depends(get_db)):
-    # Query the database for all users
-    posts = db.query(models.User).all()
-    return posts
+# @router.get("/", response_model=List[user.UserInfo])
+# async def get_email(db: Session = Depends(get_db)):
+#     # Query the database for all users
+#     posts = db.query(models.User).all()
+#     return posts
 
 @router.get('/me/', response_model=user.UserInfo)
 async def read_current_user(current_user: user.UserOut = Depends(oauth2.get_current_user)):
