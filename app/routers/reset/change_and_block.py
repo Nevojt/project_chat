@@ -39,9 +39,9 @@ async def reset(password: user.UserUpdatePassword,
     Raises:
         HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
     """
-    if current_user.verified == False:
+    if current_user.verified == False or current_user.blocked:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"User with ID {current_user.id} is not verified")
+                            detail=f"User with ID {current_user.id} is not verified or blocked")
         
     query = select(models.User).where(models.User.id == current_user.id)
     result = await db.execute(query)
