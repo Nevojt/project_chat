@@ -53,7 +53,7 @@ class Rooms(Base):
     image_room = Column(String, nullable=False)
     owner = Column(Integer, (ForeignKey("users.id", ondelete='SET NULL')), nullable=False)
     secret_room = Column(Boolean, default=False)
-    block = Column(Boolean, default=False)
+    block = Column(Boolean, nullable=False, server_default='false')
     
     invitations = relationship("RoomInvitation", back_populates="room")
     
