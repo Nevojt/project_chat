@@ -83,8 +83,21 @@ async def update_room_favorite(room_id: int,
                                 db: Session = Depends(get_db), 
                                 current_user: models.User = Depends(oauth2.get_current_user)):
     """
-    Update a room by ID.
-    """
+    Updates the favorite status of a room for a specific user.
+
+    Args:
+        room_id (int): The ID of the room to update.
+        favorite (bool): The new favorite status for the room.
+        db (Session, optional): The database session. Defaults to Depends(get_db).
+        current_user (models.User, optional): The current user. Defaults to Depends(oauth2.get_current_user).
+
+    Raises:
+        HTTPException: If the user is blocked or not verified.
+        HTTPException: If the room is not found.
+
+    Returns:
+        dict: A dictionary containing the room ID and the new favorite status.
+    """  
     if current_user.blocked: # or not current_user.verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"Access denied for user {current_user.id}")
