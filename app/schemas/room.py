@@ -17,7 +17,6 @@ class RoomBase(BaseModel):
     count_messages: int
     created_at: datetime
     secret_room: bool
-    # favorite: Optional[bool] = None
     block: Optional[bool] = None
         
 class RoomFavorite(RoomBase):
