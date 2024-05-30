@@ -243,9 +243,8 @@ async def update_room(room_id: int,
 
     elif update_room.secret_room == False:
         if manager is not None:
-            db.delete(manager)
+            await db.delete(manager)
             await db.commit()
-            await db.refresh(manager)
 
     return room
 

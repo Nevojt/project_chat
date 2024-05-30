@@ -59,7 +59,7 @@ class Rooms(Base):
     
     
 class RoomsManager(Base):
-    __tablename__ = 'rooms_manager'
+    __tablename__ = 'rooms_manager_secret'
     
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
