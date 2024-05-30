@@ -120,10 +120,10 @@ async def create_room(room: room_schema.RoomCreate,
     await db.commit()
     await db.refresh(role_in_room)
     
-    # add_room_to_tab = models.RoomsTabs(user_id=current_user.id, tab_id=36, room_id=new_room.id, tab_name="My room")
-    # db.add(add_room_to_tab)
-    # await db.commit()
-    # await db.refresh(add_room_to_tab)
+    add_room_to_my_room = models.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
+    db.add(add_room_to_my_room)
+    await db.commit()
+    await db.refresh(add_room_to_my_room)
     
     if  room.secret_room == True:
         manager_room = models.RoomsManager(user_id=current_user.id, room_id=new_room.id)

@@ -66,6 +66,15 @@ class RoomsManager(Base):
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     favorite = Column(Boolean, default=False)
 
+class RoomsManagerMyRooms(Base):
+    __tablename__ = 'rooms_manager_my_rooms'
+    
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
+    room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
+    favorite = Column(Boolean, default=False)
+
+
 class RoomTabsInfo(Base):
     __tablename__ = 'tabs_info'
     
