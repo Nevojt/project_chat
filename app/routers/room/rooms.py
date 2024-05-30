@@ -198,47 +198,57 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
 
 
 @router.put("/{room_id}", response_model=room_schema.RoomUpdate)  # Assuming you're using room_id
-def update_room(room_id: int, 
-                update: room_schema.RoomCreate, 
-                db: Session = Depends(get_db), 
-                current_user: models.User = Depends(oauth2.get_current_user)):
+async def update_room(room_id: int, 
+                      update_room: room_schema.RoomCreate, 
+                      db: AsyncSession = Depends(get_async_session), 
+                      current_user: models.User = Depends(oauth2.get_current_user)):
     """
-    Update a room.
-
-    Args:
-        room_id (int): The ID of the room to update.
-        update (schemas.RoomCreate): The updated room data.
-        db (Session): The database session.
-        current_user (User): The currently authenticated user.
-
-    Raises:
-        HTTPException: If the room does not exist, or the user does not have sufficient permissions.
-
-    Returns:
-        JSON: A JSON object with a "Message" key containing a message indicating that the room was updated.
+    Update a room by ID.
     """
-    if current_user.blocked == True or current_user.verified == False:
+    if current_user.blocked or not current_user.verified:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"User with ID {current_user.id} is blocked or not verified")
-    
-    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id)
-    room = room_query.first()
+                            detail=f"Access denied for user {current_user.id}")
+
+    # Fetch room
+    room_query = await db.execute(select(models.Rooms).where(models.Rooms.id == room_id))
+    room = room_query.scalar_one_or_none()
     
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Room with ID: {room_id} not found")
-        
-    if current_user.role != "admin" and current_user.id != room.owner:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-    
-    # Assuming update.model_dump() returns a dictionary of attributes to update
-    room_query.update(update.model_dump(), synchronize_session=False)
-    
-    db.commit()
+                            detail=f"Room with ID {room_id} not found")
 
-    # Re-fetch or update the room object to reflect the changes
-    updated_room = room_query.first()
-    return updated_room
+    # Check user permissions
+    if current_user.role != "admin" and current_user.id != room.owner:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Insufficient permissions to modify room")
+
+    # Update the room with new data provided by update_room
+    update_data = update_room.model_dump()
+    for key, value in update_data.items():
+        setattr(room, key, value)  # Dynamically set attributes based on model_dump output
+
+    await db.commit()  # Commit changes
+    await db.refresh(room)  # Refresh the instance to get updated values
+
+    # Handle room secrecy logic if applicable
+    manager_query = await db.execute(select(models.RoomsManager).where(models.RoomsManager.room_id == room_id))
+    manager = manager_query.scalar_one_or_none()
+    
+    if update_room.secret_room:
+        if manager is None:
+            manager = models.RoomsManager(user_id=current_user.id, room_id=room_id)
+            db.add(manager)
+            await db.commit()
+            await db.refresh(manager)
+
+    elif update_room.secret_room == False:
+        if manager is not None:
+            db.delete(manager)
+            await db.commit()
+            await db.refresh(manager)
+
+    return room
+
 
 @router.put('/block/{room_id}', status_code=status.HTTP_200_OK)
 async def block_room(room_id: int, 
