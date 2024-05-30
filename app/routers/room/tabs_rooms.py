@@ -282,6 +282,55 @@ async def update_tab(id: int, update: room_schema.TabUpdate,
         tab.image_tab = update.image_tab
     db.commit()
     return {"message": "Tab updated successfully"}
+
+
+@router.put('/{room_id}')
+async def room_update_to_favorites(room_id: int,
+                                favorite: bool,
+                                db: Session = Depends(get_db), 
+                                current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Updates the favorite status of a room in tab for a specific user.
+
+    Args:
+        room_id (int): The ID of the room to update.
+        favorite (bool): The new favorite status for the room.
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary containing the room ID and the updated favorite status.
+
+    Raises:
+        HTTPException: If the user is blocked or not verified, a 403 Forbidden error is raised.
+        HTTPException: If the room is not found, a 404 Not Found error is raised.
+    """
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+
+    # Fetch room
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    
+    # Check if there is already a favorite record
+    favorite_record = db.query(models.RoomsTabs).filter(
+        models.RoomsTabs.room_id == room_id,
+        models.RoomsTabs.user_id == current_user.id
+    ).first()
+
+    # Update if exists, else create a new record
+    if favorite_record:
+        favorite_record.favorite = favorite
+    else:
+        new_favorite = models.RoomsTabs(
+            favorite=favorite
+        )
+        db.add(new_favorite)
+
+    db.commit()
+    return {"room_id": room_id, "favorite": favorite}
     
 
 
