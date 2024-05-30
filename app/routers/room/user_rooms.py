@@ -18,7 +18,7 @@ router = APIRouter(
 
 
 
-@router.get("/", response_model=List[room_schema.RoomFavorite])
+@router.get("/", response_model=List[room_schema.RoomBase])
 async def get_user_rooms(db: Session = Depends(get_db), 
                          current_user: models.User = Depends(oauth2.get_current_user)):
     
@@ -36,9 +36,8 @@ async def get_user_rooms(db: Session = Depends(get_db),
                             detail=f"User with ID {current_user.id} is blocked")
         
     # get info rooms and not room "Hell"
-    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).join(models.RoomsTabs, models.Rooms.id == models.RoomsTabs.room_id
-        ).filter(models.RoomsTabs.user_id == current_user.id).all()
+    rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell',
+                                          models.Rooms.owner == current_user.id).order_by(asc(models.Rooms.id)).all()
 
     # Fetch message count for each user-associated room
     messages_count = db.query(
@@ -54,7 +53,7 @@ async def get_user_rooms(db: Session = Depends(get_db),
 
     rooms_info = []
     # Iterate over each room and tab pair
-    for room, tab in rooms_and_tabs:
+    for room in rooms:
         room_info = {
             "id": room.id,
             "owner": room.owner,
@@ -64,10 +63,9 @@ async def get_user_rooms(db: Session = Depends(get_db),
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
             "secret_room": room.secret_room,
-            "favorite": tab.favorite,
             "block": room.block
         }
-        rooms_info.append(room_schema.RoomFavorite(**room_info))
+        rooms_info.append(room_schema.RoomBase(**room_info))
 
     return rooms_info
     
