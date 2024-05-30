@@ -75,6 +75,45 @@ async def get_user_rooms(db: Session = Depends(get_db),
     return rooms_info
     
     
+    
+    
+@router.put("/{room_id}")  # Assuming you're using room_id
+async def update_room_favorite(room_id: int, 
+                                favorite: bool, 
+                                db: Session = Depends(get_db), 
+                                current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Update a room by ID.
+    """
+    if current_user.blocked: # or not current_user.verified:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"Access denied for user {current_user.id}")
+
+    # Fetch room
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    
+    # Check if there is already a favorite record
+    favorite_record = db.query(models.RoomsManagerMyRooms).filter(
+        models.RoomsManagerMyRooms.room_id == room_id,
+        models.RoomsManagerMyRooms.user_id == current_user.id
+    ).first()
+
+    # Update if exists, else create a new record
+    if favorite_record:
+        favorite_record.favorite = favorite
+    else:
+        new_favorite = models.RoomsManagerMyRooms(
+            user_id=current_user.id, 
+            room_id=room_id, 
+            favorite=favorite
+        )
+        db.add(new_favorite)
+
+    db.commit()
+    return {"room_id": room_id, "favorite": favorite}
+    
 
 
 
