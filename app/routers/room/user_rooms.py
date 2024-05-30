@@ -103,7 +103,7 @@ async def update_room_favorite(room_id: int,
                             detail=f"Access denied for user {current_user.id}")
 
     # Fetch room
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
