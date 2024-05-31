@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-# from typing import List
 from ...database.database import get_db
 from app.models import models
 from app.schemas import user as user_schema

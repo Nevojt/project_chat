@@ -1,13 +1,10 @@
 from typing import List
-from fastapi import status, HTTPException, Depends, APIRouter, Response
+from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc
-# from sqlalchemy.future import select
-# from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth import oauth2
 from app.database.database import get_db
-# from app.database.async_db import get_async_session
-
 from app.models import models
 from app.schemas import room as room_schema
 
