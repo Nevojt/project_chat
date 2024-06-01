@@ -5,15 +5,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mail import send_mail
 
-
 from ...config import utils
+from app.config.config import settings
 from .hello import say_hello_system
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
 from app.models import models
 from app.schemas import user
-from typing import Annotated, List
 
 router = APIRouter(
     prefix="/users",
@@ -64,7 +63,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
     await db.commit()
     await db.refresh(post)
     
-    registration_link = f"http://cool-chat.club/api/success_registration?token={new_user.token_verify}"
+    registration_link = f"http://{settings.url_address_dns}/api/success_registration?token={new_user.token_verify}"
     await send_mail.send_registration_mail("Thank you for registration!", new_user.email,
                                            {
                                             "title": "Registration",
@@ -216,7 +215,7 @@ def get_user_mail(email: str, db: Session = Depends(get_db)):
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT,
                             detail=f"User with email {email} not found")
         
     return user
@@ -242,17 +241,10 @@ def get_user_name(user_name: str, db: Session = Depends(get_db)):
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT,
                             detail=f"User with user name {user_name} not found")
         
     return user
-
-
-@router.get("/", response_model=List[user.UserInfo])
-async def get_email(db: Session = Depends(get_db)):
-    # Query the database for all users
-    posts = db.query(models.User).all()
-    return posts
 
 @router.get('/me/', response_model=user.UserInfo)
 async def read_current_user(current_user: user.UserOut = Depends(oauth2.get_current_user)):

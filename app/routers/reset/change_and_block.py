@@ -1,19 +1,15 @@
-from fastapi import Response, status, HTTPException, Depends, APIRouter, Request
+from fastapi import status, HTTPException, Depends, APIRouter, Request
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.mail import send_mail
-
-
 from ...config import utils
+from app.config.config import settings
 from ...auth import oauth2
 from ...database.async_db import get_async_session
-from ...database.database import get_db
 from app.models import models
 from app.schemas import user
-from typing import Annotated, List
 
 router = APIRouter(
     prefix="/manipulation",
@@ -39,6 +35,10 @@ async def reset(password: user.UserUpdatePassword,
     Raises:
         HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
     """
+    if current_user.verified == False or current_user.blocked:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is not verified or blocked")
+        
     query = select(models.User).where(models.User.id == current_user.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
@@ -61,7 +61,7 @@ async def reset(password: user.UserUpdatePassword,
     await db.commit()
     
     token = current_user.refresh_token
-    blocked_link = f"https://cool-chat.club/api/manipulation/blocked?token={token}"
+    blocked_link = f"https://{settings.url_address_dns}/api/manipulation/blocked?token={token}"
     await send_mail.send_mail_for_change_password("Changing your account password", current_user.email,
             {
                 "title": "Changing your account password",

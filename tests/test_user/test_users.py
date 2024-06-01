@@ -36,7 +36,44 @@ def test_create_user(test_user, client):
     new_user = user.UserOut(**res.json())
     assert new_user.user_name == "TestUser"
     assert res.status_code == 201
-    
+
+@pytest.mark.asyncio
+async def test_verify_user(test_user):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        # Authenticate the user
+        login_res = await client.post("/login", 
+                                      data={"username": test_user['email'],
+                                            "password": test_user['password']})
+        assert login_res.status_code == 200
+        login_data = login_res.json()
+        token = login_data['access_token']
+        
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        # Get user's information to find the user ID
+        user_info_res = await client.get("/users/", 
+                                         headers={"Authorization": f"Bearer {token}"})
+        assert user_info_res.status_code == 200
+        users = user_info_res.json()
+        
+        # Find the specific user
+        user = next((u for u in users if u['email'] == test_user['email']), None)
+        assert user is not None
+        token_verify = user['token_verify']
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    # # The 'put' request must also be inside the 'async with' block
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.get(f"/success_registration",
+                                    headers=headers,
+                                    params={'token': token_verify},
+                                    follow_redirects=False
+                                    )
+
+    # Step 3: Assert the response
+    assert response.status_code == 200 
     
 def test_login_user(test_user, client):
 
@@ -110,43 +147,7 @@ async def test_update_user(test_user, test_user_update):
     assert response.json()['user_name'] == test_user_update["user_name"]
 
 
-@pytest.mark.asyncio
-async def test_verify_user(test_user):
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        # Authenticate the user
-        login_res = await client.post("/login", 
-                                      data={"username": test_user['email'],
-                                            "password": test_user['password']})
-        assert login_res.status_code == 200
-        login_data = login_res.json()
-        token = login_data['access_token']
-        
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        # Get user's information to find the user ID
-        user_info_res = await client.get("/users/", 
-                                         headers={"Authorization": f"Bearer {token}"})
-        assert user_info_res.status_code == 200
-        users = user_info_res.json()
-        
-        # Find the specific user
-        user = next((u for u in users if u['email'] == test_user['email']), None)
-        assert user is not None
-        token_verify = user['token_verify']
 
-    headers = {
-        "Authorization": f"Bearer {token}"
-    }
-
-    # # The 'put' request must also be inside the 'async with' block
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get(f"/success_registration",
-                                    headers=headers,
-                                    params={'token': token_verify},
-                                    follow_redirects=False
-                                    )
-
-    # Step 3: Assert the response
-    assert response.status_code == 200
     
 @pytest.fixture
 def test_user_new_password():

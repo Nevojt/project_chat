@@ -83,40 +83,51 @@ async def get_user_rooms_secret(db: Session = Depends(get_db),
         
 
 @router.put('/{room_id}')
-async def secret_room_update(room_id: int, 
-                        db: AsyncSession = Depends(get_async_session), 
-                        current_user: models.User = Depends(oauth2.get_current_user)):
+async def secret_room_update(room_id: int,
+                            favorite: bool,
+                            db: Session = Depends(get_db), 
+                            current_user: models.User = Depends(oauth2.get_current_user)):
     """
+    Updates the favorite status of a secret room for a specific user.
 
+    Args:
+        room_id (int): The ID of the room to update.
+        favorite (bool): The new favorite status for the room.
+        db (Session): The database session.
+        current_user (models.User): The currently authenticated user.
+
+    Returns:
+        dict: A dictionary containing the room ID and the updated favorite status.
+
+    Raises:
+        HTTPException: If the user is blocked or not verified, a 403 Forbidden error is raised.
+        HTTPException: If the room is not found, a 404 Not Found error is raised.
     """
     if current_user.blocked == True or current_user.verified == False:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
+
+    # Fetch room
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
+    if room is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.secret_room == True)
-    result = await db.execute(room_get)
-    existing_room = result.scalar_one_or_none()
-    
-    if existing_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Room with ID {room_id} not found")
-        
-    manager_room_query = select(models.RoomsManager).where(
-        models.RoomsManager.user_id == current_user.id,
-        models.RoomsManager.room_id == room_id
-    )
-    existing_manager_room = await db.execute(manager_room_query)
-    manager_room = existing_manager_room.scalar_one_or_none()
-    if manager_room is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"Room with ID {room_id} not found")
-    
-    if manager_room.favorite == True:
-        manager_room.favorite = False
+    # Check if there is already a favorite record
+    favorite_record = db.query(models.RoomsManager).filter(
+        models.RoomsManager.room_id == room_id,
+        models.RoomsManager.user_id == current_user.id
+    ).first()
+
+    # Update if exists, else create a new record
+    if favorite_record:
+        favorite_record.favorite = favorite
     else:
-        manager_room.favorite = True
+        new_favorite = models.RoomsManager(
+            user_id=current_user.id, 
+            room_id=room_id, 
+            favorite=favorite
+        )
+        db.add(new_favorite)
 
-    await db.commit()
-    await db.refresh(manager_room)
-
-    return {"favorite": manager_room.favorite}
+    db.commit()
+    return {"room_id": room_id, "favorite": favorite}

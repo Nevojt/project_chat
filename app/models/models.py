@@ -53,18 +53,27 @@ class Rooms(Base):
     image_room = Column(String, nullable=False)
     owner = Column(Integer, (ForeignKey("users.id", ondelete='SET NULL')), nullable=False)
     secret_room = Column(Boolean, default=False)
-    block = Column(Boolean, default=False)
+    block = Column(Boolean, nullable=False, server_default='false')
     
     invitations = relationship("RoomInvitation", back_populates="room")
     
     
 class RoomsManager(Base):
-    __tablename__ = 'rooms_manager'
+    __tablename__ = 'rooms_manager_secret'
     
     id = Column(Integer, primary_key=True, nullable=False)
     user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
     room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
     favorite = Column(Boolean, default=False)
+
+class RoomsManagerMyRooms(Base):
+    __tablename__ = 'rooms_manager_my_rooms'
+    
+    id = Column(Integer, primary_key=True, nullable=False)
+    user_id = Column(Integer, (ForeignKey("users.id", ondelete="CASCADE")), nullable=False)
+    room_id = Column(Integer, (ForeignKey("rooms.id", ondelete="CASCADE")), nullable=False)
+    favorite = Column(Boolean, default=False)
+
 
 class RoomTabsInfo(Base):
     __tablename__ = 'tabs_info'
