@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, ConfigDict, HttpUrl
+from pydantic import BaseModel, ConfigDict      #, HttpUrl
 from datetime import datetime
 from typing import Optional, List
 
@@ -10,7 +10,7 @@ class RoomBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
-    owner: Optional[int] = 2
+    owner: int
     name_room: str
     image_room: str
     count_users: int

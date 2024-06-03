@@ -121,6 +121,15 @@ async def delete_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."
         )
+        
+    query_room = select(models.Rooms).where(models.Rooms.owner == current_user.id)
+    result_room = await db.execute(query_room)
+    rooms_to_update = result_room.scalars().all()
+    for room in rooms_to_update:
+        room.owner = 0
+        
+    await db.commit()
+
     
     # Видаліть користувача
     await db.delete(existing_user)
