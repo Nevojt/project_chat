@@ -10,7 +10,7 @@ class RoomBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
-    owner: int
+    owner: Optional[int]
     name_room: str
     image_room: str
     count_users: int

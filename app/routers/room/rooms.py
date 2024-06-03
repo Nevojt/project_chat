@@ -70,7 +70,6 @@ async def get_rooms_info(db: Session = Depends(get_db)):
             "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
             "secret_room": room.secret_room,
-            # "favorited": room.favorited, 
             "block": room.block
         }
         rooms_info.append(room_schema.RoomBase(**room_info))
