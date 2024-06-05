@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import Response, status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
@@ -250,7 +251,7 @@ def get_user_name(user_name: str, db: Session = Depends(get_db)):
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
-        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT,
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with user name {user_name} not found")
         
     return user
@@ -267,3 +268,13 @@ async def read_current_user(current_user: user.UserOut = Depends(oauth2.get_curr
     schemas.UserInfo: The user information.
     """
     return current_user
+
+@router.get("/", response_model=List[user.UserInfo], include_in_schema=False)
+async def read_users(db: AsyncSession = Depends(get_async_session)):
+    """
+    Retrieve a list of users.
+    """
+    query = select(models.User)
+    result = await db.execute(query)
+    users = result.scalars().all()
+    return users

@@ -13,6 +13,14 @@ from app.schemas import user, token
 @pytest.fixture
 def client():
     return TestClient(app)
+        
+
+
+# @pytest.fixture
+# async def async_client():
+#     async with AsyncClient(app=app, base_url="http://test") as client:
+#         yield client
+
 
 
 @pytest.fixture
@@ -26,14 +34,24 @@ def test_user_update():
             "avatar": "New avatar"}
 
 
-def test_create_user(test_user, client):
-    res = client.post(
-        "/users/", json={"email": test_user["email"],
-                         "password": test_user["password"],
-                         "user_name": "TestUser",
-                         "avatar": "avatar"})
 
-    new_user = user.UserOut(**res.json())
+
+# Further assertions can follow
+@pytest.mark.asyncio
+async def test_create_user(test_user):
+    async with AsyncClient(app=app, base_url="http://test") as async_client:
+        response = await async_client.post(
+            "/users/",
+            json={
+                "email": test_user["email"],
+                "password": test_user["password"],
+                "user_name": "TestUser",
+                "avatar": "avatar"
+            }
+        )
+    assert response.status_code == 201
+
+    new_user = user.UserOut(**response.json())
     assert new_user.user_name == "TestUser"
     assert res.status_code == 201
 
@@ -93,7 +111,7 @@ def test_login_user(test_user, client):
     ('sanjeev@gmail.com', None, 422)
 ])
     
-def test_incorrect_login(test_user, client, email, password, status_code):
+def test_incorrect_login(client, email, password, status_code):
     res = client.post(
         "/login", 
         data={"username": email, "password": password})
@@ -176,7 +194,7 @@ async def test_change_user_password(test_user, test_user_new_password):
 
     # Attempt to change the user's password using the 'put' method with JSON body
     async with AsyncClient(app=app, base_url="http://test") as client:
-        res_password = await client.put("/users/password",
+        res_password = await client.put("/manipulation/password",
                                         headers={"Authorization": f"Bearer {token}"},
                                         json=change_password)
         

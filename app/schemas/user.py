@@ -71,6 +71,7 @@ class UserInfo(BaseModel):
     role: Optional[str]
     verified: bool
     blocked: bool
+    token_verify: Optional[str] = None
     
 class UserDelete(BaseModel):
     password: str
