@@ -23,6 +23,29 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Set Environment Variables
+      run: |
+          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> $GITHUB_ENV
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> $GITHUB_ENV
+          echo "MAIL_FROM=${{ secrets.MAIL_FROM }}" >> $GITHUB_ENV
+          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> $GITHUB_ENV
+          echo "MAIL_SERVER=${{ secrets.MAIL_SERVER }}" >> $GITHUB_ENV
+          echo "MAIL_FROM_NAME=${{ secrets.MAIL_FROM_NAME }}" >> $GITHUB_ENV
+          echo "DATABASE_HOSTNAME=${{ secrets.DATABASE_HOSTNAME }}" >> $GITHUB_ENV
+          echo "DATABASE_PORT=${{ secrets.DATABASE_PORT }}" >> $GITHUB_ENV
+          echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> $GITHUB_ENV
+          echo "DATABASE_NAME=${{ secrets.DATABASE_NAME }}" >> $GITHUB_ENV
+          echo "DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}" >> $GITHUB_ENV
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> $GITHUB_ENV
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> $GITHUB_ENV
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> $GITHUB_ENV
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> $GITHUB_ENV
+          echo "BACKBLAZE_ID=${{ secrets.BACKBLAZE_ID }}" >> $GITHUB_ENV
+          echo "BACKBLAZE_KEY=${{ secrets.BACKBLAZE_KEY }}" >> $GITHUB_ENV
+          echo "URL_ADDRESS_DNS=${{ secrets.URL_ADDRESS_DNS }}" >> $GITHUB_ENV
+
+
     - name: Run Tests
       run: |
         pytest
