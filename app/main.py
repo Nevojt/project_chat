@@ -83,8 +83,8 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 @app.get("/", include_in_schema=False)
-async def home(request: Request):
-    return RedirectResponse(url="https://cool-chat.club/chat")
+async def home():
+    return RedirectResponse(url="https://cool-chat.club/chat", status_code=307)
 
 
 @app.get("/reset", include_in_schema=False)
@@ -96,8 +96,8 @@ async def finally_reset(request: Request):
     return templates.TemplateResponse("success-page.html", {"request": request})
 
 @app.get('/privacy-policy', include_in_schema=False)
-async def privacy_policy(request: Request):
-    return RedirectResponse(url="https://cool-chat.club/chat#/PrivacyPolicy")
+async def privacy_policy():
+    return RedirectResponse(url="https://cool-chat.club/chat#/PrivacyPolicy", status_code=307)
 
 app.mount("/contact-form", StaticFiles(directory="contact-form"), name="contact-form")
 templates_form = Jinja2Templates(directory="contact-form")
