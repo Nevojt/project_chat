@@ -84,7 +84,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", include_in_schema=False)
 async def home(request: Request):
-    return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/")
+    return RedirectResponse(url="https://cool-chat.club/chat")
 
 
 @app.get("/reset", include_in_schema=False)
@@ -97,7 +97,7 @@ async def finally_reset(request: Request):
 
 @app.get('/privacy-policy', include_in_schema=False)
 async def privacy_policy(request: Request):
-    return RedirectResponse(url="https://yura-platonov.github.io/Team-Chat/#/PrivacyPolicy")
+    return RedirectResponse(url="https://cool-chat.club/chat#/PrivacyPolicy")
 
 app.mount("/contact-form", StaticFiles(directory="contact-form"), name="contact-form")
 templates_form = Jinja2Templates(directory="contact-form")
