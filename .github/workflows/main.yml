@@ -45,7 +45,6 @@ jobs:
           echo "BACKBLAZE_KEY=${{ secrets.BACKBLAZE_KEY }}" >> $GITHUB_ENV
           echo "URL_ADDRESS_DNS=${{ secrets.URL_ADDRESS_DNS }}" >> $GITHUB_ENV
 
-
     - name: Run Tests
       run: |
         pytest
