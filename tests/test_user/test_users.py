@@ -1,12 +1,12 @@
-# import pytest
-# from httpx import AsyncClient
-# from jose import jwt
-# import json
+import pytest
+from httpx import AsyncClient
+from jose import jwt
+import json
 
-# from app.config.config import settings
-# from fastapi.testclient import TestClient
-# from app.main import app
-# from app.schemas import user, token
+from app.config.config import settings
+from fastapi.testclient import TestClient
+from app.main import app
+from app.schemas import user, token
 
 
 
@@ -14,7 +14,7 @@
 # def client():
 #     return TestClient(app)
         
-# client = TestClient(app)
+client = TestClient(app)
 
 # # @pytest.fixture
 # # async def async_client():
@@ -23,21 +23,21 @@
 
 
 
-# @pytest.fixture
-# def test_user():
-#     return {"email":"test_user@gmail.com",
-#             "password":"password123"}
+@pytest.fixture
+def test_user():
+    return {"email":"test_user@gmail.com",
+            "password":"password123"}
 
-# @pytest.fixture
-# def test_user_update():
-#     return {"user_name": "User test Update",
-#             "avatar": "New avatar"}
-
-
+@pytest.fixture
+def test_user_update():
+    return {"user_name": "User test Update",
+            "avatar": "New avatar"}
 
 
-# # Further assertions can follow
-# # @pytest.mark.asyncio
+
+
+# Further assertions can follow
+# @pytest.mark.asyncio
 # def test_create_user(test_user):
 #     # async with AsyncClient(app=app, base_url="http://test") as async_client:
 #     response = client.post(
@@ -56,17 +56,17 @@
 
 
     
-# def test_login_user(test_user):
+def test_login_user(test_user):
 
-#     res = client.post(
-#         "/login", data={"username": test_user['email'], "password": test_user['password']}
-#     )
+    res = client.post(
+        "/login", data={"username": test_user['email'], "password": test_user['password']}
+    )
     
-#     assert res.status_code == 200
-#     login_res = token.Token(**res.json())
-#     payload = jwt.decode(login_res.access_token, settings.secret_key, algorithms=[settings.algorithm])
+    assert res.status_code == 200
+    login_res = token.Token(**res.json())
+    payload = jwt.decode(login_res.access_token, settings.secret_key, algorithms=[settings.algorithm])
 
-#     assert login_res.token_type == "bearer"
+    assert login_res.token_type == "bearer"
     
     
 # @pytest.mark.parametrize("email, password, status_code", [
