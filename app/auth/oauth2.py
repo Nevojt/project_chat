@@ -88,9 +88,9 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     
     token = verify_access_token(token, credentials_exception)
     
-    async with db.begin() as session:
-        user = await db.execute(select(models.User).filter(models.User.id == token.id))
-        user = user.scalar()
+    
+    user = await db.execute(select(models.User).filter(models.User.id == token.id))
+    user = user.scalar()
     
     return user
 

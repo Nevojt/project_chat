@@ -1,5 +1,6 @@
 
 import logging
+from typing import Annotated
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=['Authentication'])
 
 @router.post('/login', response_model=Token)
-async def login(user_credentials: OAuth2PasswordRequestForm = Depends(),
+async def login(user_credentials: Annotated[OAuth2PasswordRequestForm, Depends()],
                 db: AsyncSession = Depends(async_db.get_async_session)):
         
     """
