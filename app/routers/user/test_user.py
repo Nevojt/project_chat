@@ -1,8 +1,8 @@
-import pytest
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient
-from app.main import app
-from app.auth import oauth2
+# import pytest
+# from unittest.mock import patch, AsyncMock
+# from httpx import AsyncClient
+# from app.main import app
+# from app.auth import oauth2
 
 
 # client = TestClient(app)
