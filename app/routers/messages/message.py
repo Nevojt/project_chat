@@ -7,14 +7,43 @@ from app.auth import oauth2
 from app.database.async_db import get_async_session
 from app.models import models
 from app.schemas import message
+from app.config.config import settings
 from sqlalchemy.future import select
 from typing import List
+
+import base64
+from cryptography.fernet import Fernet, InvalidToken
 
 router = APIRouter(
     prefix="/messages",
     tags=['Message'],
 )
 
+
+
+
+
+key = settings.key_crypto
+cipher = Fernet(key)
+
+def is_base64(s):
+    try:
+        return base64.b64encode(base64.b64decode(s)).decode('utf-8') == s
+    except Exception:
+        return False
+
+
+async def async_decrypt(encoded_data: str):
+    if not is_base64(encoded_data):
+       
+        return encoded_data  
+
+    try:
+        encrypted = base64.b64decode(encoded_data.encode('utf-8'))
+        decrypted = cipher.decrypt(encrypted).decode('utf-8')
+        return decrypted
+    except InvalidToken:
+        return None
 
 @router.get("/", response_model=List[message.SocketModel], include_in_schema=False)
 async def get_posts(session: AsyncSession = Depends(get_async_session), 
@@ -53,23 +82,25 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
     raw_messages = result.all()
 
     # Convert raw messages to SocketModel
-    messages = [
-        message.SocketModel(
-            created_at=socket.created_at,
-            receiver_id=socket.receiver_id,
-            id=socket.id,
-            message=socket.message,
-            fileUrl=socket.fileUrl,
-            user_name=user.user_name,
-            avatar=user.avatar,
-            verified=user.verified,
-            vote=votes,
-            id_return=socket.id_return,
-            edited=socket.edited
+    messages = []
+    for socket, user, votes in raw_messages:
+        decrypted_message = await async_decrypt(socket.message)
+        messages.append(
+            message.SocketModel(
+                created_at=socket.created_at,
+                receiver_id=socket.receiver_id,
+                message=decrypted_message,
+                fileUrl=socket.fileUrl,
+                user_name=user.user_name if user is not None else "Unknown user",
+                avatar=user.avatar if user is not None else "https://example.com/default_avatar.webp",
+                verified=user.verified if user is not None else None,
+                id=socket.id,
+                vote=votes,
+                id_return=socket.id_return,
+                edited=socket.edited
+            )
         )
-        for socket, user, votes in raw_messages
-    ]
-
+    messages.reverse()
     return messages
 
 async def check_room_blocked(room: str, session: AsyncSession):
@@ -121,22 +152,24 @@ async def get_messages_room(rooms: str,
     raw_messages = result.all()
 
     # Convert raw messages to SocketModel
-    messages = [
-        message.SocketModel(
-            created_at=socket.created_at,
-            receiver_id=socket.receiver_id,
-            message=socket.message,
-            fileUrl=socket.fileUrl,
-            user_name=user.user_name if user is not None else "Unknown user",
-            avatar=user.avatar if user is not None else "https://tygjaceleczftbswxxei.supabase.co/storage/v1/object/public/image_bucket/inne/image/boy_1.webp",
-            verified=user.verified if user is not None else None,
-            id=socket.id,
-            vote=votes,
-            id_return=socket.id_return,
-            edited=socket.edited
+    messages = []
+    for socket, user, votes in raw_messages:
+        decrypted_message = await async_decrypt(socket.message)
+        messages.append(
+            message.SocketModel(
+                created_at=socket.created_at,
+                receiver_id=socket.receiver_id,
+                message=decrypted_message,
+                fileUrl=socket.fileUrl,
+                user_name=user.user_name if user is not None else "Unknown user",
+                avatar=user.avatar if user is not None else "https://example.com/default_avatar.webp",
+                verified=user.verified if user is not None else None,
+                id=socket.id,
+                vote=votes,
+                id_return=socket.id_return,
+                edited=socket.edited
+            )
         )
-        for socket, user, votes in raw_messages
-    ]
     messages.reverse()
     return messages
 

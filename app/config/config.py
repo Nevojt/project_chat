@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     backblaze_id: str
     backblaze_key: str
     url_address_dns: str
+    key_crypto: str
     model_config = SettingsConfigDict(env_file = ".env")
    
 
