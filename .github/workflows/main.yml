@@ -47,7 +47,9 @@ jobs:
 
     - name: Run Tests
       run: |
-        pytest
+        for test in tests/test_*.py; do
+          pytest $test || exit 1
+        done
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
