@@ -47,7 +47,7 @@ jobs:
 
     - name: Run Tests
       run: |
-        for test in tests/test_*.py; do
+        for test in tests/test_user/test_*.py; do
           pytest $test || exit 1
         done
 
