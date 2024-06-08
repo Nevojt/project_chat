@@ -47,9 +47,14 @@ jobs:
 
     - name: Run Tests
       run: |
-        for test in tests/test_user/test_*.py; do
-          pytest $test || exit 1
-        done
+        if ls tests/test_user/test_*.py 1> /dev/null 2>&1; then
+          for test in tests/test_user/test_*.py; do
+            pytest $test || exit 1
+          done
+        else
+          echo "No test files found."
+          exit 1
+        fi
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
