@@ -34,9 +34,9 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     try:
         # Query for recipients and senders
         messages_query = db.query(models.PrivateMessage, models.User).join(
-            models.User, models.PrivateMessage.recipient_id == models.User.id
+            models.User, models.PrivateMessage.receiver_id == models.User.id
         ).filter(
-            (models.PrivateMessage.sender_id == user_id) | (models.PrivateMessage.recipient_id == user_id)
+            (models.PrivateMessage.sender_id == user_id) | (models.PrivateMessage.receiver_id == user_id)
         )
 
         # Execute query
@@ -45,18 +45,18 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
         # Filter and map results
         users_info = {}
         for message, user in messages:
-            other_user_id = message.sender_id if message.recipient_id == user_id else message.recipient_id
+            other_user_id = message.sender_id if message.receiver_id == user_id else message.receiver_id
             other_user = db.query(models.User).filter(models.User.id == other_user_id).first()
 
             # Determine if the message is read or not
-            is_read = message.is_read if message.recipient_id == user_id else False
+            is_read = message.is_read if message.receiver_id == user_id else False
 
             # Update or add the user info
             if other_user_id not in users_info or not users_info[other_user_id].is_read:
                 users_info[other_user_id] = private.PrivateInfoRecipient(
-                    recipient_id=other_user_id,
-                    recipient_name=other_user.user_name,
-                    recipient_avatar=other_user.avatar,
+                    receiver_id=other_user_id,
+                    receiver_name=other_user.user_name,
+                    receiver_avatar=other_user.avatar,
                     verified=other_user.verified,
                     is_read=is_read
                 )
