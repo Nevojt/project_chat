@@ -44,8 +44,8 @@ class UserCreate(BaseModel):
     user_name: str
     password: str
     avatar: str
-    verified: bool = Field(False)
-    role: UserRole = UserRole.user
+    # verified: bool = Field(False)
+    # role: UserRole = UserRole.user
    
     
 class UserUpdate(BaseModel):

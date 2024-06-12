@@ -23,7 +23,7 @@ messages = ["👋 Вітаю! Я тут, щоб розповісти про мо
     "З любов'ю, команда розробників. 💖"]
 
 
-async def say_hello_system(recipient_id: int):
+async def say_hello_system(receiver_id: int):
     """
     Say hello to a user.
 
@@ -33,6 +33,6 @@ async def say_hello_system(recipient_id: int):
     async with async_session_maker() as session:
         for message in messages:
             # await asyncio.sleep(5)
-            stmt = insert(models.PrivateMessage).values(messages=message, sender_id=2, recipient_id=recipient_id)
+            stmt = insert(models.PrivateMessage).values(message=message, sender_id=2, receiver_id=receiver_id)
             await session.execute(stmt)
             await session.commit()
