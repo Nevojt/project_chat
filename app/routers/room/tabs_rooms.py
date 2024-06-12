@@ -310,7 +310,7 @@ async def room_update_to_favorites(room_id: int,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
 
     # Fetch room
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
+    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
