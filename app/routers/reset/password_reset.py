@@ -1,4 +1,6 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
+import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,11 +91,13 @@ async def reset(token: str, new_password: PasswordReset, db: AsyncSession = Depe
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    current_time_utc = datetime.now(pytz.UTC)
     # hashed new password
     hashed_password = utils.hash(new_password.password)
 
     # Update password to database
     user.password = hashed_password
     user.blocked = False
+    user.password_changed = current_time_utc
     db.add(user)
     await db.commit()

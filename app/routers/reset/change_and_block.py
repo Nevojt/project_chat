@@ -1,5 +1,7 @@
+from datetime import datetime
 from fastapi import status, HTTPException, Depends, APIRouter, Request
 from fastapi.templating import Jinja2Templates
+import pytz
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -51,12 +53,14 @@ async def reset(password: user.UserUpdatePassword,
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect password."
         )
-
+  
+    current_time_utc = datetime.now(pytz.UTC)
     # hashed new password
     hashed_password = utils.hash(password.new_password)
 
     # Update password to database
     current_user.password = hashed_password
+    current_user.password_changed = current_time_utc
     db.add(current_user)
     await db.commit()
     

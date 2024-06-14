@@ -127,6 +127,7 @@ class User(Base):
     refresh_token = Column(String, nullable=True)
     role = Column(Enum(UserRole), default=UserRole.user)
     blocked = Column(Boolean, nullable=False, server_default='false')
+    password_changed = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     
     bans = relationship("Ban", back_populates="user")
     
