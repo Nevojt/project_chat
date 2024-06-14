@@ -251,7 +251,7 @@ def get_user_name(user_name: str, db: Session = Depends(get_db)):
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+        raise HTTPException(status_code=status.HTTP_204_NO_CONTENT,
                             detail=f"User with user name {user_name} not found")
         
     return user
