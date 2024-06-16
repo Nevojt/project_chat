@@ -211,3 +211,12 @@ class ImagesRooms(Base):
     id = Column(Integer, primary_key=True, nullable=False, index=True, autoincrement=True)
     rooms = Column(String, nullable=False)
     images_url = Column(String, nullable=False)
+    
+    
+class UserOnlineTime(Base):
+    __tablename__ = 'user_online_time'
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    session_start = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    session_end = Column(TIMESTAMP(timezone=True), nullable=False)
