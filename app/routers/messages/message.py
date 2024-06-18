@@ -103,8 +103,8 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
     messages.reverse()
     return messages
 
-async def check_room_blocked(room: str, session: AsyncSession):
-    query = select(models.Rooms).where(models.Rooms.name_room == room, models.Rooms.block.is_(True))
+async def check_room_blocked(room_id: int, session: AsyncSession):
+    query = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.block.is_(True))
     try:
         result = await session.execute(query)
         room_record = result.scalar_one()
@@ -112,8 +112,8 @@ async def check_room_blocked(room: str, session: AsyncSession):
     except NoResultFound:
         return False
 
-@router.get("/{rooms}", response_model=List[message.SocketModel])
-async def get_messages_room(rooms: str, 
+@router.get("/{id}", response_model=List[message.SocketModel])
+async def get_messages_room(room_id: int, 
                             session: AsyncSession = Depends(get_async_session), 
                             limit: int = 50, skip: int = 0):
     """
@@ -128,9 +128,16 @@ async def get_messages_room(rooms: str,
     Returns:
         List[schemas.SocketModel]: A list of socket messages along with user details, structured as per SocketModel schema.
     """
-    room_blocked = await check_room_blocked(rooms, session)  
+    room_blocked = await check_room_blocked(room_id, session)  
     if room_blocked:
         raise HTTPException(status_code=403, detail="Room is blocked")
+    
+    room = select(models.Rooms).where(models.Rooms.id == room_id)
+    result = await session.execute(room)
+    existing_room = result.scalar_one_or_none()
+    if existing_room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
     
     query = select(
     models.Socket, 
@@ -141,7 +148,7 @@ async def get_messages_room(rooms: str,
     ).outerjoin( 
         models.User, models.Socket.receiver_id == models.User.id
     ).filter(
-        models.Socket.rooms == rooms
+        models.Socket.rooms == existing_room.name_room
     ).group_by(
         models.Socket.id, models.User.id
     ).order_by(

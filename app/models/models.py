@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Enum, DateTime
+from sqlalchemy import Column, Integer, Interval, String, Boolean, ForeignKey, Enum, DateTime
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
@@ -220,3 +220,4 @@ class UserOnlineTime(Base):
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     session_start = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     session_end = Column(TIMESTAMP(timezone=True), nullable=False)
+    total_online_time = Column(Interval, nullable=False)
