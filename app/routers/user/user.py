@@ -1,5 +1,7 @@
+from datetime import datetime
 from typing import List
 from fastapi import Response, status, HTTPException, Depends, APIRouter
+import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -128,6 +130,7 @@ async def delete_user(
     rooms_to_update = result_room.scalars().all()
     for room in rooms_to_update:
         room.owner = 0
+        room.delete_at = datetime.now(pytz.utc)
         
     await db.commit()
 

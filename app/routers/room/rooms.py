@@ -40,6 +40,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
         models.Rooms.created_at,
         models.Rooms.secret_room,
         models.Rooms.block,
+        models.Rooms.delete_at,
         func.count(models.Socket.id).label('count_messages')
     ).outerjoin(models.Socket, models.Rooms.name_room == models.Socket.rooms) \
     .filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True) \
