@@ -15,7 +15,10 @@ from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
 from .routers.reset import password_reset, password_reset_mobile, change_and_block
 from .routers.mail import contact_form
+from .config.scheduler import setup_scheduler
+
 from .database.database import engine
+from app.database.async_db import async_session_maker
 from app.models import models
 
 models.Base.metadata.create_all(bind=engine)
@@ -37,6 +40,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup Scheduler
+setup_scheduler(async_session_maker)
 
 
 app.include_router(message.router)
