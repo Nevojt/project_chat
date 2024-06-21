@@ -92,7 +92,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 
 @router.post("/v2", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
-async def created_user(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
+async def created_user_v2(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
                        file: UploadFile = File(...), bucket_name: str = Query("usravatar"), 
                        db: AsyncSession = Depends(get_async_session)):
     """
