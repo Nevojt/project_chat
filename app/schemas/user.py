@@ -47,6 +47,10 @@ class UserCreate(BaseModel):
     # verified: bool = Field(False)
     # role: UserRole = UserRole.user
    
+class UserCreateV2(BaseModel):
+    email: EmailStr
+    user_name: str
+    password: str
     
 class UserUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,11 @@
 from datetime import datetime
+import json
 from typing import List
-from fastapi import Response, status, HTTPException, Depends, APIRouter
+from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File, Query
+import shutil
+from b2sdk.v2 import InMemoryAccountInfo, B2Api
+from tempfile import NamedTemporaryFile
+from fastapi.responses import JSONResponse
 import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
@@ -17,10 +22,18 @@ from ...database.database import get_db
 from app.models import models
 from app.schemas import user
 
+
+info = InMemoryAccountInfo()
+b2_api = B2Api(info)
+b2_api.authorize_account("production", settings.backblaze_id, settings.backblaze_key)
+
+
+
 router = APIRouter(
     prefix="/users",
     tags=['Users'],
 )
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
 async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_async_session)):
@@ -76,6 +89,116 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
     await say_hello_system(new_user.id)
     
     return new_user
+
+
+@router.post("/v2", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
+async def created_user(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
+                       file: UploadFile = File(...), bucket_name: str = Query("usravatar"), 
+                       db: AsyncSession = Depends(get_async_session)):
+    """
+    This function creates a new user in the database.
+
+    Args:
+        email (str): The email of the user.
+        user_name (str): The user name of the user.
+        password (str): The password of the user.
+        file (UploadFile): The avatar file of the user.
+        bucket_name (str): The name of the Backblaze B2 bucket to upload the file to.
+        db (AsyncSession): The database session to use.
+
+    Returns:
+        schemas.UserOut: The newly created user.
+
+    Raises:
+        HTTPException: If a user with the given email already exists.
+    """
+
+    user_data = user.UserCreateV2(email=email, user_name=user_name, password=password)
+
+# Check if a user with the given email already exists
+    email_query = select(models.User).where(models.User.email == user_data.email)
+    email_result = await db.execute(email_query)
+    existing_email_user = email_result.scalar_one_or_none()
+
+    if existing_email_user:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"User with email {existing_email_user.email} already exists")
+    
+    # Check if a user with the given user_name already exists
+    username_query = select(models.User).where(models.User.user_name == user_data.user_name)
+    username_result = await db.execute(username_query)
+    existing_username_user = username_result.scalar_one_or_none()
+
+    if existing_username_user:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"User with user_name {existing_username_user.user_name} already exists")
+    
+    # Hash the user's password
+    hashed_password = utils.hash(user_data.password)
+    user_data.password = hashed_password
+    
+    verification_token = utils.generate_unique_token(user_data.email)
+    avatar = await upload_to_backblaze(file, bucket_name)
+    # Create a new user and add it to the database
+    new_user = models.User(**user_data.model_dump(),
+                           avatar=avatar,
+                           token_verify=verification_token)
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    
+    # Create a User_Status entry for the new user
+    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
+    db.add(post)
+    await db.commit()
+    await db.refresh(post)
+    
+    registration_link = f"http://{settings.url_address_dns}/api/success_registration?token={new_user.token_verify}"
+    await send_mail.send_registration_mail("Thank you for registration!", new_user.email,
+                                           {
+                                            "title": "Registration",
+                                            "name": user_data.user_name,
+                                            "registration_link": registration_link
+                                            })
+    await say_hello_system(new_user.id)
+    
+    return new_user
+
+async def upload_to_backblaze(file: UploadFile, bucket_name: str) -> str:
+    """
+    This function is responsible for uploading a file to a specified Backblaze B2 bucket.
+
+    Parameters:
+    file (UploadFile): The file to be uploaded. The file size limit is set to 25MB.
+    bucket_name (str): The name of the Backblaze B2 bucket to upload the file to. The default value is "chatall".
+                        Download avatars: bucket -> "usravatar"
+                        The bucket_name must be one of the values in the 'bucket' list.
+
+    Returns:
+    str: The public URL of the uploaded file.
+    
+    Raises:
+    HTTPException: If an error occurs during the upload process.
+    """
+    try:
+        with NamedTemporaryFile(delete=False) as temp_file:
+            shutil.copyfileobj(file.file, temp_file)
+            temp_file_path = temp_file.name
+        
+        bucket = b2_api.get_bucket_by_name(bucket_name)
+        
+        bucket.upload_local_file(
+            local_file=temp_file_path,
+            file_name=file.filename
+        )
+        
+        download_url = b2_api.get_download_url_for_file_name(bucket_name, file.filename)
+        return download_url
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        file.file.close()
+
 
 
 
