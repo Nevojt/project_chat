@@ -112,7 +112,7 @@ async def check_room_blocked(room_id: int, session: AsyncSession):
     except NoResultFound:
         return False
 
-@router.get("/{id}", response_model=List[message.SocketModel])
+@router.get("/{room_id}", response_model=List[message.SocketModel])
 async def get_messages_room(room_id: int, 
                             session: AsyncSession = Depends(get_async_session), 
                             limit: int = 50, skip: int = 0):

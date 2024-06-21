@@ -11,7 +11,7 @@ def setup_scheduler(db_session_factory):
     scheduler.add_job(delete_old_rooms, 'cron', day='*', hour='0', args=[db_session_factory])
     # scheduler.add_job(
     #     delete_old_rooms,
-    #     trigger=CronTrigger(day='0'),  # Start awery day
+    #     trigger=CronTrigger(minute='0'),  # Start awery day
     #     args=[db_session_factory]
     # )
     scheduler.start()
