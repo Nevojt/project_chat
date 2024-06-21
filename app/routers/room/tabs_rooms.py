@@ -305,9 +305,9 @@ async def room_update_to_favorites(room_id: int,
         HTTPException: If the user is blocked or not verified, a 403 Forbidden error is raised.
         HTTPException: If the room is not found, a 404 Not Found error is raised.
     """
-    if current_user.blocked == True or current_user.verified == False:
+    if current_user.blocked == True:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail=f"User with ID {current_user.id} is blocked or not verified")
+                            detail=f"User with ID {current_user.id} is blocked")
 
     # Fetch room
     room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
