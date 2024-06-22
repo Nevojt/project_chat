@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import status, HTTPException, Depends, APIRouter, Response
+from fastapi import File, Form, Query, UploadFile, status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, asc
 from sqlalchemy.future import select
@@ -8,8 +8,21 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
+import shutil
+from b2sdk.v2 import InMemoryAccountInfo, B2Api
+from tempfile import NamedTemporaryFile
+
 from app.models import models
 from app.schemas import room as room_schema
+from app.config.config import settings
+
+
+
+
+
+info = InMemoryAccountInfo()
+b2_api = B2Api(info)
+b2_api.authorize_account("production", settings.backblaze_id, settings.backblaze_key)
 
 router = APIRouter(
     prefix="/rooms",
@@ -134,6 +147,107 @@ async def create_room(room: room_schema.RoomCreate,
     return new_room
 
 
+@router.post("/v2", status_code=status.HTTP_201_CREATED)
+async def create_room_v2(name_room: str =Form(...),
+                        file: UploadFile = File(...),
+                        secret: bool = False,
+                        db: AsyncSession = Depends(get_async_session), 
+                        current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Create a new room.
+
+    Args:
+        room (schemas.RoomCreate): Room creation data.
+        db (AsyncSession): Database session.
+        current_user (str): Currently authenticated user.
+
+    Raises:
+        HTTPException: If the room already exists.
+
+    Returns:
+        models.Rooms: The newly created room.
+    """
+    room_data = room_schema.RoomCreateV2(name_room=name_room, secret_room=secret)
+    
+    if current_user.blocked == True or current_user.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail=f"User with ID {current_user.id} is blocked or not verified")
+        
+    room_get = select(models.Rooms).where(models.Rooms.name_room == room_data.name_room)
+    result = await db.execute(room_get)
+    existing_room = result.scalar_one_or_none()
+    
+    if existing_room:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"Room {room_data.name_room} already exists")
+    
+    image = await upload_to_backblaze(file)
+    new_room = models.Rooms(owner=current_user.id, image_room=image, 
+                            **room_data.model_dump())
+    db.add(new_room)
+    await db.commit()
+    await db.refresh(new_room)
+    
+    role_in_room = models.RoleInRoom(user_id=current_user.id, room_id=new_room.id, role="owner")
+    db.add(role_in_room)
+    await db.commit()
+    await db.refresh(role_in_room)
+    
+    add_room_to_my_room = models.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
+    db.add(add_room_to_my_room)
+    await db.commit()
+    await db.refresh(add_room_to_my_room)
+    
+    if  room_data.secret_room == True:
+        manager_room = models.RoomsManager(user_id=current_user.id, room_id=new_room.id)
+        db.add(manager_room)
+        await db.commit()
+        await db.refresh(manager_room)
+    
+    return new_room
+
+
+async def upload_to_backblaze(file: UploadFile) -> str:
+    """
+    Uploads a file to Backblaze B2 storage.
+
+    Parameters:
+    file (UploadFile): The file to be uploaded.
+
+    Returns:
+    str: The download URL of the uploaded file.
+
+    Raises:
+    HTTPException: If an error occurs during the upload process.
+    """
+
+    try:
+        # Create a temporary file to store the uploaded file
+        with NamedTemporaryFile(delete=False) as temp_file:
+            # Copy the uploaded file to the temporary file
+            shutil.copyfileobj(file.file, temp_file)
+            temp_file_path = temp_file.name
+        
+        # Set the name of the bucket where the file will be uploaded
+        bucket_name = "roomimage"
+        # Get the bucket by its name
+        bucket = b2_api.get_bucket_by_name(bucket_name)
+        
+        # Upload the file to the bucket
+        bucket.upload_local_file(
+            local_file=temp_file_path,
+            file_name=file.filename
+        )
+        
+        # Get the download URL of the uploaded file
+        download_url = b2_api.get_download_url_for_file_name(bucket_name, file.filename)
+        return download_url
+    except Exception as e:
+        # Raise a HTTPException with a 500 status code and the error message
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        # Close the file after the upload process
+        file.file.close()
 
 @router.get("/{name_room}", response_model=room_schema.RoomUpdate)
 async def get_room(name_room: str, db: Session = Depends(get_db)):

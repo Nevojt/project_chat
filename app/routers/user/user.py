@@ -1,11 +1,10 @@
 from datetime import datetime
-import json
 from typing import List
 from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File, Query
 import shutil
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
-from fastapi.responses import JSONResponse
+
 import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
@@ -93,7 +92,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 @router.post("/v2", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
 async def created_user_v2(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
-                       file: UploadFile = File(...), bucket_name: str = Query("usravatar"), 
+                       file: UploadFile = File(...),
                        db: AsyncSession = Depends(get_async_session)):
     """
     This function creates a new user in the database.
@@ -138,7 +137,7 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     user_data.password = hashed_password
     
     verification_token = utils.generate_unique_token(user_data.email)
-    avatar = await upload_to_backblaze(file, bucket_name)
+    avatar = await upload_to_backblaze(file)
     # Create a new user and add it to the database
     new_user = models.User(**user_data.model_dump(),
                            avatar=avatar,
@@ -164,7 +163,7 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     
     return new_user
 
-async def upload_to_backblaze(file: UploadFile, bucket_name: str) -> str:
+async def upload_to_backblaze(file: UploadFile) -> str:
     """
     This function is responsible for uploading a file to a specified Backblaze B2 bucket.
 
@@ -184,7 +183,7 @@ async def upload_to_backblaze(file: UploadFile, bucket_name: str) -> str:
         with NamedTemporaryFile(delete=False) as temp_file:
             shutil.copyfileobj(file.file, temp_file)
             temp_file_path = temp_file.name
-        
+        bucket_name = "usravatar"
         bucket = b2_api.get_bucket_by_name(bucket_name)
         
         bucket.upload_local_file(

@@ -27,6 +27,10 @@ class RoomCreate(BaseModel):
     name_room: str
     image_room: str
     secret_room: bool = False
+    
+class RoomCreateV2(BaseModel):
+    name_room: str
+    secret_room: bool = False
 
 class RoomPost(RoomBase):
     model_config = ConfigDict(from_attributes=True)
