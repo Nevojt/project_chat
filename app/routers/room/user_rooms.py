@@ -7,6 +7,7 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.models import models
 from app.schemas import room as room_schema
+from app.routers.user.hello import system_notification_change_owner
 
 router = APIRouter(
     prefix='/user_rooms',
@@ -137,4 +138,35 @@ async def update_room_favorite(room_id: int,
     
 
 
+@router.put("/change-owner/{room_id}")
+async def change_room_owner(room_id: int, 
+                            new_owner_id: int, 
+                            db: Session = Depends(get_db), 
+                            current_user: models.User = Depends(oauth2.get_current_user)):
+    
+    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id,
+                                               models.Rooms.owner == current_user.id).first()
 
+    if room_query is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
+    
+    if room_query.block:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Room is blocked")
+    
+    user_query  = db.query(models.User).filter(models.User.id == new_owner_id).first()
+    
+    if user_query is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    if user_query.verified == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User is not verified")
+    
+    room_query.owner = new_owner_id
+    db.add(room_query)
+    db.commit()
+    
+    message = f"Room {room_query.name_room} is now owned by {user_query.user_name}"
+    
+    await system_notification_change_owner(new_owner_id, message)
+    
+    return {"room_id": room_id, "new_owner_id": new_owner_id}

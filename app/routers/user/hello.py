@@ -2,7 +2,7 @@
 from sqlalchemy import insert
 from app.models import models
 from app.database.async_db import async_session_maker
-import asyncio
+
 
 
 
@@ -36,3 +36,13 @@ async def say_hello_system(receiver_id: int):
             stmt = insert(models.PrivateMessage).values(message=message, sender_id=2, receiver_id=receiver_id)
             await session.execute(stmt)
             await session.commit()
+
+
+async def system_notification_change_owner(receiver_id: int, message: str):
+
+        
+    async with async_session_maker() as session:
+ 
+        stmt = insert(models.PrivateMessage).values(message=message, sender_id=2, receiver_id=receiver_id)
+        await session.execute(stmt)
+        await session.commit()
