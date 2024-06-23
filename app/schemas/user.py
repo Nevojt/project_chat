@@ -58,7 +58,12 @@ class UserUpdate(BaseModel):
     user_name: str
     avatar: str
         
+class UserUpdateAvatar(BaseModel):
+    avatar: str
         
+class UserUpdateUsername(BaseModel):
+    user_name: str
+            
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

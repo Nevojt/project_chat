@@ -367,7 +367,104 @@ async def update_user(update: user.UserUpdate,
     return updated_user
     
     
+@router.put('/v2/avatar')
+async def update_user_v2(file: UploadFile = File(...), 
+                        db: Session = Depends(get_db), 
+                        current_user: models.User = Depends(oauth2.get_current_user)):
+
+        
+    if not current_user.verified or current_user.blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User not verification or blocked."
+        )
+        
+    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+    user_data = user_query.first()
     
+    if user_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID: {current_user.id} not found"
+        )
+    
+    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status = user_status_query.first()
+    
+    if user_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User status for ID: {current_user.id} not found"
+        )
+    avatar = await upload_to_backblaze(file)
+    
+    update = user.UserUpdateAvatar(avatar=avatar)
+    update_data = update.model_dump()
+
+    user_query.update(update_data, synchronize_session=False)
+    db.commit()
+
+ 
+    return "updated avatar"
+
+@router.put('/v2/username')
+async def update_user_v2(user_name: str = Form(...),
+                        db: Session = Depends(get_db), 
+                        current_user: models.User = Depends(oauth2.get_current_user)):
+    """
+    Update a user's username.
+
+    This function updates the username of the currently authenticated user in the database.
+    It checks if the user is verified and not blocked before performing the update.
+    If the user is not verified or blocked, it raises an HTTPException with a 403 status code.
+    If the user is not found in the database, it raises an HTTPException with a 404 status code.
+
+    Parameters:
+    - user_name (str): The new username to be updated. This parameter is obtained from the request form.
+    - db (Session): The database session to use for querying and updating the user's information.
+    - current_user (models.User): The currently authenticated user. This parameter is obtained from the dependency injection.
+
+    Returns:
+    - str: A string indicating that the username has been updated.
+
+    Raises:
+    - HTTPException: If the user is not verified or blocked, or if the user is not found in the database.
+    """
+        
+    if not current_user.verified or current_user.blocked:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User not verification or blocked."
+        )
+        
+    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+    user_data = user_query.first()
+    
+    if user_data is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User with ID: {current_user.id} not found"
+        )
+    
+    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status = user_status_query.first()
+    
+    if user_status is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User status for ID: {current_user.id} not found"
+        )
+    
+    update = user.UserUpdateUsername(user_name=user_name)
+    update_data = update.model_dump()
+
+    user_query.update(update_data, synchronize_session=False)
+    user_status_query.update({"user_name": update.user_name}, synchronize_session="fetch")
+    db.commit()
+
+    # Re-fetch or update the user object to reflect the changes
+    updated_user = user_query.first()
+    return "updated username"
 
 
 @router.get('/{email}', response_model=user.UserInfo)
