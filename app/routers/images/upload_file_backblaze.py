@@ -1,10 +1,12 @@
 import shutil
+import random
+import string
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
 from fastapi import APIRouter, File, HTTPException, UploadFile, Query
 from fastapi.responses import JSONResponse
 from app.config.config import settings
-
+import os
 
 
 
@@ -16,41 +18,58 @@ router = APIRouter(
     prefix="/upload-to-backblaze",
     tags=['Upload file'],
 )
-bucket = ["chatall", "usravatar"]
-@router.post("/chat")
-async def upload_to_backblaze(file: UploadFile = File(..., limit="25MB"), bucket_name: str = Query("chatall", inclusion=bucket)):
+
+def generate_random_suffix(length=8):
     """
-    This function is responsible for uploading a file to a specified Backblaze B2 bucket.
+    Генерує випадковий суфікс з букв і цифр.
 
     Parameters:
-    file (UploadFile): The file to be uploaded. The file size limit is set to 25MB.
-    bucket_name (str): The name of the Backblaze B2 bucket to upload the file to. The default value is "chatall".
-                        Download avatars: bucket -> "usravatar"
-                        The bucket_name must be one of the values in the 'bucket' list.
+    length (int): Довжина суфіксу. Значення за замовчуванням - 8.
 
     Returns:
-    JSONResponse: A JSON response containing the public URL of the uploaded file.
-                  If an error occurs during the upload process, a HTTPException is raised with a 500 status code.
-
-    Raises:
-    HTTPException: If an error occurs during the upload process.
+    str: Випадковий суфікс.
     """
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
+
+def generate_unique_filename(filename):
+    """
+    Генерує унікальну назву файлу, додаючи випадковий суфікс.
+
+    Parameters:
+    filename (str): Назва файлу.
+
+    Returns:
+    str: Унікальна назва файлу.
+    """
+    file_name, file_extension = os.path.splitext(filename)
+    unique_suffix = generate_random_suffix()
+    unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
+    return unique_filename
+
+@router.post("/chat")
+async def upload_to_backblaze(file: UploadFile = File(..., limit="25MB"),
+                              bucket_name: str = Query("chatall")):
+
     try:
-        # Створення тимчасового файлу
+   
         with NamedTemporaryFile(delete=False) as temp_file:
             shutil.copyfileobj(file.file, temp_file)
             temp_file_path = temp_file.name
         
-        # get backed
+
         bucket = b2_api.get_bucket_by_name(bucket_name)
         
-        # Download file Backblaze B2
+
+        unique_filename = generate_unique_filename(file.filename)
+        
+ 
         bucket.upload_local_file(
             local_file=temp_file_path,
-            file_name=file.filename
+            file_name=unique_filename
         )
-        # Generate public URL
-        download_url = b2_api.get_download_url_for_file_name(bucket_name, file.filename)
-        return JSONResponse(status_code=200, content=download_url)
+ 
+        download_url = b2_api.get_download_url_for_file_name(bucket_name, unique_filename)
+        return JSONResponse(status_code=200, content={"url": download_url})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

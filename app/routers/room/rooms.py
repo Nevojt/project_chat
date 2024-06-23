@@ -9,6 +9,9 @@ from app.database.database import get_db
 from app.database.async_db import get_async_session
 
 import shutil
+import random
+import string
+import os
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
 
@@ -207,6 +210,34 @@ async def create_room_v2(name_room: str =Form(...),
     return new_room
 
 
+def generate_random_suffix(length=8):
+    """
+    Генерує випадковий суфікс з букв і цифр.
+
+    Parameters:
+    length (int): Довжина суфіксу. Значення за замовчуванням - 8.
+
+    Returns:
+    str: Випадковий суфікс.
+    """
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
+
+def generate_unique_filename(filename):
+    """
+    Генерує унікальну назву файлу, додаючи випадковий суфікс.
+
+    Parameters:
+    filename (str): Назва файлу.
+
+    Returns:
+    str: Унікальна назва файлу.
+    """
+    file_name, file_extension = os.path.splitext(filename)
+    unique_suffix = generate_random_suffix()
+    unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
+    return unique_filename
+
 async def upload_to_backblaze(file: UploadFile) -> str:
     """
     Uploads a file to Backblaze B2 storage.
@@ -234,13 +265,16 @@ async def upload_to_backblaze(file: UploadFile) -> str:
         bucket = b2_api.get_bucket_by_name(bucket_name)
         
         # Upload the file to the bucket
+        unique_filename = generate_unique_filename(file.filename)
+        
+        # Завантаження файлу до Backblaze B2
         bucket.upload_local_file(
             local_file=temp_file_path,
-            file_name=file.filename
+            file_name=unique_filename
         )
         
         # Get the download URL of the uploaded file
-        download_url = b2_api.get_download_url_for_file_name(bucket_name, file.filename)
+        download_url = b2_api.get_download_url_for_file_name(bucket_name, unique_filename)
         return download_url
     except Exception as e:
         # Raise a HTTPException with a 500 status code and the error message
