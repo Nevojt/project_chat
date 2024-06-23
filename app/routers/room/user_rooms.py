@@ -165,6 +165,12 @@ async def change_room_owner(room_id: int,
     db.add(room_query)
     db.commit()
     
+    role_query = db.query(models.RoleInRoom).filter(models.RoleInRoom.room_id == room_id).first()
+    
+    role_query.user_id = new_owner_id
+    db.add(role_query)
+    db.commit()
+    
     message = f"Room {room_query.name_room} is now owned by {user_query.user_name}"
     
     await system_notification_change_owner(new_owner_id, message)
