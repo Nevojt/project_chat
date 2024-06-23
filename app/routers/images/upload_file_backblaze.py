@@ -70,6 +70,6 @@ async def upload_to_backblaze(file: UploadFile = File(..., limit="25MB"),
         )
  
         download_url = b2_api.get_download_url_for_file_name(bucket_name, unique_filename)
-        return JSONResponse(status_code=200, content={"url": download_url})
+        return JSONResponse(status_code=200, content=download_url)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
