@@ -226,7 +226,7 @@ async def upload_to_backblaze(file: UploadFile) -> str:
         
         unique_filename = generate_unique_filename(file.filename)
         
-        # Завантаження файлу до Backblaze B2
+        # Upload file to Backblaze B2
         bucket.upload_local_file(
             local_file=temp_file_path,
             file_name=unique_filename
