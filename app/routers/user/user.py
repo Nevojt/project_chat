@@ -271,11 +271,11 @@ async def delete_user(
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
-    # Якщо користувач не існує, підніміть помилку 404
+    # If the user does not exist, raise a 404 error
     if not existing_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"User with ID  does not exist.")
-    # Перевірте, чи користувач верифікований
+    # Check if the user is verified
     if not existing_user.verified or existing_user.blocked:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -298,7 +298,7 @@ async def delete_user(
     await db.commit()
 
     
-    # Видаліть користувача
+    # delete user
     await db.delete(existing_user)
     await db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
