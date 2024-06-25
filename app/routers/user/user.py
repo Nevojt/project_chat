@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Union
 from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File, Query
 import shutil
 import random
@@ -9,6 +9,7 @@ from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
 
 import pytz
+from sqlalchemy import Null
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,6 +19,7 @@ from app.mail import send_mail
 from ...config import utils
 from app.config.config import settings
 from .hello import say_hello_system
+from .created_image import generate_image_with_letter
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
@@ -95,7 +97,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 @router.post("/v2", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
 async def created_user_v2(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
-                       file: UploadFile = File(...),
+                       file: UploadFile = File(None),
                        db: AsyncSession = Depends(get_async_session)):
     """
     This function creates a new user in the database.
@@ -140,7 +142,13 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     user_data.password = hashed_password
     
     verification_token = utils.generate_unique_token(user_data.email)
-    avatar = await upload_to_backblaze(file)
+    
+    if file is None:
+        generate_image_with_letter(user_name)
+        avatar = await upload_to_backblaze("app/routers/user/output.png")
+    else:
+        avatar = await upload_to_backblaze(file)
+        
     # Create a new user and add it to the database
     new_user = models.User(**user_data.model_dump(),
                            avatar=avatar,
@@ -201,43 +209,46 @@ def generate_unique_filename(filename):
     unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
     return unique_filename
 
-async def upload_to_backblaze(file: UploadFile) -> str:
+async def upload_to_backblaze(file: Union[UploadFile, str]) -> str:
     """
-    This function is responsible for uploading a file to a specified Backblaze B2 bucket.
-
-    Parameters:
-    file (UploadFile): The file to be uploaded. The file size limit is set to 25MB.
-    bucket_name (str): The name of the Backblaze B2 bucket to upload the file to. The default value is "chatall".
-                        Download avatars: bucket -> "usravatar"
-                        The bucket_name must be one of the values in the 'bucket' list.
-
-    Returns:
-    str: The public URL of the uploaded file.
-    
-    Raises:
-    HTTPException: If an error occurs during the upload process.
+    Uploads a file or a file at a given path to the specified Backblaze B2 bucket.
     """
     try:
-        with NamedTemporaryFile(delete=False) as temp_file:
-            shutil.copyfileobj(file.file, temp_file)
-            temp_file_path = temp_file.name
+        # Determine if the input is a file path or an UploadFile
+        if isinstance(file, str):
+            # If it's a string, assume it's a file path
+            file_path = file
+            file_name = os.path.basename(file_path)
+        else:
+            # It's an UploadFile; create a temporary file to copy to
+            with NamedTemporaryFile(delete=False) as temp_file:
+                shutil.copyfileobj(file.file, temp_file)
+                file_path = temp_file.name
+                file_name = file.filename
+
+        # Ensure the filename is unique
+        unique_filename = generate_unique_filename(file_name)
+
         bucket_name = "usravatar"
         bucket = b2_api.get_bucket_by_name(bucket_name)
-        
-        unique_filename = generate_unique_filename(file.filename)
-        
+
         # Upload file to Backblaze B2
         bucket.upload_local_file(
-            local_file=temp_file_path,
+            local_file=file_path,
             file_name=unique_filename
         )
-        
+
+        # Get public URL of the uploaded file
         download_url = b2_api.get_download_url_for_file_name(bucket_name, unique_filename)
         return download_url
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to upload file: {str(e)}")
     finally:
-        file.file.close()
+        # Clean up if a temporary file was used
+        if isinstance(file, UploadFile) and file and hasattr(file, 'file'):
+            file.file.close()
+        if isinstance(file, str):
+            os.remove(file_path)  # Remove the generated image file after uploading
 
 
 
@@ -292,7 +303,15 @@ async def delete_user(
     result_room = await db.execute(query_room)
     rooms_to_update = result_room.scalars().all()
     for room in rooms_to_update:
-        room.owner = 0
+        query_moderators = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room.id, models.RoleInRoom.role == 'moderator')
+        result_moderators = await db.execute(query_moderators)
+        moderator = result_moderators.scalars().first()
+        
+        if moderator:
+            room.owner = moderator.user_id
+            moderator.role = 'moderator'
+        else:
+            room.owner = 0
         room.delete_at = datetime.now(pytz.utc)
         
     await db.commit()
