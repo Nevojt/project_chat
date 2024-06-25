@@ -291,9 +291,19 @@ async def delete_user(
     query_room = select(models.Rooms).where(models.Rooms.owner == current_user.id)
     result_room = await db.execute(query_room)
     rooms_to_update = result_room.scalars().all()
+    
     for room in rooms_to_update:
-        room.owner = 0
-        room.delete_at = datetime.now(pytz.utc)
+        query_moderators = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room.id,
+                                                           models.RoleInRoom.role == 'moderator')
+        result_moderators = await db.execute(query_moderators)
+        moderator = result_moderators.scalars().first()
+        
+        if moderator:
+            room.owner = moderator.user_id
+            moderator.role = "owner"
+        else:
+            room.owner = 0
+            room.delete_at = datetime.now(pytz.utc)
         
     await db.commit()
 
