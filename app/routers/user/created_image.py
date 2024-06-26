@@ -58,4 +58,4 @@ def generate_image_with_letter(text):
     image.save("app/routers/user/output.png")
 
 # Приклад використання функції
-# generate_image_with_letter("hello")
+generate_image_with_letter("hello")
