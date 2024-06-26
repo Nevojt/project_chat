@@ -309,7 +309,7 @@ async def delete_user(
         
         if moderator:
             room.owner = moderator.user_id
-            moderator.role = 'moderator'
+            moderator.role = 'owner'
         else:
             room.owner = 0
         room.delete_at = datetime.now(pytz.utc)
