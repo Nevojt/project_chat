@@ -9,7 +9,6 @@ from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
 
 import pytz
-from sqlalchemy import Null
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
