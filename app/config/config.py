@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     backblaze_key: str
     url_address_dns: str
     key_crypto: str
+    rout_image: str
+    bucket_name_user_avatar: str
+    bucket_name_room_image: str
     model_config = SettingsConfigDict(env_file = ".env")
    
 

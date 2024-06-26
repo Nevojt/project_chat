@@ -144,7 +144,7 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     
     if file is None:
         generate_image_with_letter(user_name)
-        avatar = await upload_to_backblaze("app/routers/user/output.png")
+        avatar = await upload_to_backblaze(settings.rout_image)
     else:
         avatar = await upload_to_backblaze(file)
         
@@ -228,7 +228,7 @@ async def upload_to_backblaze(file: Union[UploadFile, str]) -> str:
         # Ensure the filename is unique
         unique_filename = generate_unique_filename(file_name)
 
-        bucket_name = "usravatar"
+        bucket_name = settings.bucket_name_user_avatar
         bucket = b2_api.get_bucket_by_name(bucket_name)
 
         # Upload file to Backblaze B2

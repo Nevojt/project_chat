@@ -260,7 +260,7 @@ async def upload_to_backblaze(file: UploadFile) -> str:
             temp_file_path = temp_file.name
         
         # Set the name of the bucket where the file will be uploaded
-        bucket_name = "roomimage"
+        bucket_name = settings.bucket_name_room_image
         # Get the bucket by its name
         bucket = b2_api.get_bucket_by_name(bucket_name)
         
