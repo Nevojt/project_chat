@@ -17,7 +17,7 @@ from app.mail import send_mail
 
 from ...config import utils
 from app.config.config import settings
-from .hello import say_hello_system
+from .hello import say_hello_system, system_notification_change_owner
 from .created_image import generate_image_with_letter
 from ...auth import oauth2
 from ...database.async_db import get_async_session
@@ -301,14 +301,17 @@ async def delete_user(
     query_room = select(models.Rooms).where(models.Rooms.owner == current_user.id)
     result_room = await db.execute(query_room)
     rooms_to_update = result_room.scalars().all()
+    
     for room in rooms_to_update:
         query_moderators = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room.id, models.RoleInRoom.role == 'moderator')
         result_moderators = await db.execute(query_moderators)
         moderator = result_moderators.scalars().first()
         
+        message = f"Room {room.name_room} is now owned by YOU"
         if moderator:
             room.owner = moderator.user_id
             moderator.role = 'owner'
+            await system_notification_change_owner(moderator.user_id, message)
         else:
             room.owner = 0
         room.delete_at = datetime.now(pytz.utc)
