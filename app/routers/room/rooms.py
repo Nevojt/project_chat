@@ -212,26 +212,26 @@ async def create_room_v2(name_room: str =Form(...),
 
 def generate_random_suffix(length=8):
     """
-    Генерує випадковий суфікс з букв і цифр.
+    Generate a random suffix of specified length.
 
     Parameters:
-    length (int): Довжина суфіксу. Значення за замовчуванням - 8.
+    length (int): The length of the random suffix. Default is 8.
 
     Returns:
-    str: Випадковий суфікс.
+    str: A random string of specified length consisting of letters and digits.
     """
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for i in range(length))
 
 def generate_unique_filename(filename):
     """
-    Генерує унікальну назву файлу, додаючи випадковий суфікс.
+    Generate a unique filename by appending a random suffix to the original filename.
 
     Parameters:
-    filename (str): Назва файлу.
+    filename (str): The original filename.
 
     Returns:
-    str: Унікальна назва файлу.
+    str: The unique filename.
     """
     file_name, file_extension = os.path.splitext(filename)
     unique_suffix = generate_random_suffix()
