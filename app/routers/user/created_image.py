@@ -54,7 +54,7 @@ def generate_image_with_letter(text: str) -> None:
     draw.text((text_x, text_y), first_letter, fill="black", font=font)
 
     # Save the image as a PNG file
-    image.save("app/routers/user/output.png")
+    image.save("app/routers/user/image/output.png")
 
 # Example usage
-# generate_image_with_letter("hello")
+generate_image_with_letter("hello")
