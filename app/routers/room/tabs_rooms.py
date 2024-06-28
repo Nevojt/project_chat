@@ -400,4 +400,4 @@ async def delete_room_from_tab(tab_id: int, room_ids: List[int],
 
     db.commit()  # Commit all changes at once
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(status_code=status.HTTP_200_OK)
