@@ -23,42 +23,22 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
                           current_user: models.User = Depends(oauth2.get_current_user)):
     """
     Create a new tab for the current user.
-
-    Args:
-        tab (room_schema.RoomTabsCreate): A dictionary containing the details of the new tab.
-        db (AsyncSession): The database session.
-        current_user (models.User): The currently authenticated user.
-
-    Raises:
-        HTTPException: If the tab already exists or if there is an internal server error.
-
-    Returns:
-        JSON: A JSON object containing the details of the newly created tab.
     """
-    if current_user.blocked == True:
+    if current_user.blocked:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
         
-    try:
-        # Check if tab already exists
-        post_tab = select(models.RoomTabsInfo).where(models.RoomTabsInfo.name_tab == tab.name_tab)
-        result = await db.execute(post_tab)
-        existing_room = result.scalar_one_or_none()
-
-        if existing_room:
-            raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
-                                detail=f"Tab {tab.name_tab} already exists")
-            
+    try: 
         # Check the number of tabs the user already owns
         tab_count_query = select(func.count()).where(models.RoomTabsInfo.owner_id == current_user.id)
         tab_count = await db.scalar(tab_count_query)
-
+        
         if tab_count >= 10:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail="Maximum tab limit reached. You can only have 10 tabs.")
         
         # Create a new tab
-        new_tab = models.RoomTabsInfo(owner_id=current_user.id, **tab.model_dump())
+        new_tab = models.RoomTabsInfo(owner_id=current_user.id, **tab.dict())
         db.add(new_tab)
         await db.commit()
         await db.refresh(new_tab)
@@ -68,6 +48,7 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=str(e))
+
 
     
 
@@ -400,5 +381,4 @@ async def delete_room_from_tab(tab_id: int, room_ids: List[int],
 
     db.commit()  # Commit all changes at once
 
-    return HTTPException(status_code=status.HTTP_200_OK,
-                         detail="Room deleted in tab")
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
