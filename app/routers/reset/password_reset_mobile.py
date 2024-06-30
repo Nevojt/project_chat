@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -66,7 +66,7 @@ async def reset_password_v2_code(reset: PasswordResetV2, db: AsyncSession = Depe
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Code reset not active")
     
-    return {"msg": "Code reset is active."}
+    return Response(status_code=status.HTTP_200_OK)
 
 @router.post("/reset-password")
 async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(get_async_session)):
@@ -88,14 +88,15 @@ async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Code reset not active")
     
-    stmt_update = update(models.User).where(models.User.email == reset.email).values(password=utils.hash(reset.password), blocked=False, password_changed=current_time_utc)
+    stmt_update = update(models.User).where(models.User.email == reset.email).values(password=utils.hash(reset.password),
+                                                                                     blocked=False,
+                                                                                     password_changed=current_time_utc)
     result = await db.execute(stmt_update)
     await db.commit()
     
     stmt_delete = delete(models.PasswordReset).where(models.PasswordReset.email == reset.email)
     result = await db.execute(stmt_delete)
     await db.commit()
-    return {"msg": "Password reset successfully."}
+    return Response(status_code=status.HTTP_200_OK)
     
     
-
