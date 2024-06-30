@@ -6,7 +6,7 @@ import pytz
 from datetime import datetime, timedelta
 
 from app.models import models
-from app.schemas.reset import PasswordResetRequest, PasswordResetMobile
+from app.schemas.reset import PasswordResetRequest, PasswordResetMobile, PasswordResetV2
 
 from app.config import utils
 from app.mail.send_mail import password_reset_mobile
@@ -45,6 +45,29 @@ async def request_password_reset(email: PasswordResetRequest,
         )
     return {"msg": "Password reset email sent successfully."}
 
+
+@router.post("/code_verification")
+async def reset_password_v2_code(reset: PasswordResetV2, db: AsyncSession = Depends(get_async_session)):
+    
+    stmt = select(models.PasswordReset).where(models.PasswordReset.email == reset.email,
+                                                 models.PasswordReset.reset_code == reset.code,
+                                                 models.PasswordReset.is_active == True)
+    result = await db.execute(stmt)
+    reset_entry = result.scalars().first()
+    
+    timezone = pytz.timezone('UTC')
+    current_time_utc = datetime.now(timezone)
+    if not reset_entry:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"User with email {reset.email} not found or code reset not active")
+        
+    if current_time_utc > reset_entry.created_at + timedelta(hours=1):
+        reset_entry.is_active = False
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"Code reset not active")
+    
+    return {"msg": "Code reset is active."}
+
 @router.post("/reset-password")
 async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(get_async_session)):
     
@@ -74,3 +97,5 @@ async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(
     await db.commit()
     return {"msg": "Password reset successfully."}
     
+    
+
