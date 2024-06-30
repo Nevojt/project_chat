@@ -89,4 +89,4 @@ async def block_account(token: str, request: Request, db: AsyncSession = Depends
     db.add(user)
     await db.commit()
     
-    return templates.TemplateResponse("success-page.html", {"request": request})
+    return templates.TemplateResponse("blocked_account.html", {"request": request})
