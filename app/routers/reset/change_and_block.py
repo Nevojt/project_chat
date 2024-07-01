@@ -24,18 +24,20 @@ async def reset(password: user.UserUpdatePassword,
                 db: AsyncSession = Depends(get_async_session),
                 current_user: models.User = Depends(oauth2.get_current_user)):
     """
-    Reset the password of the currently authenticated user.
+    Reset user password.
 
-    Args:
-        password (schemas.UserUpdatePassword): The new password and confirmation.
-        db (AsyncSession): The database session to use.
-        current_user (models.User): The currently authenticated user.
+    Parameters:
+    password (user.UserUpdatePassword): The new password and old password.
+    db (AsyncSession): The database session.
+    current_user (models.User): The current user.
 
     Returns:
-        dict: A message indicating that the password was reset successfully.
+    dict: A dictionary with a success message.
 
     Raises:
-        HTTPException: If the user is not found, if the old password is incorrect, or if the new passwords do not match.
+    HTTPException: If the user is not verified or blocked.
+    HTTPException: If the user is not found.
+    HTTPException: If the old password is incorrect.
     """
     if current_user.verified == False or current_user.blocked:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
@@ -79,7 +81,23 @@ async def reset(password: user.UserUpdatePassword,
 templates = Jinja2Templates(directory="templates")
 @router.get("/blocked")
 async def block_account(token: str, request: Request, db: AsyncSession = Depends(get_async_session)):
-    
+    """
+    This function is responsible for blocking a user's account.
+    It retrieves the user from the database using the provided token.
+    If the user is found, it sets the 'blocked' attribute to True and commits the changes to the database.
+    Finally, it renders a template response for the blocked account page.
+
+    Parameters:
+    token (str): The token used to authenticate and retrieve the user.
+    request (Request): The FastAPI request object, used to access the request context.
+    db (AsyncSession): The database session, used to interact with the database.
+
+    Returns:
+    TemplateResponse: A FastAPI TemplateResponse object, rendering the "blocked_account.html" template.
+
+    Raises:
+    HTTPException: If the user is not found in the database.
+    """
     user = await oauth2.get_current_user(token, db)
     
     if not user:
