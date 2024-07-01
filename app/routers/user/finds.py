@@ -80,3 +80,23 @@ def search_users_and_rooms(substring: str, db: Session = Depends(get_db)):
         "users": users_info,
         "rooms": rooms_info
     }
+    
+@router.get("/users/{substring}")
+def search_users(substring: str, db: Session = Depends(get_db)):
+    
+    pattern = f"%{substring.lower()}%"
+    
+    # Search for users
+    users = db.query(models.User).filter(func.lower(models.User.user_name).like(pattern)).all()
+    
+    users_info =[]
+    for user in users:
+        user_info = {
+            "id": user.id,
+            "user_name": user.user_name,
+            "avatar": user.avatar,
+            "created_at": user.created_at
+        }
+        users_info.append(user_schema.UserOut(**user_info))
+    
+    return {"users": users_info}
