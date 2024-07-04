@@ -1,7 +1,6 @@
 import pytest
 from httpx import AsyncClient
 from jose import jwt
-import json
 import asyncio
 
 from app.config.config import settings
@@ -30,40 +29,44 @@ def test_user_create():
     return {"email": random_email(),
             "password": "password123"}
 
-def test_create_user_v2(test_user_create):
-    user_name = random_lower_string()
-    email = test_user_create["email"]
-    password = test_user_create["password"]
+@pytest.mark.asyncio
+async def test_create_user_v2(test_user_create, async_session):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        user_name = random_lower_string()
+        email = test_user_create["email"]
+        password = test_user_create["password"]
 
-    response = client.post(
-        "/users/v2",
-        data={
-            "email": email,
-            "user_name": user_name,
-            "password": password
-        },
-        files={"file": (None, "", "application/octet-stream")}
-    )
+        response = await client.post(
+            "/users/v2",
+            data={
+                "email": email,
+                "user_name": user_name,
+                "password": password
+            },
+            files={"file": (None, "", "application/octet-stream")}
+        )
 
-    assert response.status_code == 201
-    new_user = user.UserOut(**response.json())
-    assert new_user.user_name == user_name
+        assert response.status_code == 201
+        new_user = user.UserOut(**response.json())
+        assert new_user.user_name == user_name
 
 @pytest.fixture
 def test_login_user_fixture():
     return {"email": "test_user@test.testing",
             "password": "password123"}
 
-def test_login_user_login(test_login_user_fixture):
-    res = client.post(
-        "/login", data={"username": test_login_user_fixture['email'], "password": test_login_user_fixture['password']}
-    )
-    
-    assert res.status_code == 200
-    login_res = token.Token(**res.json())
-    payload = jwt.decode(login_res.access_token, settings.secret_key, algorithms=[settings.algorithm])
+@pytest.mark.asyncio
+async def test_login_user_login(test_login_user_fixture, async_session):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        res = await client.post(
+            "/login", data={"username": test_login_user_fixture['email'], "password": test_login_user_fixture['password']}
+        )
+        
+        assert res.status_code == 200
+        login_res = token.Token(**res.json())
+        payload = jwt.decode(login_res.access_token, settings.secret_key, algorithms=[settings.algorithm])
 
-    assert login_res.token_type == "bearer"
+        assert login_res.token_type == "bearer"
 
 @pytest.fixture
 def test_user_verify():
