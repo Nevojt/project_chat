@@ -144,7 +144,7 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     
     if file is None:
         generate_image_with_letter(user_name)
-        avatar = await upload_to_backblaze(settings.rout_image)
+        avatar = await upload_to_backblaze("app/routers/user/image/output.png")
     else:
         avatar = await upload_to_backblaze(file)
         
