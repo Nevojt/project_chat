@@ -56,5 +56,5 @@ def generate_image_with_letter(text: str) -> None:
     # Save the image as a PNG file
     image.save("app/routers/user/image/output.png")
 
-# Example usage
+# # Example usage
 # generate_image_with_letter("ello")
