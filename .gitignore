@@ -54,10 +54,12 @@ coverage.xml
 .pytest_cache/
 cover/
 
+#  Castom
+app/routers/user/image/*.png
+
 # Translations
 *.mo
 *.pot
-image/
 
 # Django stuff:
 # *.log
