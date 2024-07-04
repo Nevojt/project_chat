@@ -44,6 +44,10 @@ jobs:
           echo "BACKBLAZE_ID=${{ secrets.BACKBLAZE_ID }}" >> $GITHUB_ENV
           echo "BACKBLAZE_KEY=${{ secrets.BACKBLAZE_KEY }}" >> $GITHUB_ENV
           echo "URL_ADDRESS_DNS=${{ secrets.URL_ADDRESS_DNS }}" >> $GITHUB_ENV
+          echo "KEY_CRYPTO=${{ secrets.KEY_CRYPTO }}" >> $GITHUB_ENV
+          echo "ROUT_IMAGE=${{ secrets.ROUT_IMAGE }}" >> $GITHUB_ENV
+          echo "BUCKET_NAME_USER_AVATAR=${{ secrets.BUCKET_NAME_USER_AVATAR }}" >> $GITHUB_ENV
+          echo "BUCKET_NAME_ROOM_IMAGE=${{ secrets.BUCKET_NAME_ROOM_IMAGE }}" >> $GITHUB_ENV
 
     - name: Run Tests
       run: |
