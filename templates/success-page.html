@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Password Reset Successful</title>
+    <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="https://dsfokvnqjxxsziqofvss.supabase.co/storage/v1/object/public/Front_icon/coolchat/Group_223__1_.png" type="image/png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1; 
+        }
+
+        .video-background video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+        }
+
+        .message {
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 14px;
+            background: linear-gradient(180.00deg, rgba(171, 171, 171, 0.9), rgba(105, 104, 106, 0.2) 100%);
+            backdrop-filter: blur(2px);
+            z-index: 1;
+            padding: 20px;
+            box-sizing: border-box;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+           
+    </style>
+</head>
+<body>
+    <div class="video-background">
+        <video autoplay loop muted>
+            <source src="https://dsfokvnqjxxsziqofvss.supabase.co/storage/v1/object/public/Front_icon/coolchat/video/fire__2.mp4?t=2024-06-01T17%3A25%3A08.070Z" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+    <div class="message">
+        <h2>Password Reset Successful</h2>
+        <p>Your password has been changed successfully.</p>
+        <p>Please close this page.</p>
+    </div>
+</body>
+</html>
