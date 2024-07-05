@@ -1,10 +1,9 @@
 from ast import arg
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
+# from apscheduler.triggers.cron import CronTrigger
 import pytz
 from sqlalchemy import select
-from app.database.async_db import async_session_maker
 from app.models import models
 
 def setup_scheduler(db_session_factory):
@@ -29,7 +28,7 @@ async def delete_old_rooms(db_session_factory):
 async def delete_test_users(db_session_factory):
     async with db_session_factory() as db:
         
-        email_pattern = '%@%.testuser'
+        email_pattern = '%.testuser'
         
         query = select(models.User).where(models.User.email.like(email_pattern))
         result = await db.execute(query)
