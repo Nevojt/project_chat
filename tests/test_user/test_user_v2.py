@@ -4,14 +4,9 @@ from httpx import AsyncClient
 from jose import jwt
 import asyncio
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.async_db import get_async_session
-from app.models import models
-from app.config import utils
 
 from app.config.config import settings
 from fastapi.testclient import TestClient
-from fastapi import Depends
 from app.main import app
 from app.schemas import user, token
 from .utils import random_email, random_lower_string
