@@ -1,10 +1,17 @@
+import json
 import pytest
 from httpx import AsyncClient
 from jose import jwt
 import asyncio
 
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.database.async_db import get_async_session
+from app.models import models
+from app.config import utils
+
 from app.config.config import settings
 from fastapi.testclient import TestClient
+from fastapi import Depends
 from app.main import app
 from app.schemas import user, token
 from .utils import random_email, random_lower_string
@@ -183,3 +190,56 @@ async def test_change_user_password(test_user_update_password, test_user_new_pas
                                         json=change_password)
         
         assert res_password.status_code == 200
+
+@pytest.fixture
+def test_user_delete_login():
+    return {
+        "email": "userdelete@delete.userdel",
+        "user_name": "userdelete",
+        "avatar": "userdelete",
+        "password": "password123"
+    }
+
+
+@pytest.mark.asyncio
+async def test_create_user_v2_del(test_user_delete_login, async_session):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+
+        response = await client.post(
+            "/users/test",
+            json={
+                "email": test_user_delete_login["email"],
+                "user_name": test_user_delete_login["user_name"],
+                "avatar": test_user_delete_login["avatar"],  # Додано поле avatar
+                "password": test_user_delete_login["password"],
+                "verified": True
+            }
+        )
+
+        assert response.status_code == 201
+
+
+@pytest.mark.asyncio
+async def test_delete_user(test_user_delete_login, async_session):
+    # Log in the user
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        login_response = await client.post(
+            "/login",
+            data={"username": test_user_delete_login['email'], "password": test_user_delete_login['password']}
+        )
+        assert login_response.status_code == 200
+        login_data = login_response.json()
+        token = login_data['access_token']
+
+        # Delete the user
+        delete_response = await client.request(
+        "DELETE",
+        "/users/",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        },
+        content=json.dumps({"password": test_user_delete_login['password']})  # Передаємо пароль у форматі JSON
+    )
+
+        assert delete_response.status_code == 204

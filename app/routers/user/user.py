@@ -562,3 +562,26 @@ async def read_users(db: AsyncSession = Depends(get_async_session)):
     result = await db.execute(query)
     users = result.scalars().all()
     return users
+
+
+
+@router.post("/test", status_code=status.HTTP_201_CREATED, response_model=user.UserOut, include_in_schema=False)
+async def created_user_test(user: user.UserCreateDel, db: AsyncSession = Depends(get_async_session)):
+
+    # Hash the user's password
+    hashed_password = utils.hash(user.password)
+    user.password = hashed_password
+
+    # Create a new user and add it to the database
+    new_user = models.User(**user.model_dump())
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    
+    # Create a User_Status entry for the new user
+    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
+    db.add(post)
+    await db.commit()
+    await db.refresh(post)
+    
+    return new_user

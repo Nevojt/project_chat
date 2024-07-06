@@ -51,6 +51,9 @@ class UserCreateV2(BaseModel):
     user_name: str
     password: str
     
+class UserCreateDel(UserCreate):
+    verified: bool
+    
 class UserUpdate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
