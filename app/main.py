@@ -15,6 +15,8 @@ from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
 from .routers.reset import password_reset, password_reset_mobile, change_and_block
 from .routers.mail import contact_form
+from .routers.company import company
+
 from .config.scheduler import setup_scheduler
 
 from .database.database import engine
@@ -80,6 +82,8 @@ app.include_router(contact_form.router)
 app.include_router(verify_user.router)
 
 app.include_router(ass.router)
+
+app.include_router(company.router)
 
 
 
