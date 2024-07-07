@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -90,7 +90,7 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", include_in_schema=False)
 async def home():
-    return RedirectResponse(url="https://cool-chat.club/chat", status_code=307)
+    return RedirectResponse(url="https://sayorama.eu/chat", status_code=307)
 
 
 @app.get("/reset", include_in_schema=False)
@@ -103,7 +103,7 @@ async def finally_reset(request: Request):
 
 @app.get('/privacy-policy', include_in_schema=False)
 async def privacy_policy():
-    return RedirectResponse(url="https://cool-chat.club/chat#/PrivacyPolicy", status_code=307)
+    return RedirectResponse(url="https://sayorama.eu/chat#/PrivacyPolicy", status_code=307)
 
 app.mount("/contact-form", StaticFiles(directory="contact-form"), name="contact-form")
 templates_form = Jinja2Templates(directory="contact-form")
@@ -111,3 +111,15 @@ templates_form = Jinja2Templates(directory="contact-form")
 @app.get('/contact-form', include_in_schema=False)
 async def contact_form(request: Request):
     return templates_form.TemplateResponse("index.html", {"request": request})
+
+
+
+def get_company_from_subdomain(request: Request):
+    host = request.headers.get("host")
+    subdomain = host.split(".")[0]
+    
+    return subdomain
+
+@app.get("/company")
+async def get_company(company: str = Depends(get_company_from_subdomain)):
+    return {"company": company}
