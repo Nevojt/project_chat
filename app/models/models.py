@@ -1,4 +1,5 @@
 from datetime import timedelta
+from tkinter import CASCADE
 from sqlalchemy import JSON, Column, Integer, Interval, String, Boolean, ForeignKey, Enum, DateTime
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -52,6 +53,9 @@ class Company(Base):
     additional_contacts = Column(String)
     settings = Column(JSON)
     
+    users = relationship("User", back_populates="company", cascade="all, delete")
+    rooms = relationship("Rooms", back_populates="company", cascade="all, delete")
+    
 class PrivateMessage(Base):
     __tablename__ = 'private_messages'
     
@@ -76,7 +80,9 @@ class Rooms(Base):
     secret_room = Column(Boolean, default=False)
     block = Column(Boolean, nullable=False, server_default='false')
     delete_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete=CASCADE), nullable=False)
     
+    company = relationship("Company", back_populates="rooms")
     invitations = relationship("RoomInvitation", back_populates="room")
     
     
@@ -119,6 +125,7 @@ class RoomsTabs(Base):
     favorite = Column(Boolean, default=False)
     
     
+    
 class RoomInvitation(Base):
     __tablename__ = 'room_invitations'
 
@@ -150,7 +157,9 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.user)
     blocked = Column(Boolean, nullable=False, server_default='false')
     password_changed = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    company_id = Column(Integer, ForeignKey('companies.id', ondelete=CASCADE), nullable=False)
     
+    company = relationship("Company", back_populates="users")
     bans = relationship("Ban", back_populates="user")
     
     

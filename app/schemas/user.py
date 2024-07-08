@@ -82,7 +82,9 @@ class UserInfo(BaseModel):
     role: Optional[str]
     verified: bool
     blocked: bool
-    token_verify: Optional[str] = None
+    # token_verify: Optional[str] = None
+    company_id: int
+    
     
 class UserDelete(BaseModel):
     password: str

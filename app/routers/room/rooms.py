@@ -185,7 +185,9 @@ async def create_room_v2(name_room: str =Form(...),
                             detail=f"Room {room_data.name_room} already exists")
     
     image = await upload_to_backblaze(file)
-    new_room = models.Rooms(owner=current_user.id, image_room=image, 
+    new_room = models.Rooms(owner=current_user.id,
+                            image_room=image,
+                            company_id=current_user.company_id, 
                             **room_data.model_dump())
     db.add(new_room)
     await db.commit()
@@ -267,7 +269,7 @@ async def upload_to_backblaze(file: UploadFile) -> str:
         # Upload the file to the bucket
         unique_filename = generate_unique_filename(file.filename)
         
-        # Завантаження файлу до Backblaze B2
+        # download file to Backblaze B2
         bucket.upload_local_file(
             local_file=temp_file_path,
             file_name=unique_filename

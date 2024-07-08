@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .mail import send_mail
 
-from .routers.user import auth, finds, user, verify_user, user_status
+from .routers.user import auth, finds, user, verify_user, user_status, company_user
 from .routers.messages import message, private_messages, vote
 from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return, upload_file_backblaze
 from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms, ban_user, role_in_room
@@ -83,7 +83,9 @@ app.include_router(verify_user.router)
 
 app.include_router(ass.router)
 
+# Company routes
 app.include_router(company.router)
+app.include_router(company_user.router)
 
 
 
