@@ -95,9 +95,11 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
 
 
 @router.post("/v2", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
-async def created_user_v2(email: str = Form(...), user_name: str = Form(...), password: str = Form(...),
-                       file: UploadFile = File(None),
-                       db: AsyncSession = Depends(get_async_session)):
+async def created_user_v2(email: str = Form(...),
+                          user_name: str = Form(...),
+                          password: str = Form(...),
+                          file: UploadFile = File(None),
+                          db: AsyncSession = Depends(get_async_session)):
     """
     This function creates a new user in the database.
 
@@ -115,7 +117,9 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     Raises:
         HTTPException: If a user with the given email already exists.
     """
-
+    
+    company = 1
+    
     user_data = user.UserCreateV2(email=email, user_name=user_name, password=password)
 
 # Check if a user with the given email already exists
@@ -151,6 +155,7 @@ async def created_user_v2(email: str = Form(...), user_name: str = Form(...), pa
     # Create a new user and add it to the database
     new_user = models.User(**user_data.model_dump(),
                            avatar=avatar,
+                           company_id=company, # Default company id
                            token_verify=verification_token)
     db.add(new_user)
     await db.commit()
