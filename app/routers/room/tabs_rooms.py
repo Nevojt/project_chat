@@ -188,8 +188,8 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
             "owner": room.owner,
             "name_room": room.name_room,
             "image_room": room.image_room,
-            "count_users": 0,  # Initialize count of users
-            "count_messages": 0,  # Initialize count of messages
+            "count_users": next((uc.count for uc in users_count if uc.name_room == room.name_room), 0),
+            "count_messages": next((mc.count for mc in messages_count if mc.rooms == room.name_room), 0),
             "created_at": room.created_at,
             "secret_room": room.secret_room,
             "favorite": tab_info.favorite,
