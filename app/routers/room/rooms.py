@@ -441,16 +441,18 @@ async def block_room(room_id: int,
 
 @router.get("/company/v2/", response_model=List[room_schema.RoomBase])
 async def get_rooms_info_company(current_user: models.User = Depends(oauth2.get_current_user),
-                         db: Session = Depends(get_db)):
-    
+                                 db: Session = Depends(get_db)):
     """
-    Retrieves information about chat rooms, excluding a specific room ('Hell'), along with associated message and user counts.
+    Retrieves a list of rooms for a specific company, excluding the 'Hell' room and rooms marked as secret.
+    The function counts the number of messages and users in each room and returns a list of room information.
 
-    Args:
-        db (Session, optional): Database session dependency. Defaults to Depends(get_db).
+    Parameters:
+    current_user (models.User): The currently authenticated user.
+    db (Session): The database session.
 
     Returns:
-        List[schemas.RoomBase]: A list containing information about each room, such as room name, image, count of users, count of messages, and creation date.
+    List[room_schema.RoomBase]: A list of room information, including room ID, owner, name, image, creation date,
+    secret status, block status, delete status, number of messages, and number of users.
     """
     company_id = current_user.company_id 
     # get info rooms and not room "Hell"
