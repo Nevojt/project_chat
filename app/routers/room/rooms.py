@@ -113,6 +113,8 @@ async def create_room(room: room_schema.RoomCreate,
     Returns:
         models.Rooms: The newly created room.
     """
+    
+    
     if current_user.blocked == True or current_user.verified == False:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
@@ -152,7 +154,7 @@ async def create_room(room: room_schema.RoomCreate,
 
 @router.post("/v2", status_code=status.HTTP_201_CREATED)
 async def create_room_v2(name_room: str =Form(...),
-                        file: UploadFile = File(...),
+                        file: UploadFile = File(None),
                         secret: bool = False,
                         db: AsyncSession = Depends(get_async_session), 
                         current_user: models.User = Depends(oauth2.get_current_user)):
@@ -170,6 +172,11 @@ async def create_room_v2(name_room: str =Form(...),
     Returns:
         models.Rooms: The newly created room.
     """
+    default_image = ["https://f003.backblazeb2.com/file/imagesapp/DALLE_1+.webp",
+                     "https://f003.backblazeb2.com/file/imagesapp/DALLE_4.webp",
+                     "https://f003.backblazeb2.com/file/imagesapp/DALLE_3.webp",
+                     "https://f003.backblazeb2.com/file/imagesapp/DALLE_2.webp"]
+    
     room_data = room_schema.RoomCreateV2(name_room=name_room, secret_room=secret)
     
     if current_user.blocked == True or current_user.verified == False:
@@ -183,8 +190,11 @@ async def create_room_v2(name_room: str =Form(...),
     if existing_room:
         raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
                             detail=f"Room {room_data.name_room} already exists")
-    
-    image = await upload_to_backblaze(file)
+    if file is None:
+        image = random.choice(default_image)
+    else:
+        image = await upload_to_backblaze(file)
+        
     new_room = models.Rooms(owner=current_user.id,
                             image_room=image,
                             company_id=current_user.company_id, 
