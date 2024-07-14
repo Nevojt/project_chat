@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, asc
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.admin import user
 from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
@@ -15,7 +16,7 @@ import os
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
 
-from app.models import models
+from app.models import room_model, room_model, messages_model, user_model
 from app.schemas import room as room_schema
 from app.config.config import settings
 
@@ -47,33 +48,33 @@ async def get_rooms_info(db: Session = Depends(get_db)):
     """
     
     # get info rooms and not room "Hell"
-    # rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True).order_by(asc(models.Rooms.id)).all()
+    # rooms = db.query(room_model.Rooms).filter(room_model.Rooms.name_room != 'Hell', room_model.Rooms.secret_room != True).order_by(asc(room_model.Rooms.id)).all()
     rooms = db.query(
-        models.Rooms.id,
-        models.Rooms.owner,
-        models.Rooms.name_room,
-        models.Rooms.image_room,
-        models.Rooms.created_at,
-        models.Rooms.secret_room,
-        models.Rooms.block,
-        models.Rooms.delete_at,
-        func.count(models.Socket.id).label('count_messages')
-    ).outerjoin(models.Socket, models.Rooms.name_room == models.Socket.rooms) \
-    .filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True) \
-    .group_by(models.Rooms.id) \
+        room_model.Rooms.id,
+        room_model.Rooms.owner,
+        room_model.Rooms.name_room,
+        room_model.Rooms.image_room,
+        room_model.Rooms.created_at,
+        room_model.Rooms.secret_room,
+        room_model.Rooms.block,
+        room_model.Rooms.delete_at,
+        func.count(messages_model.Socket.id).label('count_messages')
+    ).outerjoin(messages_model.Socket, room_model.Rooms.name_room == messages_model.Socket.rooms) \
+    .filter(room_model.Rooms.name_room != 'Hell', room_model.Rooms.secret_room != True) \
+    .group_by(room_model.Rooms.id) \
     .order_by(desc('count_messages')) \
     .all()
     # Count messages for room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
 
     # merge result
     rooms_info = []
@@ -98,7 +99,7 @@ async def get_rooms_info(db: Session = Depends(get_db)):
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_room(room: room_schema.RoomCreate, 
                       db: AsyncSession = Depends(get_async_session), 
-                      current_user: models.User = Depends(oauth2.get_current_user)):
+                      current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Create a new room.
 
@@ -111,7 +112,7 @@ async def create_room(room: room_schema.RoomCreate,
         HTTPException: If the room already exists.
 
     Returns:
-        models.Rooms: The newly created room.
+        room_model.Rooms: The newly created room.
     """
     
     
@@ -119,7 +120,7 @@ async def create_room(room: room_schema.RoomCreate,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
         
-    room_get = select(models.Rooms).where(models.Rooms.name_room == room.name_room)
+    room_get = select(room_model.Rooms).where(room_model.Rooms.name_room == room.name_room)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
@@ -128,23 +129,23 @@ async def create_room(room: room_schema.RoomCreate,
                             detail=f"Room {room.name_room} already exists")
     
     
-    new_room = models.Rooms(owner=current_user.id, **room.model_dump())
+    new_room = room_model.Rooms(owner=current_user.id, **room.model_dump())
     db.add(new_room)
     await db.commit()
     await db.refresh(new_room)
     
-    role_in_room = models.RoleInRoom(user_id=current_user.id, room_id=new_room.id, role="owner")
+    role_in_room = room_model.RoleInRoom(user_id=current_user.id, room_id=new_room.id, role="owner")
     db.add(role_in_room)
     await db.commit()
     await db.refresh(role_in_room)
     
-    add_room_to_my_room = models.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
+    add_room_to_my_room = room_model.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
     db.add(add_room_to_my_room)
     await db.commit()
     await db.refresh(add_room_to_my_room)
     
     if  room.secret_room == True:
-        manager_room = models.RoomsManager(user_id=current_user.id, room_id=new_room.id)
+        manager_room = room_model.RoomsManager(user_id=current_user.id, room_id=new_room.id)
         db.add(manager_room)
         await db.commit()
         await db.refresh(manager_room)
@@ -157,7 +158,7 @@ async def create_room_v2(name_room: str =Form(...),
                         file: UploadFile = File(None),
                         secret: bool = False,
                         db: AsyncSession = Depends(get_async_session), 
-                        current_user: models.User = Depends(oauth2.get_current_user)):
+                        current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Create a new room.
 
@@ -170,7 +171,7 @@ async def create_room_v2(name_room: str =Form(...),
         HTTPException: If the room already exists.
 
     Returns:
-        models.Rooms: The newly created room.
+        room_model.Rooms: The newly created room.
     """
     default_image = ["https://f003.backblazeb2.com/file/imagesapp/DALLE_1+.webp",
                      "https://f003.backblazeb2.com/file/imagesapp/DALLE_4.webp",
@@ -183,7 +184,7 @@ async def create_room_v2(name_room: str =Form(...),
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
         
-    room_get = select(models.Rooms).where(models.Rooms.name_room == room_data.name_room)
+    room_get = select(room_model.Rooms).where(room_model.Rooms.name_room == room_data.name_room)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
@@ -195,7 +196,7 @@ async def create_room_v2(name_room: str =Form(...),
     else:
         image = await upload_to_backblaze(file)
         
-    new_room = models.Rooms(owner=current_user.id,
+    new_room = room_model.Rooms(owner=current_user.id,
                             image_room=image,
                             company_id=current_user.company_id, 
                             **room_data.model_dump())
@@ -203,18 +204,18 @@ async def create_room_v2(name_room: str =Form(...),
     await db.commit()
     await db.refresh(new_room)
     
-    role_in_room = models.RoleInRoom(user_id=current_user.id, room_id=new_room.id, role="owner")
+    role_in_room = room_model.RoleInRoom(user_id=current_user.id, room_id=new_room.id, role="owner")
     db.add(role_in_room)
     await db.commit()
     await db.refresh(role_in_room)
     
-    add_room_to_my_room = models.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
+    add_room_to_my_room = room_model.RoomsManagerMyRooms(user_id=current_user.id, room_id=new_room.id)
     db.add(add_room_to_my_room)
     await db.commit()
     await db.refresh(add_room_to_my_room)
     
     if  room_data.secret_room == True:
-        manager_room = models.RoomsManager(user_id=current_user.id, room_id=new_room.id)
+        manager_room = room_model.RoomsManager(user_id=current_user.id, room_id=new_room.id)
         db.add(manager_room)
         await db.commit()
         await db.refresh(manager_room)
@@ -307,7 +308,7 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
     Returns:
     schemas.RoomPost: The room with the specified name, or a 404 Not Found error if no room with that name exists.
     """
-    post = db.query(models.Rooms).filter(models.Rooms.name_room == name_room).first()
+    post = db.query(room_model.Rooms).filter(room_model.Rooms.name_room == name_room).first()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -316,7 +317,8 @@ async def get_room(name_room: str, db: Session = Depends(get_db)):
 
 
 @router.delete("/{room_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_room(room_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+def delete_room(room_id: int, db: Session = Depends(get_db), 
+                current_user: user_model.User = Depends(oauth2.get_current_user)):
     """Deletes a room.
 
     Args:
@@ -334,7 +336,7 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
     
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id).first()
     
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -344,7 +346,7 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
     
     # Updating user statuses
-    users_in_room = db.query(models.User_Status).filter(models.User_Status.room_id == room_id).all()
+    users_in_room = db.query(user_model.User_Status).filter(user_model.User_Status.room_id == room_id).all()
     for user_status in users_in_room:
         user_status.name_room = 'Hell'
         user_status.room_id = 1  # Assuming 'Hell' room ID is 1
@@ -361,7 +363,7 @@ def delete_room(room_id: int, db: Session = Depends(get_db), current_user: model
 async def update_room(room_id: int, 
                       update_room: room_schema.RoomCreate, 
                       db: AsyncSession = Depends(get_async_session), 
-                      current_user: models.User = Depends(oauth2.get_current_user)):
+                      current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Update a room by ID.
     """
@@ -370,7 +372,7 @@ async def update_room(room_id: int,
                             detail=f"Access denied for user {current_user.id}")
 
     # Fetch room
-    room_query = await db.execute(select(models.Rooms).where(models.Rooms.id == room_id))
+    room_query = await db.execute(select(room_model.Rooms).where(room_model.Rooms.id == room_id))
     room = room_query.scalar_one_or_none()
     
     if room is None:
@@ -391,12 +393,12 @@ async def update_room(room_id: int,
     await db.refresh(room)  # Refresh the instance to get updated values
 
     # Handle room secrecy logic if applicable
-    manager_query = await db.execute(select(models.RoomsManager).where(models.RoomsManager.room_id == room_id))
+    manager_query = await db.execute(select(room_model.RoomsManager).where(room_model.RoomsManager.room_id == room_id))
     manager = manager_query.scalar_one_or_none()
     
     if update_room.secret_room:
         if manager is None:
-            manager = models.RoomsManager(user_id=current_user.id, room_id=room_id)
+            manager = room_model.RoomsManager(user_id=current_user.id, room_id=room_id)
             db.add(manager)
             await db.commit()
             await db.refresh(manager)
@@ -412,7 +414,7 @@ async def update_room(room_id: int,
 @router.put('/block/{room_id}', status_code=status.HTTP_200_OK)
 async def block_room(room_id: int, 
                      db: Session = Depends(get_db), 
-                     current_user: models.User = Depends(oauth2.get_current_user)):
+                     current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Blocks or unblocks a room.
 
@@ -431,7 +433,7 @@ async def block_room(room_id: int,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
 
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id).first()
     
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -450,14 +452,14 @@ async def block_room(room_id: int,
 
 
 @router.get("/company/v2/", response_model=List[room_schema.RoomBase])
-async def get_rooms_info_company(current_user: models.User = Depends(oauth2.get_current_user),
+async def get_rooms_info_company(current_user: user_model.User = Depends(oauth2.get_current_user),
                                  db: Session = Depends(get_db)):
     """
     Retrieves a list of rooms for a specific company, excluding the 'Hell' room and rooms marked as secret.
     The function counts the number of messages and users in each room and returns a list of room information.
 
     Parameters:
-    current_user (models.User): The currently authenticated user.
+    current_user (room_model.User): The currently authenticated user.
     db (Session): The database session.
 
     Returns:
@@ -466,33 +468,33 @@ async def get_rooms_info_company(current_user: models.User = Depends(oauth2.get_
     """
     company_id = current_user.company_id 
     # get info rooms and not room "Hell"
-    # rooms = db.query(models.Rooms).filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True).order_by(asc(models.Rooms.id)).all()
+    # rooms = db.query(room_model.Rooms).filter(room_model.Rooms.name_room != 'Hell', room_model.Rooms.secret_room != True).order_by(asc(room_model.Rooms.id)).all()
     rooms = db.query(
-        models.Rooms.id,
-        models.Rooms.owner,
-        models.Rooms.name_room,
-        models.Rooms.image_room,
-        models.Rooms.created_at,
-        models.Rooms.secret_room,
-        models.Rooms.block,
-        models.Rooms.delete_at,
-        func.count(models.Socket.id).label('count_messages')
-    ).outerjoin(models.Socket, models.Rooms.name_room == models.Socket.rooms) \
-    .filter(models.Rooms.name_room != 'Hell', models.Rooms.secret_room != True, models.Rooms.company_id == company_id) \
-    .group_by(models.Rooms.id) \
+        room_model.Rooms.id,
+        room_model.Rooms.owner,
+        room_model.Rooms.name_room,
+        room_model.Rooms.image_room,
+        room_model.Rooms.created_at,
+        room_model.Rooms.secret_room,
+        room_model.Rooms.block,
+        room_model.Rooms.delete_at,
+        func.count(messages_model.Socket.id).label('count_messages')
+    ).outerjoin(messages_model.Socket, room_model.Rooms.name_room == messages_model.Socket.rooms) \
+    .filter(room_model.Rooms.name_room != 'Hell', room_model.Rooms.secret_room != True, room_model.Rooms.company_id == company_id) \
+    .group_by(room_model.Rooms.id) \
     .order_by(desc('count_messages')) \
     .all()
     # Count messages for room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
 
     # merge result
     rooms_info = []

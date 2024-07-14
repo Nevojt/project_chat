@@ -10,7 +10,7 @@ from ...config import utils
 from app.config.config import settings
 from ...auth import oauth2
 from ...database.async_db import get_async_session
-from app.models import models
+from app.models import user_model
 from app.schemas import user
 
 router = APIRouter(
@@ -22,14 +22,14 @@ router = APIRouter(
 @router.put("/password", response_description="Reset password")
 async def reset(password: user.UserUpdatePassword,
                 db: AsyncSession = Depends(get_async_session),
-                current_user: models.User = Depends(oauth2.get_current_user)):
+                current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Reset user password.
 
     Parameters:
     password (user.UserUpdatePassword): The new password and old password.
     db (AsyncSession): The database session.
-    current_user (models.User): The current user.
+    current_user (user_model.User): The current user.
 
     Returns:
     dict: A dictionary with a success message.
@@ -43,7 +43,7 @@ async def reset(password: user.UserUpdatePassword,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is not verified or blocked")
         
-    query = select(models.User).where(models.User.id == current_user.id)
+    query = select(user_model.User).where(user_model.User.id == current_user.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
     

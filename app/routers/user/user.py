@@ -22,7 +22,7 @@ from .created_image import generate_image_with_letter
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
-from app.models import models
+from app.models import user_model, room_model
 from app.schemas import user
 
 
@@ -55,7 +55,7 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
     """
     
     # Check if a user with the given email already exists
-    query = select(models.User).where(models.User.email == user.email)
+    query = select(user_model.User).where(user_model.User.email == user.email)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
@@ -70,14 +70,14 @@ async def created_user(user: user.UserCreate, db: AsyncSession = Depends(get_asy
     verification_token = utils.generate_unique_token(user.email)
     
     # Create a new user and add it to the database
-    new_user = models.User(**user.model_dump(),
+    new_user = user_model.User(**user.model_dump(),
                            token_verify=verification_token)
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
     
     # Create a User_Status entry for the new user
-    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
+    post = user_model.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
     db.add(post)
     await db.commit()
     await db.refresh(post)
@@ -123,7 +123,7 @@ async def created_user_v2(email: str = Form(...),
     user_data = user.UserCreateV2(email=email, user_name=user_name, password=password)
 
 # Check if a user with the given email already exists
-    email_query = select(models.User).where(models.User.email == user_data.email)
+    email_query = select(user_model.User).where(user_model.User.email == user_data.email)
     email_result = await db.execute(email_query)
     existing_email_user = email_result.scalar_one_or_none()
 
@@ -132,7 +132,7 @@ async def created_user_v2(email: str = Form(...),
                             detail=f"User with email {existing_email_user.email} already exists")
     
     # Check if a user with the given user_name already exists
-    username_query = select(models.User).where(models.User.user_name == user_data.user_name)
+    username_query = select(user_model.User).where(user_model.User.user_name == user_data.user_name)
     username_result = await db.execute(username_query)
     existing_username_user = username_result.scalar_one_or_none()
 
@@ -153,7 +153,7 @@ async def created_user_v2(email: str = Form(...),
         avatar = await upload_to_backblaze(file)
         
     # Create a new user and add it to the database
-    new_user = models.User(**user_data.model_dump(),
+    new_user = user_model.User(**user_data.model_dump(),
                            avatar=avatar,
                            company_id=company, # Default company id
                            token_verify=verification_token)
@@ -162,7 +162,7 @@ async def created_user_v2(email: str = Form(...),
     await db.refresh(new_user)
     
     # Create a User_Status entry for the new user
-    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
+    post = user_model.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
     db.add(post)
     await db.commit()
     await db.refresh(post)
@@ -282,7 +282,7 @@ async def delete_user(
     - Response: An empty response with a 204 No Content status, indicating successful deletion.
     """
     
-    query = select(models.User).where(models.User.id == current_user.id)
+    query = select(user_model.User).where(user_model.User.id == current_user.id)
     result = await db.execute(query)
     existing_user = result.scalar_one_or_none()
 
@@ -303,12 +303,12 @@ async def delete_user(
             detail="Incorrect password."
         )
         
-    query_room = select(models.Rooms).where(models.Rooms.owner == current_user.id)
+    query_room = select(room_model.Rooms).where(room_model.Rooms.owner == current_user.id)
     result_room = await db.execute(query_room)
     rooms_to_update = result_room.scalars().all()
     
     for room in rooms_to_update:
-        query_moderators = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room.id, models.RoleInRoom.role == 'moderator')
+        query_moderators = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room.id, room_model.RoleInRoom.role == 'moderator')
         result_moderators = await db.execute(query_moderators)
         moderator = result_moderators.scalars().first()
         
@@ -335,14 +335,14 @@ async def delete_user(
 @router.put('/', response_model=user.UserInfo)
 async def update_user(update: user.UserUpdate, 
                       db: Session = Depends(get_db), 
-                      current_user: models.User = Depends(oauth2.get_current_user)):
+                      current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Update a user's information.
 
     Args:
         update (schemas.UserUpdate): The updated user information.
         db (Session): The database session to use.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         schemas.UserInfo: The updated user information.
@@ -362,7 +362,7 @@ async def update_user(update: user.UserUpdate,
             detail="User not verification or blocked."
         )
         
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+    user_query = db.query(user_model.User).filter(user_model.User.id == current_user.id)
     user = user_query.first()
     
     if user is None:
@@ -371,7 +371,7 @@ async def update_user(update: user.UserUpdate,
             detail=f"User with ID: {current_user.id} not found"
         )
     
-    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status_query = db.query(user_model.User_Status).filter(user_model.User_Status.user_id == current_user.id)
     user_status = user_status_query.first()
     
     if user_status is None:
@@ -396,7 +396,7 @@ async def update_user(update: user.UserUpdate,
 @router.put('/v2/avatar')
 async def update_user_v2(file: UploadFile = File(...), 
                         db: Session = Depends(get_db), 
-                        current_user: models.User = Depends(oauth2.get_current_user)):
+                        current_user: user_model.User = Depends(oauth2.get_current_user)):
 
         
     if not current_user.verified or current_user.blocked:
@@ -405,7 +405,7 @@ async def update_user_v2(file: UploadFile = File(...),
             detail="User not verification or blocked."
         )
         
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+    user_query = db.query(user_model.User).filter(user_model.User.id == current_user.id)
     user_data = user_query.first()
     
     if user_data is None:
@@ -414,7 +414,7 @@ async def update_user_v2(file: UploadFile = File(...),
             detail=f"User with ID: {current_user.id} not found"
         )
     
-    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status_query = db.query(user_model.User_Status).filter(user_model.User_Status.user_id == current_user.id)
     user_status = user_status_query.first()
     
     if user_status is None:
@@ -436,7 +436,7 @@ async def update_user_v2(file: UploadFile = File(...),
 @router.put('/v2/username')
 async def update_user_v2(user_name: str = Form(...),
                         db: Session = Depends(get_db), 
-                        current_user: models.User = Depends(oauth2.get_current_user)):
+                        current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Update a user's username.
 
@@ -448,7 +448,7 @@ async def update_user_v2(user_name: str = Form(...),
     Parameters:
     - user_name (str): The new username to be updated. This parameter is obtained from the request form.
     - db (Session): The database session to use for querying and updating the user's information.
-    - current_user (models.User): The currently authenticated user. This parameter is obtained from the dependency injection.
+    - current_user (user_model.User): The currently authenticated user. This parameter is obtained from the dependency injection.
 
     Returns:
     - str: A string indicating that the username has been updated.
@@ -463,7 +463,7 @@ async def update_user_v2(user_name: str = Form(...),
             detail="User not verification or blocked."
         )
         
-    user_query = db.query(models.User).filter(models.User.id == current_user.id)
+    user_query = db.query(user_model.User).filter(user_model.User.id == current_user.id)
     user_data = user_query.first()
     
     if user_data is None:
@@ -472,7 +472,7 @@ async def update_user_v2(user_name: str = Form(...),
             detail=f"User with ID: {current_user.id} not found"
         )
     
-    user_status_query = db.query(models.User_Status).filter(models.User_Status.user_id == current_user.id)
+    user_status_query = db.query(user_model.User_Status).filter(user_model.User_Status.user_id == current_user.id)
     user_status = user_status_query.first()
     
     if user_status is None:
@@ -510,7 +510,7 @@ def get_user_mail(email: str, db: Session = Depends(get_db)):
     """
     
     # Query the database for a user with the given email
-    user = db.query(models.User).filter(models.User.email == email).first()
+    user = db.query(user_model.User).filter(user_model.User.email == email).first()
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
@@ -536,7 +536,7 @@ def get_user_name(user_name: str, db: Session = Depends(get_db)):
     """
     
     # Query the database for a user with the given email
-    user = db.query(models.User).filter(models.User.user_name == user_name).first()
+    user = db.query(user_model.User).filter(user_model.User.user_name == user_name).first()
     
     # If the user is not found, raise an HTTP 404 error
     if not user:
@@ -563,7 +563,7 @@ async def read_users(db: AsyncSession = Depends(get_async_session)):
     """
     Retrieve a list of users.
     """
-    query = select(models.User)
+    query = select(user_model.User)
     result = await db.execute(query)
     users = result.scalars().all()
     return users
@@ -578,13 +578,13 @@ async def created_user_test(user: user.UserCreateDel, db: AsyncSession = Depends
     user.password = hashed_password
 
     # Create a new user and add it to the database
-    new_user = models.User(**user.model_dump())
+    new_user = user_model.User(**user.model_dump())
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
     
     # Create a User_Status entry for the new user
-    post = models.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
+    post = user_model.User_Status(user_id=new_user.id, user_name=new_user.user_name, name_room="Hell", room_id=1)
     db.add(post)
     await db.commit()
     await db.refresh(post)

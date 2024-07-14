@@ -5,7 +5,7 @@ from app.config.config import settings
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 from app.database.database import get_db
-from app.models import models
+from app.models import image_model
 from app.schemas import image
 
 
@@ -26,7 +26,7 @@ def public_url(bucket_name, file_path):
 
 async def create_image_avatars(images: image.UploadAvatar, db: Session = Depends(get_db)):
  
-    images = models.ImagesAvatar(**images.model_dump())
+    images = image_model.ImagesAvatar(**images.model_dump())
     db.add(images)
     db.commit()
     db.refresh(images)    
@@ -67,7 +67,7 @@ async def upload_to_avatars(name: str,
 # Upload to server and database images for rooms
 async def create_image_rooms(images: image.UploadRooms, db: Session = Depends(get_db)):
  
-    images = models.ImagesRooms(**images.model_dump())
+    images = image_model.ImagesRooms(**images.model_dump())
     db.add(images)
     db.commit()
     db.refresh(images)    

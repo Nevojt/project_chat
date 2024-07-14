@@ -4,7 +4,7 @@ import pytz
 from sqlalchemy.orm import Session
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import models
+from app.models import user_model
 from app.schemas.reset import PasswordReset, PasswordResetRequest, PasswordResetMobile
 from app.auth import oauth2
 from app.config import utils
@@ -39,7 +39,7 @@ async def reset_password(request: PasswordResetRequest, db: Session = Depends(ge
         dict: A message confirming that an email has been sent for password reset instructions.
     """
     # Func
-    user = db.query(models.User).filter(models.User.email == request.email).first()
+    user = db.query(user_model.User).filter(user_model.User.email == request.email).first()
     
     
     if not user:

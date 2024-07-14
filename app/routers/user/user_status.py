@@ -2,7 +2,7 @@ from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from ...auth import oauth2
 from app.database.database import get_db
-from app.models import models
+from app.models import user_model
 from app.schemas import user
 
 router = APIRouter(
@@ -22,7 +22,7 @@ async def get_posts(db: Session = Depends(get_db)): # , current_user: int = Depe
     Returns:
         List[schemas.UserStatus]: A list of user status objects.
     """
-    posts = db.query(models.User_Status).all()
+    posts = db.query(user_model.User_Status).all()
     return posts
 
 
@@ -41,7 +41,7 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
     Returns:
         List[schemas.UserStatus]: A list of user status objects, or an empty list if no user status is found.
     """
-    post = db.query(models.User_Status).filter(models.User_Status.user_name == user_name).all()
+    post = db.query(user_model.User_Status).filter(user_model.User_Status.user_name == user_name).all()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -53,7 +53,7 @@ async def get_post(user_name: str, db: Session = Depends(get_db)):  # , current_
 
     
 #     # print(current_user.user_name)
-#     post = models.User_Status(**post.dict())
+#     post = user_model.User_Status(**post.dict())
 #     db.add(post)
 #     db.commit()
 #     db.refresh(post)    
@@ -75,10 +75,10 @@ def update_post(user_id: int, update_post: user.UserStatusUpdate, db: Session = 
         HTTPException: Raises a 404 error if no post is found for the given user ID.
 
     Returns:
-        models.User_Status: The updated user post after the changes have been committed to the database.
+        user_model.User_Status: The updated user post after the changes have been committed to the database.
     """
     
-    post_query = db.query(models.User_Status).filter(models.User_Status.user_id == user_id)
+    post_query = db.query(user_model.User_Status).filter(user_model.User_Status.user_id == user_id)
     post = post_query.first()
     
     if post == None:

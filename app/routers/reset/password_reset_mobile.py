@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 import pytz
 from datetime import datetime, timedelta
 
-from app.models import models
+from app.models import user_model, password_model
 from app.schemas.reset import PasswordResetRequest, PasswordResetMobile, PasswordResetV2
 
 from app.config import utils
@@ -24,7 +24,7 @@ router = APIRouter(
 async def request_password_reset(email: PasswordResetRequest,
                                  db: AsyncSession = Depends(get_async_session)):
     
-    mail_query = select(models.User).where(models.User.email == email.email, models.User.verified == True)
+    mail_query = select(user_model.User).where(user_model.User.email == email.email, user_model.User.verified == True)
     result = await db.execute(mail_query)
     mail = result.one_or_none()
     
@@ -34,7 +34,7 @@ async def request_password_reset(email: PasswordResetRequest,
 
     
     reset_code = utils.generate_reset_code()
-    db_obj = models.PasswordReset(email=email.email, reset_code=reset_code)
+    db_obj = password_model.PasswordReset(email=email.email, reset_code=reset_code)
     db.add(db_obj)
     await db.commit()
     await password_reset_mobile("Password Reset", email.email,
@@ -49,9 +49,9 @@ async def request_password_reset(email: PasswordResetRequest,
 @router.post("/code_verification")
 async def reset_password_v2_code(reset: PasswordResetV2, db: AsyncSession = Depends(get_async_session)):
     
-    stmt = select(models.PasswordReset).where(models.PasswordReset.email == reset.email,
-                                                 models.PasswordReset.reset_code == reset.code,
-                                                 models.PasswordReset.is_active == True)
+    stmt = select(password_model.PasswordReset).where(password_model.PasswordReset.email == reset.email,
+                                                 password_model.PasswordReset.reset_code == reset.code,
+                                                 password_model.PasswordReset.is_active == True)
     result = await db.execute(stmt)
     reset_entry = result.scalars().first()
     
@@ -71,9 +71,9 @@ async def reset_password_v2_code(reset: PasswordResetV2, db: AsyncSession = Depe
 @router.post("/reset-password")
 async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(get_async_session)):
     
-    stmt = select(models.PasswordReset).where(models.PasswordReset.email == reset.email,
-                                                 models.PasswordReset.reset_code == reset.code,
-                                                 models.PasswordReset.is_active == True)
+    stmt = select(password_model.PasswordReset).where(password_model.PasswordReset.email == reset.email,
+                                                 password_model.PasswordReset.reset_code == reset.code,
+                                                 password_model.PasswordReset.is_active == True)
     result = await db.execute(stmt)
     reset_entry = result.scalars().first()
     
@@ -88,13 +88,13 @@ async def reset_password(reset: PasswordResetMobile, db: AsyncSession = Depends(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Code reset not active")
     
-    stmt_update = update(models.User).where(models.User.email == reset.email).values(password=utils.hash(reset.password),
+    stmt_update = update(user_model.User).where(user_model.User.email == reset.email).values(password=utils.hash(reset.password),
                                                                                      blocked=False,
                                                                                      password_changed=current_time_utc)
     result = await db.execute(stmt_update)
     await db.commit()
     
-    stmt_delete = delete(models.PasswordReset).where(models.PasswordReset.email == reset.email)
+    stmt_delete = delete(password_model.PasswordReset).where(password_model.PasswordReset.email == reset.email)
     result = await db.execute(stmt_delete)
     await db.commit()
     return Response(status_code=status.HTTP_200_OK)

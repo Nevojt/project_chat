@@ -5,7 +5,7 @@ from sqlalchemy import func, asc
 
 from app.auth import oauth2
 from app.database.database import get_db
-from app.models import models
+from app.models import user_model, room_model, messages_model
 from app.schemas import room as room_schema
 from app.routers.user.hello import system_notification_change_owner
 
@@ -18,7 +18,7 @@ router = APIRouter(
 
 @router.get("/", response_model=List[room_schema.RoomFavorite])
 async def get_user_rooms(db: Session = Depends(get_db), 
-                         current_user: models.User = Depends(oauth2.get_current_user)):
+                         current_user: user_model.User = Depends(oauth2.get_current_user)):
     
     """
     Retrieves information about chat rooms, excluding a specific room ('Hell'), along with associated message and user counts.
@@ -34,34 +34,34 @@ async def get_user_rooms(db: Session = Depends(get_db),
                             detail=f"User with ID {current_user.id} is blocked")
         
     rooms = db.query(
-        models.Rooms,
-        models.RoomsManagerMyRooms.favorite.label('favorite')
+        room_model.Rooms,
+        room_model.RoomsManagerMyRooms.favorite.label('favorite')
     ).outerjoin(
-        models.RoomsManagerMyRooms,
-        (models.RoomsManagerMyRooms.room_id == models.Rooms.id) & (models.RoomsManagerMyRooms.user_id == current_user.id)
-    ).filter(models.Rooms.name_room != 'Hell', models.Rooms.owner == current_user.id
-    ).order_by(asc(models.Rooms.id)).all()
+        room_model.RoomsManagerMyRooms,
+        (room_model.RoomsManagerMyRooms.room_id == room_model.Rooms.id) & (room_model.RoomsManagerMyRooms.user_id == current_user.id)
+    ).filter(room_model.Rooms.name_room != 'Hell', room_model.Rooms.owner == current_user.id
+    ).order_by(asc(room_model.Rooms.id)).all()
     
 
     # Fetch message and user count for each user-associated room
     # message_and_user_counts = db.query(
-    #     models.Socket.rooms.label('name_room'),
-    #     func.count(models.Socket.id).label('count_messages'),
-    #     func.count(models.User_Status.id).label('count_users')
-    # ).join(models.User_Status, models.User_Status.name_room == models.Socket.rooms
-    # ).group_by(models.Socket.rooms
-    # ).filter(models.Socket.rooms != 'Hell').all()
+    #     messages_model.Socket.rooms.label('name_room'),
+    #     func.count(messages_model.Socket.id).label('count_messages'),
+    #     func.count(user_model.User_Status.id).label('count_users')
+    # ).join(user_model.User_Status, user_model.User_Status.name_room == messages_model.Socket.rooms
+    # ).group_by(messages_model.Socket.rooms
+    # ).filter(messages_model.Socket.rooms != 'Hell').all()
     
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
 
     rooms_info = []
     for room, favorite in rooms:
@@ -90,7 +90,7 @@ async def get_user_rooms(db: Session = Depends(get_db),
 async def update_room_favorite(room_id: int, 
                                 favorite: bool, 
                                 db: Session = Depends(get_db), 
-                                current_user: models.User = Depends(oauth2.get_current_user)):
+                                current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Updates the favorite status of a room for a specific user.
 
@@ -98,7 +98,7 @@ async def update_room_favorite(room_id: int,
         room_id (int): The ID of the room to update.
         favorite (bool): The new favorite status for the room.
         db (Session, optional): The database session. Defaults to Depends(get_db).
-        current_user (models.User, optional): The current user. Defaults to Depends(oauth2.get_current_user).
+        current_user (user_model.User, optional): The current user. Defaults to Depends(oauth2.get_current_user).
 
     Raises:
         HTTPException: If the user is blocked or not verified.
@@ -112,21 +112,21 @@ async def update_room_favorite(room_id: int,
                             detail=f"Access denied for user {current_user.id}")
 
     # Fetch room
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
+    room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id, room_model.Rooms.owner == current_user.id).first()
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
     # Check if there is already a favorite record
-    favorite_record = db.query(models.RoomsManagerMyRooms).filter(
-        models.RoomsManagerMyRooms.room_id == room_id,
-        models.RoomsManagerMyRooms.user_id == current_user.id
+    favorite_record = db.query(room_model.RoomsManagerMyRooms).filter(
+        room_model.RoomsManagerMyRooms.room_id == room_id,
+        room_model.RoomsManagerMyRooms.user_id == current_user.id
     ).first()
 
     # Update if exists, else create a new record
     if favorite_record:
         favorite_record.favorite = favorite
     else:
-        new_favorite = models.RoomsManagerMyRooms(
+        new_favorite = room_model.RoomsManagerMyRooms(
             user_id=current_user.id, 
             room_id=room_id, 
             favorite=favorite
@@ -142,10 +142,10 @@ async def update_room_favorite(room_id: int,
 async def change_room_owner(room_id: int, 
                             new_owner_id: int, 
                             db: Session = Depends(get_db), 
-                            current_user: models.User = Depends(oauth2.get_current_user)):
+                            current_user: user_model.User = Depends(oauth2.get_current_user)):
     
-    room_query = db.query(models.Rooms).filter(models.Rooms.id == room_id,
-                                               models.Rooms.owner == current_user.id).first()
+    room_query = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id,
+                                               room_model.Rooms.owner == current_user.id).first()
 
     if room_query is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
@@ -153,7 +153,7 @@ async def change_room_owner(room_id: int,
     if room_query.block:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Room is blocked")
     
-    user_query  = db.query(models.User).filter(models.User.id == new_owner_id).first()
+    user_query  = db.query(user_model.User).filter(user_model.User.id == new_owner_id).first()
     
     if user_query is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -165,7 +165,7 @@ async def change_room_owner(room_id: int,
     db.add(room_query)
     db.commit()
     
-    role_query = db.query(models.RoleInRoom).filter(models.RoleInRoom.room_id == room_id).first()
+    role_query = db.query(room_model.RoleInRoom).filter(room_model.RoleInRoom.room_id == room_id).first()
     
     role_query.user_id = new_owner_id
     db.add(role_query)

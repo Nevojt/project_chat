@@ -6,7 +6,7 @@ from app.database.async_db import get_async_session
 from datetime import datetime, timedelta
 import pytz
 from app.auth import oauth2
-from app.models import models
+from app.models import user_model, room_model
 
 
 
@@ -18,18 +18,18 @@ router = APIRouter(
 
 @router.get('/mute-users/{room_id}')
 async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_session), 
-                          current_user: models.User = Depends(oauth2.get_current_user)):
+                          current_user: user_model.User = Depends(oauth2.get_current_user)):
 
     if current_user.blocked == True:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked")
         
-    room_query = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_query = select(room_model.Rooms).where(room_model.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
     
-    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
-                                                models.RoleInRoom.user_id == current_user.id)
+    role_room = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room_id,
+                                                room_model.RoleInRoom.user_id == current_user.id)
     result = await db.execute(role_room)
     role_in_room = result.scalar_one_or_none()
 
@@ -41,7 +41,7 @@ async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_ses
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail="You do not have permission to view banned users in this room.")
 
-    mute_users_query = select(models.Ban).options(joinedload(models.Ban.user)).where(models.Ban.room_id == room_id)
+    mute_users_query = select(room_model.Ban).options(joinedload(room_model.Ban.user)).where(room_model.Ban.room_id == room_id)
     result = await db.execute(mute_users_query)
     bans = result.scalars().all()
 
@@ -62,7 +62,7 @@ async def list_mute_users(room_id: int, db: AsyncSession = Depends(get_async_ses
 @router.post('/mute-user')
 async def mute_user(user_id: int, room_id: int, duration_minutes: int, 
                     db: AsyncSession = Depends(get_async_session), 
-                    current_user: models.User = Depends(oauth2.get_current_user)):
+                    current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Mute a user in a specific room.
 
@@ -71,7 +71,7 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
     room_id (int): The ID of the room where the user is to be muted.
     duration_minutes (int): The duration in minutes for which the user will be muted.
     db (AsyncSession): The database session for asynchronous operations.
-    current_user (models.User): The current user making the request.
+    current_user (user_model.User): The current user making the request.
 
     Returns:
     dict: A dictionary containing a success message and the ID of the muted user.
@@ -90,12 +90,12 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
     current_time_utc = datetime.now(pytz.timezone('UTC'))
     current_time_naive = current_time_utc.replace(tzinfo=None)
     
-    room_get = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_get = select(room_model.Rooms).where(room_model.Rooms.id == room_id)
     result = await db.execute(room_get)
     existing_room = result.scalar_one_or_none()
     
-    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
-                                                models.RoleInRoom.user_id == current_user.id)
+    role_room = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room_id,
+                                                room_model.RoleInRoom.user_id == current_user.id)
     result = await db.execute(role_room)
     role_in_room = result.scalar_one_or_none()
     
@@ -105,7 +105,7 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
                             detail="You are not the owner or a moderator of this room.")
                 
     end_time = current_time_naive + timedelta(minutes=duration_minutes)
-    ban = models.Ban(user_id=user_id, room_id=room_id, start_time=current_time_naive, end_time=end_time)
+    ban = room_model.Ban(user_id=user_id, room_id=room_id, start_time=current_time_naive, end_time=end_time)
     
     db.add(ban)
     await db.commit()
@@ -116,7 +116,7 @@ async def mute_user(user_id: int, room_id: int, duration_minutes: int,
 @router.delete('/un-mute-user')
 async def un_mute_user(user_id: int, room_id: int, 
                     db: AsyncSession = Depends(get_async_session), 
-                    current_user: models.User = Depends(oauth2.get_current_user)):
+                    current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Un-mute a user in a specific room.
 
@@ -124,7 +124,7 @@ async def un_mute_user(user_id: int, room_id: int,
     user_id (int): The ID of the user to be un-muted.
     room_id (int): The ID of the room where the user is to be un-muted.
     db (AsyncSession): The database session for asynchronous operations.
-    current_user (models.User): The current user making the request.
+    current_user (user_model.User): The current user making the request.
 
     Returns:
     dict: A dictionary containing a success message.
@@ -136,12 +136,12 @@ async def un_mute_user(user_id: int, room_id: int,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked")
         
-    room_query = select(models.Rooms).where(models.Rooms.id == room_id)
+    room_query = select(room_model.Rooms).where(room_model.Rooms.id == room_id)
     room_result = await db.execute(room_query)
     room = room_result.scalar_one_or_none()
     
-    role_room = select(models.RoleInRoom).where(models.RoleInRoom.room_id == room_id,
-                                                models.RoleInRoom.user_id == current_user.id)
+    role_room = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room_id,
+                                                room_model.RoleInRoom.user_id == current_user.id)
     result = await db.execute(role_room)
     role_in_room = result.scalar_one_or_none()
 
@@ -155,7 +155,7 @@ async def un_mute_user(user_id: int, room_id: int,
                             detail="You are not the owner or a moderator of this room.")
 
     
-    delete_ban = select(models.Ban).where(models.Ban.user_id == user_id, models.Ban.room_id == room_id)
+    delete_ban = select(room_model.Ban).where(room_model.Ban.user_id == user_id, room_model.Ban.room_id == room_id)
     result = await db.execute(delete_ban)
     existing_ban = result.scalar()
     

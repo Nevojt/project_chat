@@ -1,6 +1,6 @@
 from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from app.models import models
+from app.models import messages_model
 from app.schemas import message
 from app.auth import oauth2
 from app.database import database
@@ -29,13 +29,13 @@ def vote(vote: message.Vote, db: Session = Depends(database.get_db), current_use
         dict: A confirmation message indicating the successful addition or deletion of a vote.
     """
     
-    message = db.query(models.Socket).filter(models.Socket.id == vote.message_id).first()
+    message = db.query(messages_model.Socket).filter(messages_model.Socket.id == vote.message_id).first()
     if not message:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"Message with id: {vote.message_id} does not exist")
     
-    vote_query = db.query(models.Vote).filter(
-        models.Vote.message_id == vote.message_id, models.Vote.user_id == current_user.id
+    vote_query = db.query(messages_model.Vote).filter(
+        messages_model.Vote.message_id == vote.message_id, messages_model.Vote.user_id == current_user.id
     )
     found_vote = vote_query.first()
     
@@ -44,7 +44,7 @@ def vote(vote: message.Vote, db: Session = Depends(database.get_db), current_use
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
                                 detail=f"User {current_user.id} has already voted on post {vote.message_id}")
         
-        new_vote = models.Vote(message_id = vote.message_id, user_id = current_user.id)
+        new_vote = messages_model.Vote(message_id = vote.message_id, user_id = current_user.id)
         db.add(new_vote)
         db.commit()
         return {"message": "Successfully added voted "}
@@ -62,8 +62,8 @@ def vote(vote: message.Vote, db: Session = Depends(database.get_db), current_use
 @router.get('/')
 async def get_votes(id_vote: int, db: Session = Depends(database.get_db), current_user: int = Depends(oauth2.get_current_user)):
     
-    vote_query = db.query(models.Vote).filter(
-        models.Vote.message_id == id_vote, models.Vote.user_id == current_user.id
+    vote_query = db.query(messages_model.Vote).filter(
+        messages_model.Vote.message_id == id_vote, messages_model.Vote.user_id == current_user.id
     )
     found_vote = vote_query.first()
     if found_vote:

@@ -11,7 +11,7 @@ from app.database.database import get_db
 from app.database.async_db import get_async_session
 
 
-from app.models.models import Company
+from app.models.company_model import Company
 from app.schemas.company import CompanyCreate, CompanyUpdate, CompanySchema
 from app.config.config import settings
 

@@ -18,19 +18,27 @@ from .routers.mail import contact_form
 from .routers.company import company
 
 from .config.scheduler import setup_scheduler
-
 from .database.database import engine
-from app.database.async_db import async_session_maker
-from app.models import models
+from app.database.async_db import async_session_maker, engine_asinc
+from app.models import user_model, room_model, image_model, password_model, company_model, messages_model
 
-models.Base.metadata.create_all(bind=engine)
+
+async def init_db():
+    async with engine_asinc.begin() as conn:
+        await conn.run_sync(user_model.Base.metadata.create_all)
+        await conn.run_sync(room_model.Base.metadata.create_all)
+        await conn.run_sync(image_model.Base.metadata.create_all)
+        await conn.run_sync(password_model.Base.metadata.create_all)
+        await conn.run_sync(company_model.Base.metadata.create_all)
+        await conn.run_sync(messages_model.Base.metadata.create_all)
 
 app = FastAPI(
     root_path="/api",
     docs_url="/docs",
     title="Chat",
     description="Chat documentation",
-    version="0.1.3"
+    version="0.1.3",
+    on_startup=[init_db]
 )
 
 origins = ["*"]
@@ -129,3 +137,4 @@ def get_company_from_subdomain(request: Request):
 @app.get("/company")
 async def get_company(company: str = Depends(get_company_from_subdomain)):
     return {"company": company}
+

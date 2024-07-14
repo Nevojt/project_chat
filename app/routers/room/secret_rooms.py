@@ -8,7 +8,7 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
-from app.models import models
+from app.models import room_model, user_model, messages_model
 from app.schemas import room as room_schema
 
 router = APIRouter(
@@ -20,7 +20,7 @@ router = APIRouter(
 
 @router.get("/")
 async def get_user_rooms_secret(db: Session = Depends(get_db), 
-                              current_user: models.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomFavorite]:
+                              current_user: user_model.User = Depends(oauth2.get_current_user)) -> List[room_schema.RoomFavorite]:
     """
     Retrieve a list of rooms accessible by the current user, along with their associated message and user counts.
 
@@ -36,29 +36,29 @@ async def get_user_rooms_secret(db: Session = Depends(get_db),
                             detail=f"User with ID {current_user.id} is blocked or not verified")
         
     # Fetch room IDs for the current user
-    user_room_ids = db.query(models.RoomsManager.room_id).filter(models.RoomsManager.user_id == current_user.id).all()
+    user_room_ids = db.query(room_model.RoomsManager.room_id).filter(room_model.RoomsManager.user_id == current_user.id).all()
     user_room_ids = [str(room_id[0]) for room_id in user_room_ids]  # Extracting room IDs from the tuple
 
     # Query rooms details based on user_room_ids, excluding 'Hell'
-    rooms = db.query(models.Rooms, models.RoomsManager.favorite
-                     ).filter(models.Rooms.id.in_(user_room_ids), 
-                    models.Rooms.name_room != 'Hell',
-                    models.Rooms.secret_room == True,
-                    models.RoomsManager.room_id == models.Rooms.id,  # Ensure the mapping between Rooms and RoomsManager
-                    models.RoomsManager.user_id == current_user.id  # Ensure we're getting the favorite status for the current user
+    rooms = db.query(room_model.Rooms, room_model.RoomsManager.favorite
+                     ).filter(room_model.Rooms.id.in_(user_room_ids), 
+                    room_model.Rooms.name_room != 'Hell',
+                    room_model.Rooms.secret_room == True,
+                    room_model.RoomsManager.room_id == room_model.Rooms.id,  # Ensure the mapping between Rooms and RoomsManager
+                    room_model.RoomsManager.user_id == current_user.id  # Ensure we're getting the favorite status for the current user
     ).all()
 
     # Fetch message count for each user-associated room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms.in_(user_room_ids)).all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms.in_(user_room_ids)).all()
 
     # Fetch user count for each user-associated room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room.in_(user_room_ids)).all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room.in_(user_room_ids)).all()
 
     # Merging room info, message count, and user count
     rooms_info = []
@@ -86,7 +86,7 @@ async def get_user_rooms_secret(db: Session = Depends(get_db),
 async def secret_room_update(room_id: int,
                             favorite: bool,
                             db: Session = Depends(get_db), 
-                            current_user: models.User = Depends(oauth2.get_current_user)):
+                            current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Updates the favorite status of a secret room for a specific user.
 
@@ -94,7 +94,7 @@ async def secret_room_update(room_id: int,
         room_id (int): The ID of the room to update.
         favorite (bool): The new favorite status for the room.
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         dict: A dictionary containing the room ID and the updated favorite status.
@@ -108,21 +108,21 @@ async def secret_room_update(room_id: int,
                             detail=f"User with ID {current_user.id} is blocked or not verified")
 
     # Fetch room
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id, models.Rooms.owner == current_user.id).first()
+    room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id, room_model.Rooms.owner == current_user.id).first()
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
     # Check if there is already a favorite record
-    favorite_record = db.query(models.RoomsManager).filter(
-        models.RoomsManager.room_id == room_id,
-        models.RoomsManager.user_id == current_user.id
+    favorite_record = db.query(room_model.RoomsManager).filter(
+        room_model.RoomsManager.room_id == room_id,
+        room_model.RoomsManager.user_id == current_user.id
     ).first()
 
     # Update if exists, else create a new record
     if favorite_record:
         favorite_record.favorite = favorite
     else:
-        new_favorite = models.RoomsManager(
+        new_favorite = room_model.RoomsManager(
             user_id=current_user.id, 
             room_id=room_id, 
             favorite=favorite

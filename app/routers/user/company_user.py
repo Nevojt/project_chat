@@ -13,7 +13,7 @@ from .created_image import generate_image_with_letter
 from ...auth import oauth2
 from ...database.async_db import get_async_session
 from ...database.database import get_db
-from app.models import models
+from app.models import user_model
 from app.schemas import user
 
 
@@ -29,7 +29,7 @@ async def read_company_users(company_id: int,
                              db: AsyncSession = Depends(get_async_session),
                              current_user: user.UserOut = Depends(oauth2.get_current_user)):
     
-    query_users = select(models.User).where(models.User.company_id == company_id)
+    query_users = select(user_model.User).where(user_model.User.company_id == company_id)
     result = await db.execute(query_users)
     users = result.scalars().all()
     

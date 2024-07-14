@@ -3,7 +3,7 @@ from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
 from typing import List
 from app.database.database import get_db
-from app.models import models
+from app.models import messages_model, user_model
 from app.schemas import private
 
 
@@ -33,10 +33,10 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
     """
     try:
         # Query for recipients and senders
-        messages_query = db.query(models.PrivateMessage, models.User).join(
-            models.User, models.PrivateMessage.receiver_id == models.User.id
+        messages_query = db.query(messages_model.PrivateMessage, user_model.User).join(
+            user_model.User, messages_model.PrivateMessage.receiver_id == user_model.User.id
         ).filter(
-            (models.PrivateMessage.sender_id == user_id) | (models.PrivateMessage.receiver_id == user_id)
+            (messages_model.PrivateMessage.sender_id == user_id) | (messages_model.PrivateMessage.receiver_id == user_id)
         )
 
         # Execute query
@@ -46,7 +46,7 @@ async def get_private_recipient(user_id: int, db: Session = Depends(get_db)):
         users_info = {}
         for message, user in messages:
             other_user_id = message.sender_id if message.receiver_id == user_id else message.receiver_id
-            other_user = db.query(models.User).filter(models.User.id == other_user_id).first()
+            other_user = db.query(user_model.User).filter(user_model.User.id == other_user_id).first()
 
             # Determine if the message is read or not
             is_read = message.is_read if message.receiver_id == user_id else False

@@ -240,7 +240,7 @@ async def test_delete_user(test_user_delete_login, async_session):
         assert delete_response.status_code == 204
 
 
-
+#  Block Rooms
 
 @pytest.fixture
 def test_user():
@@ -283,7 +283,12 @@ async def test_get_one_name(test_room, async_session):
         response = await client.get(f"/rooms/{room}")
         assert response.status_code == 200
         assert response.json()['name_room'] == test_room['name_room']
-    
+
+@pytest.mark.asyncio
+async def test_get_all_room(async_session):
+    async with AsyncClient(app=app, base_url="http://test") as client:
+        response = await client.get("/rooms/")
+        assert response.status_code == 200
 
 
 @pytest.fixture

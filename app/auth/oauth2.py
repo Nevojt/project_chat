@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from app.database import async_db
-from app.models import models
+from app.models import user_model
 from app.schemas.token import TokenData
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -75,7 +75,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
         db (AsyncSession): The database session.
 
     Returns:
-        models.User: The currently authenticated user.
+        user_model.User: The currently authenticated user.
 
     Raises:
         HTTPException: If the credentials are invalid.
@@ -89,7 +89,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     token = verify_access_token(token, credentials_exception)
     
     
-    user = await db.execute(select(models.User).filter(models.User.id == token.id))
+    user = await db.execute(select(user_model.User).filter(user_model.User.id == token.id))
     user = user.scalar()
     
     return user

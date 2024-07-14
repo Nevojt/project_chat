@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 
 from app.auth import oauth2
-from app.models.models import User
+from app.models.user_model import User
 
 
 router = APIRouter(tags=['ASS'])

@@ -12,7 +12,7 @@ from app.database import async_db
 from ...config import utils
 from ...auth import oauth2
 from app.config.config import settings
-from app.models import models
+from app.models import user_model
 from app.schemas.token import Token
 
 SECRET_KEY = settings.secret_key
@@ -49,7 +49,7 @@ async def login(user_credentials: Annotated[OAuth2PasswordRequestForm, Depends()
     - Returns the access token and the token type as a JSON object.
     """
     try:
-        query = select(models.User).where(models.User.email == user_credentials.username)
+        query = select(user_model.User).where(user_model.User.email == user_credentials.username)
         result = await db.execute(query)
         user = result.scalar_one_or_none()
         
@@ -111,7 +111,7 @@ async def refresh_access_token(refresh_token: str, db: AsyncSession = Depends(as
         payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("user_id")
         
-        query = select(models.User).where(models.User.id == user_id)
+        query = select(user_model.User).where(user_model.User.id == user_id)
         result = await db.execute(query)
         user = result.scalar_one_or_none()
         

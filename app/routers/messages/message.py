@@ -5,7 +5,7 @@ from sqlalchemy.exc import NoResultFound
 
 from app.auth import oauth2
 from app.database.async_db import get_async_session
-from app.models import models
+from app.models import user_model, room_model, messages_model
 from app.schemas import message
 from app.config.config import settings
 from sqlalchemy.future import select
@@ -62,17 +62,17 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
     """
 
     query = select(
-        models.Socket, 
-        models.User, 
-        func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
+        messages_model.Socket, 
+        user_model.User, 
+        func.coalesce(func.sum(messages_model.Vote.dir), 0).label('votes')
     ).outerjoin(
-        models.Vote, models.Socket.id == models.Vote.message_id
+        messages_model.Vote, messages_model.Socket.id == messages_model.Vote.message_id
     ).join(
-        models.User, models.Socket.receiver_id == models.User.id
+        user_model.User, messages_model.Socket.receiver_id == user_model.User.id
     ).group_by(
-        models.Socket.id, models.User.id
+        messages_model.Socket.id, user_model.User.id
     ).order_by(
-        desc(models.Socket.created_at)
+        desc(messages_model.Socket.created_at)
     ).limit(50)
 
     result = await session.execute(query)
@@ -104,7 +104,7 @@ async def get_posts(session: AsyncSession = Depends(get_async_session),
     return messages
 
 async def check_room_blocked(room_id: int, session: AsyncSession):
-    query = select(models.Rooms).where(models.Rooms.id == room_id, models.Rooms.block.is_(True))
+    query = select(room_model.Rooms).where(room_model.Rooms.id == room_id, room_model.Rooms.block.is_(True))
     try:
         result = await session.execute(query)
         room_record = result.scalar_one()
@@ -132,7 +132,7 @@ async def get_messages_room(room_id: int,
     if room_blocked:
         raise HTTPException(status_code=403, detail="Room is blocked")
     
-    room = select(models.Rooms).where(models.Rooms.id == room_id)
+    room = select(room_model.Rooms).where(room_model.Rooms.id == room_id)
     result = await session.execute(room)
     existing_room = result.scalar_one_or_none()
     if existing_room is None:
@@ -140,19 +140,19 @@ async def get_messages_room(room_id: int,
     
     
     query = select(
-    models.Socket, 
-    models.User, 
-    func.coalesce(func.sum(models.Vote.dir), 0).label('votes')
+    messages_model.Socket, 
+    user_model.User, 
+    func.coalesce(func.sum(messages_model.Vote.dir), 0).label('votes')
     ).outerjoin(
-        models.Vote, models.Socket.id == models.Vote.message_id
+        messages_model.Vote, messages_model.Socket.id == messages_model.Vote.message_id
     ).outerjoin( 
-        models.User, models.Socket.receiver_id == models.User.id
+        user_model.User, messages_model.Socket.receiver_id == user_model.User.id
     ).filter(
-        models.Socket.rooms == existing_room.name_room
+        messages_model.Socket.rooms == existing_room.name_room
     ).group_by(
-        models.Socket.id, models.User.id
+        messages_model.Socket.id, user_model.User.id
     ).order_by(
-        desc(models.Socket.created_at)
+        desc(messages_model.Socket.created_at)
     )
 
     result = await session.execute(query)
@@ -185,11 +185,11 @@ async def get_messages_room(room_id: int,
 
 @router.put("/{id}", include_in_schema=False)
 async def change_message(id_message: int, message_update: message.SocketUpdate,
-                         current_user: models.User = Depends(oauth2.get_current_user), 
+                         current_user: user_model.User = Depends(oauth2.get_current_user), 
                          session: AsyncSession = Depends(get_async_session)):
     
     
-    query = select(models.Socket).where(models.Socket.id == id_message, models.Socket.receiver_id == current_user.id)
+    query = select(messages_model.Socket).where(messages_model.Socket.id == id_message, messages_model.Socket.receiver_id == current_user.id)
     result = await session.execute(query)
     message = result.scalar()
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi.templating import Jinja2Templates
-from app.models import models
+from app.models import user_model
 from app.database.async_db import get_async_session
 
 
@@ -29,7 +29,7 @@ async def verify_email(token: str, request: Request, db: AsyncSession = Depends(
     """
     # Query for a user with the matching token_verify field
     # Construct the query
-    query = select(models.User).where(models.User.token_verify == token)
+    query = select(user_model.User).where(user_model.User.token_verify == token)
 
     # Execute the query
     result = await db.execute(query)

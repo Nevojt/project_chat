@@ -8,7 +8,7 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
-from app.models import models
+from app.models import messages_model, user_model, room_model
 from app.schemas import room as room_schema
 
 router = APIRouter(
@@ -20,14 +20,14 @@ router = APIRouter(
 @router.post('/')
 async def create_user_tab(tab: room_schema.RoomTabsCreate, 
                           db: AsyncSession = Depends(get_async_session), 
-                          current_user: models.User = Depends(oauth2.get_current_user)):
+                          current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Create a new tab for the current user.
 
     Args:
         tab (room_schema.RoomTabsCreate): A dictionary containing the details of the new tab.
         db (AsyncSession): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Raises:
         HTTPException: If the tab already exists or if there is an internal server error.
@@ -41,7 +41,7 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
         
     try: 
         # Check the number of tabs the user already owns
-        tab_count_query = select(func.count()).where(models.RoomTabsInfo.owner_id == current_user.id)
+        tab_count_query = select(func.count()).where(room_model.RoomTabsInfo.owner_id == current_user.id)
         tab_count = await db.scalar(tab_count_query)
         
         if tab_count >= 10:
@@ -49,7 +49,7 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
                                 detail="Maximum tab limit reached. You can only have 10 tabs.")
         
         # Create a new tab
-        new_tab = models.RoomTabsInfo(owner_id=current_user.id, **tab.dict())
+        new_tab = room_model.RoomTabsInfo(owner_id=current_user.id, **tab.dict())
         db.add(new_tab)
         await db.commit()
         await db.refresh(new_tab)
@@ -66,39 +66,39 @@ async def create_user_tab(tab: room_schema.RoomTabsCreate,
 
 @router.get("/")
 async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db), 
-                                         current_user: models.User = Depends(oauth2.get_current_user)) -> list:
+                                         current_user: user_model.User = Depends(oauth2.get_current_user)) -> list:
     """
     Get all tabs for the current user.
 
     Args:
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         List[room_schema.RoomTabs]: A list of tabs for the current user.
     """
     # Fetch all tabs for the current user
-    user_tabs = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id).all()
+    user_tabs = db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.owner_id == current_user.id).all()
 
     # Initialize a list to store tabs along with their rooms
     tabs_with_rooms = []
 
     # Fetch rooms and tabs details for the current user
-    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).join(models.RoomsTabs, models.Rooms.id == models.RoomsTabs.room_id
-        ).filter(models.RoomsTabs.user_id == current_user.id).all()
+    rooms_and_tabs = db.query(room_model.Rooms, room_model.RoomsTabs
+        ).join(room_model.RoomsTabs, room_model.Rooms.id == room_model.RoomsTabs.room_id
+        ).filter(room_model.RoomsTabs.user_id == current_user.id).all()
 
     # Fetch message count for each user-associated room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for each room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
 
     # Organize rooms into the appropriate tabs
     room_dict = {tab_id: [] for tab_id in [tab.id for tab in user_tabs]}
@@ -135,14 +135,14 @@ async def get_user_all_rooms_in_all_tabs(db: Session = Depends(get_db),
 
 @router.get('/{tab_id}')
 async def get_rooms_in_one_tab(db: Session = Depends(get_db), 
-                              current_user: models.User = Depends(oauth2.get_current_user),
+                              current_user: user_model.User = Depends(oauth2.get_current_user),
                               tab_id: int = None):
     """
     Get all rooms in a specific tab.
 
     Args:
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
         tab (str): The name of the tab.
 
     Returns:
@@ -152,8 +152,8 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
         HTTPException: If the tab does not exist.
     """
 
-    tab_exists = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.owner_id == current_user.id, 
-                                                      models.RoomTabsInfo.id == tab_id).first()
+    tab_exists = db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.owner_id == current_user.id, 
+                                                      room_model.RoomTabsInfo.id == tab_id).first()
     if not tab_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -161,22 +161,22 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
         )
 
     # Fetch rooms and tabs details for the current user in the specified tab
-    rooms_and_tabs = db.query(models.Rooms, models.RoomsTabs
-        ).join(models.RoomsTabs, models.Rooms.id == models.RoomsTabs.room_id
-        ).filter(models.RoomsTabs.user_id == current_user.id,
-                 models.RoomsTabs.tab_id == tab_id).all()
+    rooms_and_tabs = db.query(room_model.Rooms, room_model.RoomsTabs
+        ).join(room_model.RoomsTabs, room_model.Rooms.id == room_model.RoomsTabs.room_id
+        ).filter(room_model.RoomsTabs.user_id == current_user.id,
+                 room_model.RoomsTabs.tab_id == tab_id).all()
          
     # Fetch message count for each user-associated room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
 
 
     # Initialize an empty dictionary to store tabs with their associated rooms
@@ -209,7 +209,7 @@ async def get_rooms_in_one_tab(db: Session = Depends(get_db),
 @router.post('/add-room-to-tab/{tab_id}')
 async def add_rooms_to_tab(tab_id: int, room_ids: List[int], 
                            db: Session = Depends(get_db), 
-                           current_user: models.User = Depends(oauth2.get_current_user)):
+                           current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Add multiple rooms to a tab, remove them from other tabs if they exist.
 
@@ -217,7 +217,7 @@ async def add_rooms_to_tab(tab_id: int, room_ids: List[int],
         tab_id (int): The ID of the tab to add the rooms to.
         room_ids (List[int]): A list of room IDs to add.
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         dict: Confirmation of the rooms added to the tab.
@@ -230,27 +230,27 @@ async def add_rooms_to_tab(tab_id: int, room_ids: List[int],
                             detail=f"User with ID {current_user.id} is blocked")
 
     # Check if the tab exists and belongs to the current user
-    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == tab_id, 
-                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    tab = db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.id == tab_id, 
+                                               room_model.RoomTabsInfo.owner_id == current_user.id).first()
     if not tab:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
 
     # Process each room
     for room_id in room_ids:
-        room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+        room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id).first()
         if not room:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Room {room_id} not found")
 
-        existing_link = db.query(models.RoomsTabs).filter(models.RoomsTabs.room_id == room_id,
-                                                          models.RoomsTabs.tab_id == tab_id).first()
+        existing_link = db.query(room_model.RoomsTabs).filter(room_model.RoomsTabs.room_id == room_id,
+                                                          room_model.RoomsTabs.tab_id == tab_id).first()
         if existing_link:
             continue  # Skip if room is already in the tab
 
         # Remove the room from any other tab
-        db.query(models.RoomsTabs).filter(models.RoomsTabs.room_id == room_id).delete()
+        db.query(room_model.RoomsTabs).filter(room_model.RoomsTabs.room_id == room_id).delete()
 
         # Add the room to the tab
-        new_room_tab = models.RoomsTabs(room_id=room_id, tab_id=tab_id, user_id=current_user.id, tab_name=tab.name_tab)
+        new_room_tab = room_model.RoomsTabs(room_id=room_id, tab_id=tab_id, user_id=current_user.id, tab_name=tab.name_tab)
         db.add(new_room_tab)
 
     db.commit()
@@ -262,14 +262,14 @@ async def add_rooms_to_tab(tab_id: int, room_ids: List[int],
 @router.put('/', status_code=status.HTTP_200_OK)
 async def update_tab(id: int, update: room_schema.TabUpdate,
                      db: Session = Depends(get_db), 
-                     current_user: models.User = Depends(oauth2.get_current_user)):
+                     current_user: user_model.User = Depends(oauth2.get_current_user)):
     
     if current_user.blocked == True:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked")
         
-    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
-                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    tab = db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.id == id,
+                                               room_model.RoomTabsInfo.owner_id == current_user.id).first()
     if not tab:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
     
@@ -286,7 +286,7 @@ async def update_tab(id: int, update: room_schema.TabUpdate,
 async def room_update_to_favorites(room_id: int,
                                 favorite: bool,
                                 db: Session = Depends(get_db), 
-                                current_user: models.User = Depends(oauth2.get_current_user)):
+                                current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Updates the favorite status of a room in tab for a specific user.
 
@@ -294,7 +294,7 @@ async def room_update_to_favorites(room_id: int,
         room_id (int): The ID of the room to update.
         favorite (bool): The new favorite status for the room.
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         dict: A dictionary containing the room ID and the updated favorite status.
@@ -308,21 +308,21 @@ async def room_update_to_favorites(room_id: int,
                             detail=f"User with ID {current_user.id} is blocked")
 
     # Fetch room
-    room = db.query(models.Rooms).filter(models.Rooms.id == room_id).first()
+    room = db.query(room_model.Rooms).filter(room_model.Rooms.id == room_id).first()
     if room is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found")
     
     # Check if there is already a favorite record
-    favorite_record = db.query(models.RoomsTabs).filter(
-        models.RoomsTabs.room_id == room_id,
-        models.RoomsTabs.user_id == current_user.id
+    favorite_record = db.query(room_model.RoomsTabs).filter(
+        room_model.RoomsTabs.room_id == room_id,
+        room_model.RoomsTabs.user_id == current_user.id
     ).first()
 
     # Update if exists, else create a new record
     if favorite_record:
         favorite_record.favorite = favorite
     else:
-        new_favorite = models.RoomsTabs(
+        new_favorite = room_model.RoomsTabs(
             favorite=favorite
         )
         db.add(new_favorite)
@@ -336,14 +336,14 @@ async def room_update_to_favorites(room_id: int,
 @router.delete('/')
 async def deleted_tab(id: int,
                       db: Session = Depends(get_db), 
-                      current_user: models.User = Depends(oauth2.get_current_user)):
+                      current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Delete a tab.
 
     Args:
         id (int): The ID of the tab to delete.
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Raises:
         HTTPException: If the tab does not exist or the user does not have sufficient permissions.
@@ -354,8 +354,8 @@ async def deleted_tab(id: int,
     if current_user.blocked == True:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"User with ID {current_user.id} is blocked")
-    tab = db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == id,
-                                               models.RoomTabsInfo.owner_id == current_user.id).first()
+    tab = db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.id == id,
+                                               room_model.RoomTabsInfo.owner_id == current_user.id).first()
     if not tab:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
     
@@ -368,7 +368,7 @@ async def deleted_tab(id: int,
 @router.delete('/delete-room-in-tab/{tab_id}')
 async def delete_room_from_tab(tab_id: int, room_ids: List[int],
                                db: Session = Depends(get_db), 
-                               current_user: models.User = Depends(oauth2.get_current_user)):
+                               current_user: user_model.User = Depends(oauth2.get_current_user)):
     """
     Remove rooms from a tab.
 
@@ -376,21 +376,21 @@ async def delete_room_from_tab(tab_id: int, room_ids: List[int],
         tab_id (int): The ID of the tab to remove rooms from.
         room_ids (List[int]): List of room IDs to remove.
         db (Session): The database session.
-        current_user (models.User): The currently authenticated user.
+        current_user (user_model.User): The currently authenticated user.
 
     Returns:
         Response: HTTP status indicating the outcome.
     """
 
     # Check if the tab exists and belongs to the current user
-    if not db.query(models.RoomTabsInfo).filter(models.RoomTabsInfo.id == tab_id, 
-                                                models.RoomTabsInfo.owner_id == current_user.id).first():
+    if not db.query(room_model.RoomTabsInfo).filter(room_model.RoomTabsInfo.id == tab_id, 
+                                                room_model.RoomTabsInfo.owner_id == current_user.id).first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tab not found")
 
     # Remove specified rooms from the tab
     for room_id in room_ids:
-        room_link = db.query(models.RoomsTabs).filter(models.RoomsTabs.room_id == room_id,
-                                                      models.RoomsTabs.tab_id == tab_id).first()
+        room_link = db.query(room_model.RoomsTabs).filter(room_model.RoomsTabs.room_id == room_id,
+                                                      room_model.RoomsTabs.tab_id == tab_id).first()
         if not room_link:
             continue  # If room not found in the tab, skip it
         

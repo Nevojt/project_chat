@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 
 from ...database.database import get_db
-from app.models import models
+from app.models import user_model, room_model, messages_model
 from app.schemas import user as user_schema
 from app.schemas import room as schema_room
 
@@ -46,26 +46,26 @@ def search_users_and_rooms(substring: str, db: Session = Depends(get_db)):
     pattern = f"%{substring.lower()}%"
     
     # Search for users
-    users = db.query(models.User).filter(func.lower(models.User.user_name).like(pattern)).all()
+    users = db.query(user_model.User).filter(func.lower(user_model.User.user_name).like(pattern)).all()
     
     # Search for rooms
-    rooms = db.query(models.Rooms).filter(
-        models.Rooms.name_room != 'Hell', 
-        models.Rooms.secret_room != True, 
-        func.lower(models.Rooms.name_room).like(pattern)
+    rooms = db.query(room_model.Rooms).filter(
+        room_model.Rooms.name_room != 'Hell', 
+        room_model.Rooms.secret_room != True, 
+        func.lower(room_model.Rooms.name_room).like(pattern)
     ).all()
 
     # Count messages for room
     messages_count = db.query(
-        models.Socket.rooms, 
-        func.count(models.Socket.id).label('count')
-    ).group_by(models.Socket.rooms).filter(models.Socket.rooms != 'Hell').all()
+        messages_model.Socket.rooms, 
+        func.count(messages_model.Socket.id).label('count')
+    ).group_by(messages_model.Socket.rooms).filter(messages_model.Socket.rooms != 'Hell').all()
 
     # Count users for room
     users_count = db.query(
-        models.User_Status.name_room, 
-        func.count(models.User_Status.id).label('count')
-    ).group_by(models.User_Status.name_room).filter(models.User_Status.name_room != 'Hell').all()
+        user_model.User_Status.name_room, 
+        func.count(user_model.User_Status.id).label('count')
+    ).group_by(user_model.User_Status.name_room).filter(user_model.User_Status.name_room != 'Hell').all()
     
     
     users_info =[]
@@ -121,7 +121,7 @@ def search_users(substring: str, db: Session = Depends(get_db)):
     pattern = f"%{substring.lower()}%"
     
     # Search for users
-    users = db.query(models.User).filter(func.lower(models.User.user_name).like(pattern)).all()
+    users = db.query(user_model.User).filter(func.lower(user_model.User.user_name).like(pattern)).all()
     
     users_info =[]
     for user in users:

@@ -1,7 +1,7 @@
 from fastapi import status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 from app.database.database import get_db
-from app.models import models
+from app.models import image_model
 from app.schemas import image
 
 router = APIRouter(
@@ -12,23 +12,23 @@ router = APIRouter(
 
 @router.get("/")
 async def get_images(db: Session = Depends(get_db)):
-    posts = db.query(models.ImagesAll).all()
+    posts = db.query(image_model.ImagesAll).all()
     return posts
 
 @router.get("/avatars")
 async def get_images(db: Session = Depends(get_db)):
-    posts = db.query(models.ImagesAvatar).all()
+    posts = db.query(image_model.ImagesAvatar).all()
     return posts
 
 @router.get("/rooms")
 async def get_images(db: Session = Depends(get_db)):
-    posts = db.query(models.ImagesRooms).all()
+    posts = db.query(image_model.ImagesRooms).all()
     return posts
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=image.ImagesResponse)
 async def create_image(images: image.ImagesCreate, db: Session = Depends(get_db)):
  
-    images = models.ImagesAll(**images.model_dump())
+    images = image_model.ImagesAll(**images.model_dump())
     db.add(images)
     db.commit()
     db.refresh(images)    
@@ -38,7 +38,7 @@ async def create_image(images: image.ImagesCreate, db: Session = Depends(get_db)
 
 @router.get("/{image_room}")
 async def get_room(image_room: str, db: Session = Depends(get_db)):
-    post = db.query(models.ImagesAll).filter(models.ImagesAll.image_room == image_room).all()
+    post = db.query(image_model.ImagesAll).filter(image_model.ImagesAll.image_room == image_room).all()
     
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
@@ -48,7 +48,7 @@ async def get_room(image_room: str, db: Session = Depends(get_db)):
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_room(id: int, db: Session = Depends(get_db)):
-    post = db.query(models.ImagesAll).filter(models.ImagesAll.id == id)
+    post = db.query(image_model.ImagesAll).filter(image_model.ImagesAll.id == id)
     
     if post.first() == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
