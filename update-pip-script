@@ -1,0 +1,4 @@
+#!/bin/bash
+# This script update all dependence to this project
+
+pip list --outdated --format=columns | awk 'NR>2 {print $1}' | xargs -n1 pip install -U
