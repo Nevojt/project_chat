@@ -8,14 +8,15 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import pytz
 from sqlalchemy import select
 from app.models import user_model, room_model, company_model
+from app.config.utils import generate_code_verification
 
 # scheduler = AsyncIOScheduler()
 def setup_scheduler(db_session_factory):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_old_rooms, 'cron', day='*', hour='0', args=[db_session_factory])
     scheduler.add_job(delete_test_users, 'cron', day='*', hour='0', args=[db_session_factory])
-    # scheduler.add_job(update_access_token, 'interval', hours=4, args=[db_session_factory])
-    scheduler.add_job(update_access_token, 'interval', minutes=1, args=[db_session_factory])
+    scheduler.add_job(update_access_token, 'interval', hours=4, args=[db_session_factory])
+    # scheduler.add_job(update_access_token, 'interval', minutes=1, args=[db_session_factory]) # test functionality
 
     scheduler.start()
     return scheduler
@@ -57,6 +58,3 @@ async def update_access_token(db_session_factory):
         await db.commit()
 
     
-def generate_code_verification(length=10):
-    characters = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(characters) for _ in range(length))
