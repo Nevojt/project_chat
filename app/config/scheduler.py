@@ -1,18 +1,25 @@
-from ast import arg
+
+import secrets
+import string
+
 from datetime import datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-# from apscheduler.triggers.cron import CronTrigger
+
 import pytz
 from sqlalchemy import select
-from app.models import user_model, room_model
+from app.models import user_model, room_model, company_model
 
+# scheduler = AsyncIOScheduler()
 def setup_scheduler(db_session_factory):
     scheduler = AsyncIOScheduler()
     scheduler.add_job(delete_old_rooms, 'cron', day='*', hour='0', args=[db_session_factory])
     scheduler.add_job(delete_test_users, 'cron', day='*', hour='0', args=[db_session_factory])
+    # scheduler.add_job(update_access_token, 'interval', hours=4, args=[db_session_factory])
+    scheduler.add_job(update_access_token, 'interval', minutes=1, args=[db_session_factory])
 
     scheduler.start()
     return scheduler
+
 
 async def delete_old_rooms(db_session_factory):
     async with db_session_factory() as db:
@@ -36,3 +43,20 @@ async def delete_test_users(db_session_factory):
         for user in test_users:
             await db.delete(user)
         await db.commit()
+        
+async def update_access_token(db_session_factory):
+    async with db_session_factory() as db:
+        token_query = select(company_model.Company)
+        result = await db.execute(token_query)
+        companies = result.scalars().all()
+
+        # Generate new access token
+        for company in companies:
+            company.code_verification = generate_code_verification()
+            db.add(company)
+        await db.commit()
+
+    
+def generate_code_verification(length=10):
+    characters = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(characters) for _ in range(length))

@@ -1,11 +1,9 @@
-from datetime import timedelta
-from tkinter import CASCADE
-from sqlalchemy import JSON, Column, Integer, Interval, String, Boolean, ForeignKey, Enum, DateTime
+
+from sqlalchemy import JSON, Column, Integer, String
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
 
-from enum import Enum as PythonEnum
 from app.database.database import Base
 
 
@@ -32,6 +30,7 @@ class Company(Base):
     services = Column(String)
     additional_contacts = Column(String)
     settings = Column(JSON)
+    code_verification = Column(String(255))
     
     users = relationship("User", back_populates="company", cascade="all, delete")
     rooms = relationship("Rooms", back_populates="company", cascade="all, delete")

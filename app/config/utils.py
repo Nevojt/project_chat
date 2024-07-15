@@ -1,3 +1,4 @@
+import uuid
 from passlib.context import CryptContext
 import secrets
 import hashlib
@@ -53,3 +54,7 @@ def generate_unique_token(email: str) -> str:
 
 def generate_reset_code():
     return ''.join(random.choices(string.digits, k=6))
+
+
+def generate_access_code():
+    return str(uuid.uuid4())

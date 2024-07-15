@@ -52,3 +52,8 @@ class CompanyUpdate(BaseModel):
     services: Optional[str] = None
     additional_contacts: Optional[str] = None
     settings: Optional[Dict] = None
+    
+class CompanyCodeVerification(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    code_verification: str

@@ -1,4 +1,5 @@
 
+from sched import scheduler
 from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
@@ -17,7 +18,7 @@ from .routers.reset import password_reset, password_reset_mobile, change_and_blo
 from .routers.mail import contact_form
 from .routers.company import company
 
-from .config.scheduler import setup_scheduler
+from .config.scheduler import setup_scheduler#, scheduler
 from .database.database import engine
 from app.database.async_db import async_session_maker, engine_asinc
 from app.models import user_model, room_model, image_model, password_model, company_model, messages_model
@@ -31,6 +32,12 @@ async def init_db():
         await conn.run_sync(password_model.Base.metadata.create_all)
         await conn.run_sync(company_model.Base.metadata.create_all)
         await conn.run_sync(messages_model.Base.metadata.create_all)
+        
+def startup_event():
+    setup_scheduler(async_session_maker)
+    
+async def on_shutdown():
+    scheduler.shutdown()
 
 app = FastAPI(
     root_path="/api",
@@ -38,7 +45,8 @@ app = FastAPI(
     title="Chat",
     description="Chat documentation",
     version="0.1.3",
-    on_startup=[init_db]
+    on_startup=[init_db, startup_event],
+    # on_shutdown=[on_shutdown]
 )
 
 origins = ["*"]
@@ -52,7 +60,8 @@ app.add_middleware(
 )
 
 # Setup Scheduler
-setup_scheduler(async_session_maker)
+
+
 
 
 app.include_router(message.router)
