@@ -56,9 +56,10 @@ def generate_reset_code():
     return ''.join(random.choices(string.digits, k=6))
 
 
-def generate_code_verification(length=10):
+def generate_random_code(length=10):
     characters = string.ascii_letters + string.digits
     return ''.join(secrets.choice(characters) for _ in range(length))
+
 
 def generate_access_code():
     return str(uuid.uuid4())

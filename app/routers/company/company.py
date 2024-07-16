@@ -63,11 +63,18 @@ def update_company(company_id: int, company: CompanyUpdate, db: Session = Depend
     db.refresh(db_company)
     return db_company
 
-@router.delete("/companies/{company_id}", response_model=CompanySchema)
-def delete_company(company_id: int, db: Session = Depends(get_db)):
+@router.delete("/companies/{company_id}", response_model=CompanySchema) # , include_in_schema=True
+def delete_company(company_id: int, db: Session = Depends(get_db),
+                   current_user: int = Depends(oauth2.get_current_user)):
+    
+    
     db_company = db.query(Company).filter(Company.id == company_id).first()
     if db_company is None:
         raise HTTPException(status_code=404, detail="Company not found")
+    if current_user.company_id != company_id and current_user.role != "admin":
+        raise HTTPException(status_code=403,
+                            detail="You are not authorized to delete this company")
+    
     db.delete(db_company)
     db.commit()
     return db_company

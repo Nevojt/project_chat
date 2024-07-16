@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import List, Union
-from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File, Query
+from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File
 import shutil
-import random
-import string
+
 import os
 from b2sdk.v2 import InMemoryAccountInfo, B2Api
 from tempfile import NamedTemporaryFile
@@ -17,6 +16,7 @@ from app.mail import send_mail
 
 from ...config import utils
 from app.config.config import settings
+from app.config.utils import generate_random_code
 from .hello import say_hello_system, system_notification_change_owner
 from .created_image import generate_image_with_letter
 from ...auth import oauth2
@@ -178,21 +178,6 @@ async def created_user_v2(email: str = Form(...),
     
     return new_user
 
-def generate_random_suffix(length=8):
-    """
-    Generate a random suffix of specified length.
-
-    Parameters:
-    length (int): The length of the random suffix. Default is 8.
-
-    Returns:
-    str: A random suffix of specified length.
-
-    The characters used for generating the suffix are ASCII letters (both lowercase and uppercase)
-    and digits. The random choice is made using the random.choice() function.
-    """
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for i in range(length))
 
 def generate_unique_filename(filename):
     """
@@ -209,7 +194,7 @@ def generate_unique_filename(filename):
     The length of the suffix is 8 characters by default.
     """
     file_name, file_extension = os.path.splitext(filename)
-    unique_suffix = generate_random_suffix()
+    unique_suffix = generate_random_code()
     unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
     return unique_filename
 

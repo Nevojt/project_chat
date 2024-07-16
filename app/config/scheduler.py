@@ -8,7 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import pytz
 from sqlalchemy import select
 from app.models import user_model, room_model, company_model
-from app.config.utils import generate_code_verification
+from app.config.utils import generate_random_code
 
 # scheduler = AsyncIOScheduler()
 def setup_scheduler(db_session_factory):
@@ -53,7 +53,7 @@ async def update_access_token(db_session_factory):
 
         # Generate new access token
         for company in companies:
-            company.code_verification = generate_code_verification()
+            company.code_verification = generate_random_code()
             db.add(company)
         await db.commit()
 
