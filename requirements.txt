@@ -1,4 +1,4 @@
-aiosmtplib==3.0.1
+aiosmtplib>=2.0,<3.0
 annotated-types==0.7.0
 anyio==4.4.0
 APScheduler==3.10.4
