@@ -23,6 +23,9 @@ from .database.database import engine
 from app.database.async_db import async_session_maker, engine_asinc
 from app.models import user_model, room_model, image_model, password_model, company_model, messages_model
 
+from app.admin import user as admin_user
+from app.admin import room as admin_room
+
 
 async def init_db():
     async with engine_asinc.begin() as conn:
@@ -103,6 +106,10 @@ app.include_router(ass.router)
 # Company routes
 app.include_router(company.router)
 app.include_router(company_user.router)
+
+# Admin routes
+app.include_router(admin_user.router)
+app.include_router(admin_room.router)
 
 
 

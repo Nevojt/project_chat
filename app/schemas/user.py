@@ -85,6 +85,15 @@ class UserInfo(BaseModel):
     token_verify: Optional[str] = None
     company_id: Optional[int] = None
     
+class UserInfoLights(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    email: str
+    user_name: str
+    avatar: str
+    verified: bool
+    company_id: Optional[int] = None
     
 class UserDelete(BaseModel):
     password: str

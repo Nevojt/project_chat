@@ -1,19 +1,12 @@
 
-from os import name
-from typing import List
-from fastapi import File, Form, Query, UploadFile, status, HTTPException, Depends, APIRouter, Response
+from fastapi import status, HTTPException, Depends, APIRouter
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func, asc
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth import oauth2
 from app.database.database import get_db
-from app.database.async_db import get_async_session
-
 
 from app.models.company_model import Company
 from app.schemas.company import CompanyCreate, CompanyUpdate, CompanySchema
-from app.config.config import settings
 
 
 router = APIRouter(

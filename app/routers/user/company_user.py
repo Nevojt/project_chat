@@ -1,18 +1,13 @@
-from datetime import datetime
-from typing import List, Union
-from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File, Query
 
-from sqlalchemy.orm import Session
+from typing import List
+from fastapi import status, HTTPException, Depends, APIRouter
+
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...config import utils
-from app.config.config import settings
-from .hello import say_hello_system, system_notification_change_owner
-from .created_image import generate_image_with_letter
 from ...auth import oauth2
 from ...database.async_db import get_async_session
-from ...database.database import get_db
+
 from app.models import user_model
 from app.schemas import user
 
@@ -24,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/{company_id}", response_model=List[user.UserInfo])
+@router.get("/{company_id}", response_model=List[user.UserInfoLights])
 async def read_company_users(company_id: int,
                              db: AsyncSession = Depends(get_async_session),
                              current_user: user.UserOut = Depends(oauth2.get_current_user)):
