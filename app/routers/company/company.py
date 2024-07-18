@@ -24,7 +24,13 @@ router = APIRouter(
 
 
 @router.post("/companies/", response_model=CompanySchema)
-def create_company(company: CompanyCreate, db: Session = Depends(get_db)):
+def create_company(company: CompanyCreate, db: Session = Depends(get_db),
+                   current_user: int = Depends(oauth2.get_current_user)):
+    
+    if current_user.role != "super_admin":
+        raise HTTPException(status.HTTP_403_FORBIDDEN,
+                            detail="The user is not a super admin, access is denied.")
+    
     db_company = db.query(Company).filter(Company.subdomain == company.subdomain).first()
     
     if db_company is not None:
@@ -71,7 +77,8 @@ def delete_company(company_id: int, db: Session = Depends(get_db),
     db_company = db.query(Company).filter(Company.id == company_id).first()
     if db_company is None:
         raise HTTPException(status_code=404, detail="Company not found")
-    if current_user.company_id != company_id and current_user.role != "admin":
+    
+    if current_user.role != "super_admin":
         raise HTTPException(status_code=403,
                             detail="You are not authorized to delete this company")
     

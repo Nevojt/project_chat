@@ -11,8 +11,11 @@ from app.database.database import Base
 
 
 class UserRole(str, PythonEnum):
-	user = "user"
-	admin = "admin"
+    super_admin = "super_admin"
+    admin = "admin"
+    user = "user"
+	
+    
  
  
  
