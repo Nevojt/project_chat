@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import desc, func, asc
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.admin import user
+
 from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
