@@ -1,7 +1,7 @@
 from typing import List
-from fastapi import File, Form, Query, UploadFile, status, HTTPException, Depends, APIRouter, Response
+from fastapi import File, Form, UploadFile, status, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func, asc
+from sqlalchemy import desc, func
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,24 +9,15 @@ from app.auth import oauth2
 from app.database.database import get_db
 from app.database.async_db import get_async_session
 
-import shutil
 import random
-import string
-import os
-from b2sdk.v2 import InMemoryAccountInfo, B2Api
-from tempfile import NamedTemporaryFile
 
 from app.models import room_model, room_model, messages_model, user_model
 from app.schemas import room as room_schema
 from app.config.config import settings
+from app.config import utils
 
 
 
-
-
-info = InMemoryAccountInfo()
-b2_api = B2Api(info)
-b2_api.authorize_account("production", settings.backblaze_id, settings.backblaze_key)
 
 router = APIRouter(
     prefix="/rooms",
@@ -194,7 +185,7 @@ async def create_room_v2(name_room: str =Form(...),
     if file is None:
         image = random.choice(default_image)
     else:
-        image = await upload_to_backblaze(file)
+        image = await utils.upload_to_backblaze(file, settings.bucket_name_room_image)
         
     new_room = room_model.Rooms(owner=current_user.id,
                             image_room=image,
@@ -222,79 +213,6 @@ async def create_room_v2(name_room: str =Form(...),
     
     return new_room
 
-
-def generate_random_suffix(length=8):
-    """
-    Generate a random suffix of specified length.
-
-    Parameters:
-    length (int): The length of the random suffix. Default is 8.
-
-    Returns:
-    str: A random string of specified length consisting of letters and digits.
-    """
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choice(characters) for i in range(length))
-
-def generate_unique_filename(filename):
-    """
-    Generate a unique filename by appending a random suffix to the original filename.
-
-    Parameters:
-    filename (str): The original filename.
-
-    Returns:
-    str: The unique filename.
-    """
-    file_name, file_extension = os.path.splitext(filename)
-    unique_suffix = generate_random_suffix()
-    unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
-    return unique_filename
-
-async def upload_to_backblaze(file: UploadFile) -> str:
-    """
-    Uploads a file to Backblaze B2 storage.
-
-    Parameters:
-    file (UploadFile): The file to be uploaded.
-
-    Returns:
-    str: The download URL of the uploaded file.
-
-    Raises:
-    HTTPException: If an error occurs during the upload process.
-    """
-
-    try:
-        # Create a temporary file to store the uploaded file
-        with NamedTemporaryFile(delete=False) as temp_file:
-            # Copy the uploaded file to the temporary file
-            shutil.copyfileobj(file.file, temp_file)
-            temp_file_path = temp_file.name
-        
-        # Set the name of the bucket where the file will be uploaded
-        bucket_name = settings.bucket_name_room_image
-        # Get the bucket by its name
-        bucket = b2_api.get_bucket_by_name(bucket_name)
-        
-        # Upload the file to the bucket
-        unique_filename = generate_unique_filename(file.filename)
-        
-        # download file to Backblaze B2
-        bucket.upload_local_file(
-            local_file=temp_file_path,
-            file_name=unique_filename
-        )
-        
-        # Get the download URL of the uploaded file
-        download_url = b2_api.get_download_url_for_file_name(bucket_name, unique_filename)
-        return download_url
-    except Exception as e:
-        # Raise a HTTPException with a 500 status code and the error message
-        raise HTTPException(status_code=500, detail=str(e))
-    finally:
-        # Close the file after the upload process
-        file.file.close()
 
 @router.get("/{name_room}", response_model=room_schema.RoomUpdate)
 async def get_room(name_room: str, db: Session = Depends(get_db)):

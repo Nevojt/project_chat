@@ -99,7 +99,7 @@ def generate_unique_filename(filename):
     unique_filename = f"{file_name}_{unique_suffix}{file_extension}"
     return unique_filename
 
-async def upload_to_backblaze(file: Union[UploadFile, str]) -> str:
+async def upload_to_backblaze(file: Union[UploadFile, str], image_backed: str) -> str:
     """
     Uploads a file or a file at a given path to the specified Backblaze B2 bucket.
     """
@@ -119,7 +119,7 @@ async def upload_to_backblaze(file: Union[UploadFile, str]) -> str:
         # Ensure the filename is unique
         unique_filename = generate_unique_filename(file_name)
 
-        bucket_name = settings.bucket_name_user_avatar
+        bucket_name = image_backed
         bucket = b2_api.get_bucket_by_name(bucket_name)
 
         # Upload file to Backblaze B2

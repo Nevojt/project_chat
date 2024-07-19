@@ -141,9 +141,9 @@ async def created_user_v2(email: str = Form(...),
     
     if file is None:
         generate_image_with_letter(user_name)
-        avatar = await utils.upload_to_backblaze(settings.rout_image)
+        avatar = await utils.upload_to_backblaze(settings.rout_image, settings.bucket_name_user_avatar)
     else:
-        avatar = await utils.upload_to_backblaze(file)
+        avatar = await utils.upload_to_backblaze(file, settings.bucket_name_user_avatar)
         
     # Create a new user and add it to the database
     new_user = user_model.User(**user_data.model_dump(),
