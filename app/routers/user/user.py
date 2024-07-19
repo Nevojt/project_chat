@@ -113,6 +113,18 @@ async def created_user_v2(email: str = Form(...),
     
     company = 1
     
+    existing_deactivated_user = select(user_model.UserDeactivation).where((user_model.UserDeactivation.email == email) |
+        (user_model.UserDeactivation.user_name == user_name))
+    
+    deactivated_result = await db.execute(existing_deactivated_user)
+    existing_deactivated_user = deactivated_result.scalar_one_or_none()
+    
+
+    if existing_deactivated_user:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"User with email {email} or user_name {user_name} is deactivated")
+
+    
     user_data = user.UserCreateV2(email=email, user_name=user_name, password=password)
 
 # Check if a user with the given email already exists

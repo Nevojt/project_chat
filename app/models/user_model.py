@@ -1,6 +1,6 @@
 from datetime import timedelta
 from tkinter import CASCADE
-from sqlalchemy import JSON, Column, Integer, Interval, String, Boolean, ForeignKey, Enum, DateTime
+from sqlalchemy import JSON, Column, Integer, Interval, String, Boolean, ForeignKey, Enum, UniqueConstraint
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.orm import relationship
@@ -35,9 +35,15 @@ class User(Base):
     blocked = Column(Boolean, nullable=False, server_default='false')
     password_changed = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     company_id = Column(Integer, ForeignKey('companies.id', ondelete=CASCADE), nullable=False)
+    active = Column(Boolean, nullable=False, server_default='True')
     
     company = relationship("Company", back_populates="users")
     bans = relationship("Ban", back_populates="user")
+    
+    __table_args__ = (
+        UniqueConstraint('email', name='uq_user_email'),
+        UniqueConstraint('user_name', name='uq_user_name'),
+    )
     
 class User_Status(Base):
     __tablename__ = 'user_status' 
@@ -59,3 +65,22 @@ class UserOnlineTime(Base):
     session_start = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     session_end = Column(TIMESTAMP(timezone=True), nullable=True)
     total_online_time = Column(Interval, nullable=True, default=timedelta())
+    
+    
+class UserDeactivation(Base):
+    __tablename__ = 'user_deactivation'
+    
+    id = Column(Integer, primary_key=True, nullable=False)
+    email = Column(String, nullable=False)
+    user_name = Column(String, nullable=False)
+    deactivated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
+    reason = Column(String, nullable=True)
+    roles = Column(JSON)
+    
+    __table_args__ = (
+        UniqueConstraint('email', name='uq_deactivation_email'),
+        UniqueConstraint('user_name', name='uq_deactivation_user_name'),
+    )
+
+    
+ 
