@@ -60,6 +60,17 @@ async def created_user_admin(email: str = Form(...),
     
     company = current_user.company_id
     
+    existing_deactivated_user = select(user_model.UserDeactivation).where((user_model.UserDeactivation.email == email) |
+        (user_model.UserDeactivation.user_name == user_name))
+    
+    deactivated_result = await db.execute(existing_deactivated_user)
+    existing_deactivated_user = deactivated_result.scalar_one_or_none()
+    
+
+    if existing_deactivated_user:
+        raise HTTPException(status_code=status.HTTP_424_FAILED_DEPENDENCY,
+                            detail=f"User with email {email} or user_name {user_name} is deactivated")
+    
     user_data = user.UserCreateV2(email=email, user_name=user_name, password=password)
 
 # Check if a user with the given email already exists
@@ -88,9 +99,9 @@ async def created_user_admin(email: str = Form(...),
     
     if file is None:
         generate_image_with_letter(user_name)
-        avatar = await utils.upload_to_backblaze(settings.rout_image)
+        avatar = await utils.upload_to_backblaze(settings.rout_image, settings.bucket_name_user_avatar)
     else:
-        avatar = await utils.upload_to_backblaze(file)
+        avatar = await utils.upload_to_backblaze(file, settings.bucket_name_user_avatar)
         
     # Create a new user and add it to the database
     new_user = user_model.User(**user_data.model_dump(),
@@ -136,7 +147,7 @@ async def read_company_users(db: AsyncSession = Depends(get_async_session),
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(
+async def deactivation_user(
     user_id: int,
     db: AsyncSession = Depends(get_async_session), 
     current_user: int = Depends(oauth2.get_current_user)
@@ -190,7 +201,17 @@ async def delete_user(
         else:
             room.owner = current_user.id
 
-        
+    # Deactivate user
+    deactivation = user_model.UserDeactivation(
+            id=existing_user.id,
+            email=existing_user.email,
+            user_name=existing_user.user_name,
+            reason=None,
+            roles=None,
+            company_id=existing_user.company_id
+        )
+    db.add(deactivation)
+    
     await db.commit()
 
     

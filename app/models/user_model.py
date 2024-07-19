@@ -76,6 +76,7 @@ class UserDeactivation(Base):
     deactivated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     reason = Column(String, nullable=True)
     roles = Column(JSON)
+    company_id = Column(Integer, nullable=False)
     
     __table_args__ = (
         UniqueConstraint('email', name='uq_deactivation_email'),
