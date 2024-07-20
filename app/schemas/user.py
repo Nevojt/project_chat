@@ -94,6 +94,7 @@ class UserInfoLights(BaseModel):
     avatar: str
     verified: bool
     company_id: Optional[int] = None
+    active: bool
     
 class UserDelete(BaseModel):
     password: str

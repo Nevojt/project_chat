@@ -17,7 +17,7 @@ def random_lower_string() -> str:
     Returns:
     str: A random lowercase string of length 32.
     """
-    return "".join(random.choices(string.ascii_lowercase, k=32))
+    return "".join(random.choices(string.ascii_lowercase, k=15))
 
 
 def random_email() -> str:

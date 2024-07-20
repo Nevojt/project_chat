@@ -59,6 +59,9 @@ async def login(user_credentials: Annotated[OAuth2PasswordRequestForm, Depends()
         if user.blocked == True:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
                                 detail=f"User with ID {user.id} is blocked")
+        if user.active == False:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail=f"User with ID {user.id} is not active")
         
         if not utils.verify(user_credentials.password, user.password):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Credentials")
