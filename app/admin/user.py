@@ -1,11 +1,8 @@
 
-from datetime import datetime
+
 from typing import List
 from fastapi import Form, Response, status, HTTPException, Depends, APIRouter, UploadFile, File
 
-
-import pytz
-from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +16,7 @@ from app.routers.user.created_image import generate_image_with_letter
 from app.auth import oauth2
 from app.database.async_db import get_async_session
 
-from app.models import user_model, room_model
+from app.models import models, user_model, room_model
 from app.schemas import user
 
 
@@ -29,6 +26,21 @@ router = APIRouter(
 )
 
 
+
+@router.get("/company", response_model=List[user.UserInfoLights])
+async def read_company_users(db: AsyncSession = Depends(get_async_session),
+                             current_user: user.UserOut = Depends(oauth2.get_current_user)):
+    
+    if current_user.role != 'admin':
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="You are not authorized to read users in this company")
+    
+    query_users = select(user_model.User).where(user_model.User.company_id == current_user.company_id)
+    result = await db.execute(query_users)
+    users = result.scalars().all()
+    
+    
+    return users
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=user.UserOut)
 async def created_user_admin(email: str = Form(...),
@@ -130,20 +142,35 @@ async def created_user_admin(email: str = Form(...),
     return new_user
 
 
-@router.get("/company", response_model=List[user.UserInfoLights])
-async def read_company_users(db: AsyncSession = Depends(get_async_session),
-                             current_user: user.UserOut = Depends(oauth2.get_current_user)):
-    
-    if current_user.role != 'admin':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You are not authorized to read users in this company")
-    
-    query_users = select(user_model.User).where(user_model.User.company_id == current_user.company_id)
-    result = await db.execute(query_users)
-    users = result.scalars().all()
-    
-    
-    return users
+@router.put("/{user_id}")
+async def activated_deactivated_user(user_id: int,
+                                     db: AsyncSession = Depends(get_async_session),
+                                     current_user: int = Depends(oauth2.get_current_user)):
+    try:
+        if current_user.role != 'admin':
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="You are not authorized to modify users")
+        user_query = select(user_model.User).where(user_model.User.id == user_id)
+        user_result = await db.execute(user_query)
+        user = user_result.scalar_one_or_none()
+        
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        
+        if user.active:
+            user.active = False
+            await db.commit()
+            await db.refresh(user)
+            return {f"User {user.user_name}": "Deactivated"}
+            
+        else:
+            user.active = True
+            await db.commit()
+            await db.refresh(user)
+            return {f"User {user.user_name}": "Activated"}
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error occurred while processing the request: {str(e)}")
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -170,52 +197,56 @@ async def deactivation_user(
     - Response: An empty response with a 204 No Content status, indicating successful deletion.
     """
     
-    if current_user.role != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="You are not authorized to delete users.")
-    
-    query = select(user_model.User).where(user_model.User.id == user_id)
-    result = await db.execute(query)
-    existing_user = result.scalar_one_or_none()
+    try:
+        if current_user.role != "admin":
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                                detail="You are not authorized to delete users.")
+        
+        query = select(user_model.User).where(user_model.User.id == user_id)
+        result = await db.execute(query)
+        existing_user = result.scalar_one_or_none()
 
-    # If the user does not exist, raise a 404 error
-    if not existing_user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User with ID  does not exist.")
+        # If the user does not exist, raise a 404 error
+        if not existing_user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"User with ID  does not exist.")
+
+            
+        query_room = select(room_model.Rooms).where(room_model.Rooms.owner == user_id)
+        result_room = await db.execute(query_room)
+        rooms_to_update = result_room.scalars().all()
+        
+        for room in rooms_to_update:
+            query_moderators = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room.id, room_model.RoleInRoom.role == 'moderator')
+            result_moderators = await db.execute(query_moderators)
+            moderator = result_moderators.scalars().first()
+            
+            message = f"Room {room.name_room} is now owned by YOU"
+            if moderator:
+                room.owner = moderator.user_id
+                moderator.role = 'owner'
+                await system_notification_change_owner(moderator.user_id, message)
+            else:
+                room.owner = current_user.id
+
+        # Deactivate user
+        deactivation = user_model.UserDeactivation(
+                id=existing_user.id,
+                email=existing_user.email,
+                user_name=existing_user.user_name,
+                reason=None,
+                roles=None,
+                company_id=existing_user.company_id
+            )
+        db.add(deactivation)
+        
+        await db.commit()
 
         
-    query_room = select(room_model.Rooms).where(room_model.Rooms.owner == user_id)
-    result_room = await db.execute(query_room)
-    rooms_to_update = result_room.scalars().all()
-    
-    for room in rooms_to_update:
-        query_moderators = select(room_model.RoleInRoom).where(room_model.RoleInRoom.room_id == room.id, room_model.RoleInRoom.role == 'moderator')
-        result_moderators = await db.execute(query_moderators)
-        moderator = result_moderators.scalars().first()
-        
-        message = f"Room {room.name_room} is now owned by YOU"
-        if moderator:
-            room.owner = moderator.user_id
-            moderator.role = 'owner'
-            await system_notification_change_owner(moderator.user_id, message)
-        else:
-            room.owner = current_user.id
-
-    # Deactivate user
-    deactivation = user_model.UserDeactivation(
-            id=existing_user.id,
-            email=existing_user.email,
-            user_name=existing_user.user_name,
-            reason=None,
-            roles=None,
-            company_id=existing_user.company_id
-        )
-    db.add(deactivation)
-    
-    await db.commit()
-
-    
-    # delete user
-    await db.delete(existing_user)
-    await db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+        # delete user
+        await db.delete(existing_user)
+        await db.commit()
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error occurred while processing the request: {str(e)}")
