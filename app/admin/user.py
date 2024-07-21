@@ -16,7 +16,7 @@ from app.routers.user.created_image import generate_image_with_letter
 from app.auth import oauth2
 from app.database.async_db import get_async_session
 
-from app.models import models, user_model, room_model
+from app.models import user_model, room_model
 from app.schemas import user
 
 
