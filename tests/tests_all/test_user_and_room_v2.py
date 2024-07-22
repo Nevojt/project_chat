@@ -269,10 +269,13 @@ async def test_created_rooms(test_user, test_room, async_session):
         
         
     async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.post("/rooms/",
+        response = await client.post("/rooms/v2",
                             headers=headers, 
-                            json=test_room,
-                            follow_redirects=False)
+                            data={
+                                "name_room": test_room['name_room'],
+                                "image_room": test_room['image_room'],
+                                "secret_room": test_room['secret_room']},
+                            files={"file": (None, "", "application/octet-stream")})
         assert response.status_code == 201
 
     
