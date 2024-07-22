@@ -48,7 +48,7 @@ document.getElementById('contactForm').addEventListener('submit', function(event
         .then(response => response.text())
         .then(data => {
             alert(data);
-            window.location.href = 'https://cool-chat.club/api';  // Redirect to home page
+            window.location.href = 'https://sayorama.eu/api';  // Redirect to home page
         })
         .catch(error => {
             console.error('Error:', error);
