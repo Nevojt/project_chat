@@ -1,5 +1,5 @@
 
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, ConfigDict
 from datetime import datetime
 from typing import Optional
         
@@ -43,8 +43,6 @@ class UserCreate(BaseModel):
     user_name: str
     password: str
     avatar: str
-    # verified: bool = Field(False)
-    # role: UserRole = UserRole.user
    
 class UserCreateV2(BaseModel):
     email: EmailStr
@@ -83,7 +81,6 @@ class UserInfo(BaseModel):
     verified: bool
     blocked: bool
     token_verify: Optional[str] = None
-    company_id: Optional[int] = None
     
 class UserInfoLights(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -93,7 +90,6 @@ class UserInfoLights(BaseModel):
     user_name: str
     avatar: str
     verified: bool
-    company_id: Optional[int] = None
     active: bool
     
 class UserDelete(BaseModel):

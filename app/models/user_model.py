@@ -34,10 +34,8 @@ class User(Base):
     role = Column(Enum(UserRole), default=UserRole.user)
     blocked = Column(Boolean, nullable=False, server_default='false')
     password_changed = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
-    company_id = Column(Integer, ForeignKey('companies.id', ondelete=CASCADE), nullable=False)
     active = Column(Boolean, nullable=False, server_default='True')
-    
-    company = relationship("Company", back_populates="users")
+
     bans = relationship("Ban", back_populates="user")
     
     __table_args__ = (
@@ -76,7 +74,6 @@ class UserDeactivation(Base):
     deactivated_at = Column(TIMESTAMP(timezone=True), nullable=False, server_default=text('now()'))
     reason = Column(String, nullable=True)
     roles = Column(JSON)
-    company_id = Column(Integer, nullable=False)
     
     __table_args__ = (
         UniqueConstraint('email', name='uq_deactivation_email'),

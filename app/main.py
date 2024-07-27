@@ -144,14 +144,3 @@ async def contact_form(request: Request):
     return templates_form.TemplateResponse("index.html", {"request": request})
 
 
-
-def get_company_from_subdomain(request: Request):
-    host = request.headers.get("host")
-    subdomain = host.split(".")[0]
-    
-    return subdomain
-
-@app.get("/company")
-async def get_company(company: str = Depends(get_company_from_subdomain)):
-    return {"company": company}
-

@@ -63,9 +63,5 @@ jobs:
         SSH_USER: ${{ secrets.SSH_USER }}
       run: |
         sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "
-        eval \$(ssh-agent -s) && \
-        ssh-add ~/.ssh/git_conect_key && \
-        cd /home/$SSH_USER/api && \
-        git pull origin main && \
-        echo $SSH_PASSWORD | sudo -S systemctl restart api.service"
+
     

@@ -28,9 +28,7 @@ class Rooms(Base):
     secret_room = Column(Boolean, default=False)
     block = Column(Boolean, nullable=False, server_default='false')
     delete_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    company_id = Column(Integer, ForeignKey('companies.id', ondelete=CASCADE), nullable=False)
     
-    company = relationship("Company", back_populates="rooms")
     invitations = relationship("RoomInvitation", back_populates="room")
     
     

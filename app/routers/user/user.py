@@ -111,7 +111,6 @@ async def created_user_v2(email: str = Form(...),
         HTTPException: If a user with the given email already exists.
     """
     
-    company = 1
     
     existing_deactivated_user = select(user_model.UserDeactivation).where((user_model.UserDeactivation.email == email) |
         (user_model.UserDeactivation.user_name == user_name))
@@ -160,7 +159,6 @@ async def created_user_v2(email: str = Form(...),
     # Create a new user and add it to the database
     new_user = user_model.User(**user_data.model_dump(),
                            avatar=avatar,
-                           company_id=company, # Default company id
                            token_verify=verification_token)
     db.add(new_user)
     await db.commit()

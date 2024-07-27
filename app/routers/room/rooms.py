@@ -188,8 +188,7 @@ async def create_room_v2(name_room: str =Form(...),
         image = await utils.upload_to_backblaze(file, settings.bucket_name_room_image)
         
     new_room = room_model.Rooms(owner=current_user.id,
-                            image_room=image,
-                            company_id=current_user.company_id, 
+                            image_room=image, 
                             **room_data.model_dump())
     db.add(new_room)
     await db.commit()
