@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .mail import send_mail
 
-from .routers.user import auth, finds, user, verify_user, user_status, company_user
+from .routers.user import auth, finds, user, verify_user, user_status
 from .routers.messages import message, private_messages, vote
 from .routers.images import images, upload_file_google, upload_file_supabase, upload_and_return, upload_file_backblaze
 from .routers.room import rooms, count_users_messages, secret_rooms, tabs_rooms, user_rooms, ban_user, role_in_room
@@ -16,15 +16,13 @@ from .routers.invitations import invitation_secret_room
 from .routers.token_test import ass
 from .routers.reset import password_reset, password_reset_mobile, change_and_block
 from .routers.mail import contact_form
-from .routers.company import company
+
 
 from .config.scheduler import setup_scheduler#, scheduler
 from .database.database import engine
 from app.database.async_db import async_session_maker, engine_asinc
-from app.models import user_model, room_model, image_model, password_model, company_model, messages_model
+from app.models import user_model, room_model, image_model, password_model, messages_model
 
-from app.admin import user as admin_user
-from app.admin import room as admin_room
 
 
 async def init_db():
@@ -33,7 +31,6 @@ async def init_db():
         await conn.run_sync(room_model.Base.metadata.create_all)
         await conn.run_sync(image_model.Base.metadata.create_all)
         await conn.run_sync(password_model.Base.metadata.create_all)
-        await conn.run_sync(company_model.Base.metadata.create_all)
         await conn.run_sync(messages_model.Base.metadata.create_all)
         
 def startup_event():
@@ -104,13 +101,8 @@ app.include_router(verify_user.router)
 # Check token
 app.include_router(ass.router)
 
-# Company routes
-app.include_router(company.router)
-app.include_router(company_user.router)
 
-# Admin routes
-app.include_router(admin_user.router)
-app.include_router(admin_room.router)
+
 
 
 
